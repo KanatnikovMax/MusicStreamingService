@@ -1,0 +1,20 @@
+﻿using Microsoft.EntityFrameworkCore;
+using MusicStreamingService.DataAccess.Entities;
+
+namespace MusicStreamingService.DataAccess.Context.Configuration;
+
+public static class ArtistsContextConfigurator
+{
+    public static void ConfigureArtists(this ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Artist>().ToTable("artists");
+        modelBuilder.Entity<Artist>().Property(x => x.Name).IsRequired();
+        modelBuilder.Entity<Artist>().Property(x => x.Name).HasMaxLength(50);
+        modelBuilder.Entity<Artist>().HasIndex(x => x.Name).IsUnique();
+        
+        modelBuilder.Entity<Artist>().HasMany(x => x.Albums).WithMany(x => x.Artists)
+            .UsingEntity(t => t.ToTable("artists_albums"));
+        modelBuilder.Entity<Artist>().HasMany(x => x.Songs).WithMany(x => x.Artists)
+            .UsingEntity(t => t.ToTable("artists_songs"));
+    }
+}
