@@ -13,4 +13,6 @@ public class Song() : BaseEntity
     
     public ICollection<User>? Users { get; set; }
     public ICollection<Artist> Artists { get; set; }
+    
+    public ICollection<UserSong> UsersSongs { get; set; }
 }
