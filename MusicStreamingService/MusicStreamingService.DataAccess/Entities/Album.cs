@@ -9,5 +9,5 @@ public class Album : BaseEntity
     public ICollection<Song>? Songs { get; set; }
     public ICollection<Artist> Artists { get; set; }
     
-    public ICollection<UserAlbum> UsersAlbums { get; set; }
+    public ICollection<UserAlbum>? UsersAlbums { get; set; }
 }

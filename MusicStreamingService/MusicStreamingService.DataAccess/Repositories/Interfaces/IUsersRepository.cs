@@ -1,0 +1,16 @@
+﻿using MusicStreamingService.DataAccess.Entities;
+
+namespace MusicStreamingService.DataAccess.Repositories.Interfaces;
+
+public interface IUsersRepository : IPgRepository<User>
+{
+    Task<IEnumerable<User>> FindByEmailAsync(string email);
+    
+    Task<IEnumerable<Album>> FindAllAlbumsAsync(Guid userId);
+    
+    Task<IEnumerable<Album>> FindAllAlbumsByTitleAsync(Guid userId, string titleParts);
+    
+    Task<IEnumerable<Song>> FindAllSongsAsync(Guid userId);
+    
+    Task<IEnumerable<Song>> FindAllSongsByTitleAsync(Guid userId, string titlePart);
+}
