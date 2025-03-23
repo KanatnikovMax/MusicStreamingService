@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MusicStreamingService.DataAccess.Migrations
 {
     [DbContext(typeof(MusicServiceDbContext))]
-    [Migration("20250320215337_Initial")]
+    [Migration("20250323140623_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -27,11 +27,11 @@ namespace MusicStreamingService.DataAccess.Migrations
 
             modelBuilder.Entity("AlbumArtist", b =>
                 {
-                    b.Property<int>("AlbumsId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("AlbumsId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("ArtistsId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ArtistsId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("AlbumsId", "ArtistsId");
 
@@ -42,8 +42,8 @@ namespace MusicStreamingService.DataAccess.Migrations
 
             modelBuilder.Entity("AlbumUser", b =>
                 {
-                    b.Property<int>("AlbumsId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("AlbumsId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UsersId")
                         .HasColumnType("uuid");
@@ -57,11 +57,11 @@ namespace MusicStreamingService.DataAccess.Migrations
 
             modelBuilder.Entity("ArtistSong", b =>
                 {
-                    b.Property<int>("ArtistsId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ArtistsId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("SongsId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("SongsId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("ArtistsId", "SongsId");
 
@@ -165,11 +165,9 @@ namespace MusicStreamingService.DataAccess.Migrations
 
             modelBuilder.Entity("MusicStreamingService.DataAccess.Entities.Album", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("timestamp with time zone");
@@ -179,41 +177,27 @@ namespace MusicStreamingService.DataAccess.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("Uid")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Title");
-
-                    b.HasIndex("Uid")
-                        .IsUnique();
 
                     b.ToTable("albums", (string)null);
                 });
 
             modelBuilder.Entity("MusicStreamingService.DataAccess.Entities.Artist", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("Uid")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.HasIndex("Uid")
                         .IsUnique();
 
                     b.ToTable("artists", (string)null);
@@ -241,14 +225,12 @@ namespace MusicStreamingService.DataAccess.Migrations
 
             modelBuilder.Entity("MusicStreamingService.DataAccess.Entities.Song", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("uuid");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AlbumId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("AlbumId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("CassandraId")
                         .HasColumnType("uuid");
@@ -264,17 +246,11 @@ namespace MusicStreamingService.DataAccess.Migrations
                     b.Property<int>("TrackNumber")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("Uid")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AlbumId");
 
                     b.HasIndex("Title");
-
-                    b.HasIndex("Uid")
-                        .IsUnique();
 
                     b.ToTable("songs", (string)null);
                 });
@@ -334,8 +310,8 @@ namespace MusicStreamingService.DataAccess.Migrations
 
             modelBuilder.Entity("SongUser", b =>
                 {
-                    b.Property<int>("SongsId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("SongsId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UsersId")
                         .HasColumnType("uuid");

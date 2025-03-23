@@ -8,7 +8,7 @@ public class Song() : BaseEntity
     public int TrackNumber { get; set; }
     public Guid CassandraId { get; set; }
     
-    public int AlbumId { get; set; }
+    public Guid AlbumId { get; set; }
     public Album Album { get; set; }
     
     public ICollection<User>? Users { get; set; }
