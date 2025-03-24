@@ -18,8 +18,39 @@ public static class UsersContextConfigurator
         
         
         modelBuilder.Entity<User>().HasMany(x => x.Albums).WithMany(x => x.Users)
-            .UsingEntity(t => t.ToTable("users_albums"));
+            .UsingEntity<UserAlbum>(
+                t => t
+                    .HasOne(ua => ua.Album)
+                    .WithMany(a => a.UsersAlbums)
+                    .HasForeignKey(ua => ua.AlbumId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                t => t
+                    .HasOne(ua => ua.User)
+                    .WithMany(u => u.UsersAlbums)
+                    .HasForeignKey(ua => ua.UserId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                t => 
+                {
+                    t.ToTable("users_albums");
+                    t.Property(ua => ua.AddedTime).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                });
+
         modelBuilder.Entity<User>().HasMany(x => x.Songs).WithMany(x => x.Users)
-            .UsingEntity(t => t.ToTable("users_songs"));
+            .UsingEntity<UserSong>(
+                t => t
+                    .HasOne(us => us.Song)
+                    .WithMany(s => s.UsersSongs)
+                    .HasForeignKey(us => us.SongId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                t => t
+                    .HasOne(us => us.User)
+                    .WithMany(u => u.UsersSongs)
+                    .HasForeignKey(us => us.UserId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                t =>
+                {
+                    t.ToTable("users_songs");
+                    t.Property(us => us.AddedTime).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                });
     }
 }

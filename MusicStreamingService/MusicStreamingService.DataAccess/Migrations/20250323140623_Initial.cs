@@ -16,11 +16,9 @@ namespace MusicStreamingService.DataAccess.Migrations
                 name: "albums",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Title = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    ReleaseDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Uid = table.Column<Guid>(type: "uuid", nullable: false)
+                    ReleaseDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -31,10 +29,8 @@ namespace MusicStreamingService.DataAccess.Migrations
                 name: "artists",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Uid = table.Column<Guid>(type: "uuid", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -151,14 +147,12 @@ namespace MusicStreamingService.DataAccess.Migrations
                 name: "songs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Title = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Duration = table.Column<int>(type: "integer", nullable: false),
                     TrackNumber = table.Column<int>(type: "integer", nullable: false),
                     CassandraId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AlbumId = table.Column<int>(type: "integer", nullable: false),
-                    Uid = table.Column<Guid>(type: "uuid", nullable: false)
+                    AlbumId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -175,8 +169,8 @@ namespace MusicStreamingService.DataAccess.Migrations
                 name: "artists_albums",
                 columns: table => new
                 {
-                    AlbumsId = table.Column<int>(type: "integer", nullable: false),
-                    ArtistsId = table.Column<int>(type: "integer", nullable: false)
+                    AlbumsId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ArtistsId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -199,7 +193,7 @@ namespace MusicStreamingService.DataAccess.Migrations
                 name: "users_albums",
                 columns: table => new
                 {
-                    AlbumsId = table.Column<int>(type: "integer", nullable: false),
+                    AlbumsId = table.Column<Guid>(type: "uuid", nullable: false),
                     UsersId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -223,8 +217,8 @@ namespace MusicStreamingService.DataAccess.Migrations
                 name: "artists_songs",
                 columns: table => new
                 {
-                    ArtistsId = table.Column<int>(type: "integer", nullable: false),
-                    SongsId = table.Column<int>(type: "integer", nullable: false)
+                    ArtistsId = table.Column<Guid>(type: "uuid", nullable: false),
+                    SongsId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -247,7 +241,7 @@ namespace MusicStreamingService.DataAccess.Migrations
                 name: "users_songs",
                 columns: table => new
                 {
-                    SongsId = table.Column<int>(type: "integer", nullable: false),
+                    SongsId = table.Column<Guid>(type: "uuid", nullable: false),
                     UsersId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -273,21 +267,9 @@ namespace MusicStreamingService.DataAccess.Migrations
                 column: "Title");
 
             migrationBuilder.CreateIndex(
-                name: "IX_albums_Uid",
-                table: "albums",
-                column: "Uid",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_artists_Name",
                 table: "artists",
                 column: "Name",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_artists_Uid",
-                table: "artists",
-                column: "Uid",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -309,12 +291,6 @@ namespace MusicStreamingService.DataAccess.Migrations
                 name: "IX_songs_Title",
                 table: "songs",
                 column: "Title");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_songs_Uid",
-                table: "songs",
-                column: "Uid",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_users_albums_UsersId",
