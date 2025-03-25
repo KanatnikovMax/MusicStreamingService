@@ -13,4 +13,8 @@ public interface IUsersRepository : IPgRepository<User>
     Task<IEnumerable<Song>> FindAllSongsAsync(Guid userId);
     
     Task<IEnumerable<Song>> FindAllSongsByTitleAsync(Guid userId, string titlePart);
+    
+    Task<UserAlbum> AddAlbumAsync(Guid userId, Guid albumId);
+    
+    Task<UserSong> AddSongAsync(Guid userId, Guid songId);
 }

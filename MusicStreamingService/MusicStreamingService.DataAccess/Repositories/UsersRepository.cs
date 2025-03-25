@@ -50,8 +50,9 @@ public class UsersRepository : IUsersRepository
     public async Task<Guid?> SaveAsync(User entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var album = context.Set<User>().FirstOrDefault(a => a.Id == entity.Id);
-        if (album is not null) 
+        var user = context.Set<User>().FirstOrDefault(a => a.Id == entity.Id);
+        
+        if (user is not null) 
             return null;
         
         var result = await context.Set<User>().AddAsync(entity);
@@ -62,8 +63,9 @@ public class UsersRepository : IUsersRepository
     public async Task<Guid?> UpdateAsync(User entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var album = context.Set<User>().FirstOrDefault(a => a.Id == entity.Id);
-        if (album is null) 
+        var user = context.Set<User>().FirstOrDefault(a => a.Id == entity.Id);
+        
+        if (user is null) 
             return null;
         
         var result = context.Set<User>().Attach(entity);
@@ -125,5 +127,47 @@ public class UsersRepository : IUsersRepository
             .Select(us => us.Song)
             .Where(s => s.Title.Contains(titlePart))
             .ToListAsync();
+    }
+
+    public async Task<UserAlbum> AddAlbumAsync(Guid userId, Guid albumId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var userAlbum = context.Set<UserAlbum>()
+            .FirstOrDefault(a => a.UserId == userId && a.AlbumId == albumId);
+        
+        if (userAlbum is null)
+            return null;
+
+        userAlbum = new UserAlbum
+        {
+            UserId = userId,
+            AlbumId = albumId,
+            AddedTime = DateTime.UtcNow
+        };
+        
+        context.Set<UserAlbum>().Add(userAlbum);
+        
+        return userAlbum;
+    }
+
+    public async Task<UserSong> AddSongAsync(Guid userId, Guid songId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var userSong = context.Set<UserSong>()
+            .FirstOrDefault(s => s.UserId == userId && s.SongId == songId);
+        
+        if (userSong is null)
+            return null;
+
+        userSong = new UserSong
+        {
+            UserId = userId,
+            SongId = songId,
+            AddedTime = DateTime.UtcNow
+        };
+        
+        context.Set<UserSong>().Add(userSong);
+        
+        return userSong;
     }
 }

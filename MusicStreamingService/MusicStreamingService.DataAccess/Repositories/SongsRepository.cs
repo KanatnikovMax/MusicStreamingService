@@ -51,6 +51,7 @@ public class SongsRepository : ISongsRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var song = context.Set<Song>().FirstOrDefault(a => a.Id == entity.Id);
+        
         if (song is not null) 
             return null;
         
@@ -63,6 +64,7 @@ public class SongsRepository : ISongsRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var song = context.Set<Song>().FirstOrDefault(a => a.Id == entity.Id);
+        
         if (song is null) 
             return null;
         
