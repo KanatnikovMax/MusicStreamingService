@@ -145,7 +145,7 @@ public class UsersRepository : IUsersRepository
             AddedTime = DateTime.UtcNow
         };
         
-        context.Set<UserAlbum>().Add(userAlbum);
+        await context.Set<UserAlbum>().AddAsync(userAlbum);
         
         return userAlbum;
     }
@@ -166,7 +166,7 @@ public class UsersRepository : IUsersRepository
             AddedTime = DateTime.UtcNow
         };
         
-        context.Set<UserSong>().Add(userSong);
+        await context.Set<UserSong>().AddAsync(userSong);
         
         return userSong;
     }
