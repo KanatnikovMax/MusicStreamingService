@@ -47,7 +47,7 @@ public class SongsRepository : ISongsRepository
         await context.SaveChangesAsync();
     }
 
-    public async Task<Guid?> SaveAsync(Song entity)
+    public async Task<Song?> SaveAsync(Song entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var song = context.Set<Song>().FirstOrDefault(a => a.Id == entity.Id);
@@ -57,10 +57,10 @@ public class SongsRepository : ISongsRepository
         
         var result = await context.Set<Song>().AddAsync(entity);
         await context.SaveChangesAsync();
-        return result.Entity.Id;
+        return result.Entity;
     }
 
-    public async Task<Guid?> UpdateAsync(Song entity)
+    public async Task<Song?> UpdateAsync(Song entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var song = context.Set<Song>().FirstOrDefault(a => a.Id == entity.Id);
@@ -71,7 +71,7 @@ public class SongsRepository : ISongsRepository
         var result = context.Set<Song>().Attach(entity);
         context.Entry(entity).State = EntityState.Modified;
         await context.SaveChangesAsync();
-        return result.Entity.Id;
+        return result.Entity;
     }
 
     public async Task<IEnumerable<Song>> FindByTitleAsync(string titlePart)

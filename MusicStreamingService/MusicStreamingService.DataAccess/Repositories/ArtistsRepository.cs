@@ -56,7 +56,7 @@ public class ArtistsRepository : IArtistsRepository
         await context.SaveChangesAsync();
     }
 
-    public async Task<Guid?> SaveAsync(Artist entity)
+    public async Task<Artist?> SaveAsync(Artist entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var artist = context.Set<Artist>().FirstOrDefault(a => a.Id == entity.Id);
@@ -65,10 +65,10 @@ public class ArtistsRepository : IArtistsRepository
         
         var result = await context.Set<Artist>().AddAsync(entity);
         await context.SaveChangesAsync();
-        return result.Entity.Id;
+        return result.Entity;
     }
 
-    public async Task<Guid?> UpdateAsync(Artist entity)
+    public async Task<Artist?> UpdateAsync(Artist entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var artist = context.Set<Artist>().FirstOrDefault(a => a.Id == entity.Id);
@@ -78,7 +78,7 @@ public class ArtistsRepository : IArtistsRepository
         var result = context.Set<Artist>().Attach(entity);
         context.Entry(entity).State = EntityState.Modified;
         await context.SaveChangesAsync();
-        return result.Entity.Id;
+        return result.Entity;
     }
 
     public async Task<IEnumerable<Album>> FindAllAlbumsAsync(Guid artistId)

@@ -47,7 +47,7 @@ public class AlbumsRepository : IAlbumsRepository
         await context.SaveChangesAsync();
     }
 
-    public async Task<Guid?> SaveAsync(Album entity)
+    public async Task<Album?> SaveAsync(Album entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var album = context.Set<Album>().FirstOrDefault(a => a.Id == entity.Id);
@@ -57,10 +57,10 @@ public class AlbumsRepository : IAlbumsRepository
         
         var result = await context.Set<Album>().AddAsync(entity);
         await context.SaveChangesAsync();
-        return result.Entity.Id;
+        return result.Entity;
     }
 
-    public async Task<Guid?> UpdateAsync(Album entity)
+    public async Task<Album?> UpdateAsync(Album entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var album = context.Set<Album>().FirstOrDefault(a => a.Id == entity.Id);
@@ -71,7 +71,7 @@ public class AlbumsRepository : IAlbumsRepository
         var result = context.Set<Album>().Attach(entity);
         context.Entry(entity).State = EntityState.Modified;
         await context.SaveChangesAsync();
-        return result.Entity.Id;
+        return result.Entity;
     }
 
     public async Task<IEnumerable<Album>> FindByTitleAsync(string titlePart)

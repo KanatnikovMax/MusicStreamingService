@@ -47,7 +47,7 @@ public class UsersRepository : IUsersRepository
         await context.SaveChangesAsync();
     }
 
-    public async Task<Guid?> SaveAsync(User entity)
+    public async Task<User?> SaveAsync(User entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var user = context.Set<User>().FirstOrDefault(a => a.Id == entity.Id);
@@ -57,10 +57,10 @@ public class UsersRepository : IUsersRepository
         
         var result = await context.Set<User>().AddAsync(entity);
         await context.SaveChangesAsync();
-        return result.Entity.Id;
+        return result.Entity;
     }
 
-    public async Task<Guid?> UpdateAsync(User entity)
+    public async Task<User?> UpdateAsync(User entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var user = context.Set<User>().FirstOrDefault(a => a.Id == entity.Id);
@@ -71,7 +71,7 @@ public class UsersRepository : IUsersRepository
         var result = context.Set<User>().Attach(entity);
         context.Entry(entity).State = EntityState.Modified;
         await context.SaveChangesAsync();
-        return result.Entity.Id;
+        return result.Entity;
     }
 
     public async Task<IEnumerable<User>> FindByEmailAsync(string email)

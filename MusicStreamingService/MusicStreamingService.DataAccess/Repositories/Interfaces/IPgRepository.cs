@@ -12,7 +12,7 @@ public interface IPgRepository<T>
     
     Task DeleteAsync(T entity);
     
-    Task<Guid?> SaveAsync(T entity);
+    Task<T?> SaveAsync(T entity);
     
-    Task<Guid?> UpdateAsync(T entity);
+    Task<T?> UpdateAsync(T entity);
 }
