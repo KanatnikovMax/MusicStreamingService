@@ -90,8 +90,11 @@ public class AlbumsRepository : IAlbumsRepository
             .AsNoTracking()
             .Include(a => a.Songs)
             .FirstOrDefaultAsync(a => a.Id == albumId);
-        
-        return album?.Songs
-               ?? Enumerable.Empty<Song>();
+
+        if (album is null)
+            return Enumerable.Empty<Song>();
+
+        return album.Songs?.OrderBy(s => s.TrackNumber)
+            ?? Enumerable.Empty<Song>();
     }
 }
