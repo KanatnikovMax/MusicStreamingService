@@ -11,6 +11,8 @@ public static class ApplicationConfigurator
         DbContextConfigurator.ConfigureServices(builder.Services, settings);
         SerilogConfigurator.ConfigureServices(builder);
         SwaggerConfigurator.ConfigureServices(builder.Services);
+        MapperConfigurator.ConfigureServices(builder.Services);
+        ServicesConfigurator.ConfigureServices(builder.Services, settings);
     }
 
     public static void ConfigureApplication(WebApplication app)
