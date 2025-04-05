@@ -1,5 +1,5 @@
-﻿using MusicStreamingService.DataAccess.Entities;
+﻿using MusicStreamingService.BusinessLogic.Services.Users.Models;
 
 namespace MusicStreamingService.Service.Controllers.Users.Models;
 
-public record UsersListResponse(List<User> Users);
+public record UsersListResponse(List<UserModel> Users);
