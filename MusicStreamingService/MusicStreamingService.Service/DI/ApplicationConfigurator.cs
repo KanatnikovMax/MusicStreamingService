@@ -7,9 +7,9 @@ public static class ApplicationConfigurator
 {
     public static void ConfigureServices(WebApplicationBuilder builder, MusicServiceSettings settings)
     {
+        SerilogConfigurator.ConfigureServices(builder);
         AuthorizationConfigurator.ConfigureServices(builder.Services, settings);
         DbContextConfigurator.ConfigureServices(builder.Services, settings);
-        SerilogConfigurator.ConfigureServices(builder);
         SwaggerConfigurator.ConfigureServices(builder.Services);
         MapperConfigurator.ConfigureServices(builder.Services);
         ServicesConfigurator.ConfigureServices(builder.Services, settings);
@@ -17,8 +17,9 @@ public static class ApplicationConfigurator
 
     public static void ConfigureApplication(WebApplication app)
     {
-        AuthorizationConfigurator.ConfigureApplication(app);
         SerilogConfigurator.ConfigureApplication(app);
+        ExceptionHandlerConfigurator.ConfigureApplication(app);
+        AuthorizationConfigurator.ConfigureApplication(app);
         SwaggerConfigurator.ConfigureApplication(app);
         DbContextConfigurator.ConfigureApplication(app);
     }
