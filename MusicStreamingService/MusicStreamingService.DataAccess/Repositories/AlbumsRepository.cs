@@ -12,17 +12,16 @@ namespace MusicStreamingService.DataAccess.Repositories;
 
 public class AlbumsRepository : IAlbumsRepository
 {
-    private readonly IDbContextFactory<MusicServiceDbContext> _dbContextFactory;
+    private readonly MusicServiceDbContext _context;
 
-    public AlbumsRepository(IDbContextFactory<MusicServiceDbContext> dbContextFactory)
+    public AlbumsRepository(MusicServiceDbContext dbContext)
     {
-        _dbContextFactory = dbContextFactory;
+        _context = dbContext;
     }
 
     public async Task<IEnumerable<Album>> FindAllAsync()
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Album>()
+        return await _context.Set<Album>()
             .Include(a => a.Artists)
             .Include(a => a.Songs)
             .AsNoTracking()
@@ -31,8 +30,7 @@ public class AlbumsRepository : IAlbumsRepository
 
     public async Task<IEnumerable<Album>> FindAllAsync(Expression<Func<Album, bool>> predicate)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Album>()
+        return await _context.Set<Album>()
             .AsNoTracking()
             .Where(predicate)
             .ToListAsync();
@@ -40,8 +38,7 @@ public class AlbumsRepository : IAlbumsRepository
 
     public async Task<Album?> FindByIdAsync(Guid id)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Album>()
+        return await _context.Set<Album>()
             .Include(a => a.Artists)
             .Include(a => a.Songs)
             .AsNoTracking()
@@ -50,24 +47,22 @@ public class AlbumsRepository : IAlbumsRepository
 
     public async Task DeleteAsync(Album entity)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        context.Set<Album>().Remove(entity);
-        await context.SaveChangesAsync();
+        _context.Set<Album>().Remove(entity);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<Album?> SaveAsync(Album entity, IEnumerable<string> artistNames)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         try
         {
-            if (entity.Id != Guid.Empty && await context.Set<Album>()
+            if (entity.Id != Guid.Empty && await _context.Set<Album>()
                     .AnyAsync(a => a.Id == entity.Id))
             {
                 await transaction.RollbackAsync();
                 return null;
             }
-            var album = await context.Set<Album>()
+            var album = await _context.Set<Album>()
                 .Include(a => a.Artists)
                 .FirstOrDefaultAsync(a => a.Title.ToLower() == entity.Title.ToLower());
             if (album is not null)
@@ -91,12 +86,12 @@ public class AlbumsRepository : IAlbumsRepository
                 }
             }
             
-            var artists = await ProcessArtists(context, artistNames);
+            var artists = await ProcessArtists(_context, artistNames);
         
             entity.Artists = artists;
-            context.Albums.Add(entity);
+            _context.Albums.Add(entity);
         
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             await transaction.CommitAsync();
         
             return entity;
@@ -144,17 +139,15 @@ public class AlbumsRepository : IAlbumsRepository
     
     public async Task<Album> UpdateAsync(Album entity)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var result = context.Set<Album>().Attach(entity);
-        context.Entry(entity).State = EntityState.Modified;
-        await context.SaveChangesAsync();
+        var result = _context.Set<Album>().Attach(entity);
+        _context.Entry(entity).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
         return result.Entity;
     }
 
     public async Task<Album?> FindByTitleAsync(string title)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Album>()
+        return await _context.Set<Album>()
             .Include(a => a.Artists)
             .Include(a => a.Songs)
             .AsNoTracking()
@@ -163,8 +156,7 @@ public class AlbumsRepository : IAlbumsRepository
     
     public async Task<IEnumerable<Album>> FindByTitlePartAsync(string titlePart)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Album>()
+        return await _context.Set<Album>()
             .Include(a => a.Artists)
             .Include(a => a.Songs)
             .AsNoTracking()
@@ -174,8 +166,7 @@ public class AlbumsRepository : IAlbumsRepository
 
     public async Task<IEnumerable<Song>> FindAllSongsAsync(Guid albumId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var album = await context.Set<Album>()
+        var album = await _context.Set<Album>()
             .Include(a => a.Songs)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == albumId);

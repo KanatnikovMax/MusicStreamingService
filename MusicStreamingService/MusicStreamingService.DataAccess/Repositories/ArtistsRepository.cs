@@ -9,17 +9,16 @@ namespace MusicStreamingService.DataAccess.Repositories;
 
 public class ArtistsRepository : IArtistsRepository 
 {
-    private readonly IDbContextFactory<MusicServiceDbContext> _dbContextFactory;
+    private readonly MusicServiceDbContext _context;
 
-    public ArtistsRepository(IDbContextFactory<MusicServiceDbContext> dbContextFactory)
+    public ArtistsRepository(MusicServiceDbContext dbContext)
     {
-        _dbContextFactory = dbContextFactory;
+        _context = dbContext;
     }
 
     public async Task<IEnumerable<Artist>> FindAllAsync()
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Artist>()
+        return await _context.Set<Artist>()
             .Include(a => a.Albums)
             .Include(a => a.Songs)
             .ToListAsync();
@@ -27,8 +26,7 @@ public class ArtistsRepository : IArtistsRepository
 
     public async Task<IEnumerable<Artist>> FindAllAsync(Expression<Func<Artist, bool>> predicate)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Artist>()
+        return await _context.Set<Artist>()
             .Include(a => a.Albums)
             .Where(predicate)
             .ToListAsync();
@@ -36,8 +34,7 @@ public class ArtistsRepository : IArtistsRepository
 
     public async Task<Artist?> FindByIdAsync(Guid id)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Artist>()
+        return await _context.Set<Artist>()
             .Include(a => a.Albums)!
             .ThenInclude(a => a.Artists)
             .Include(a => a.Songs)
@@ -46,8 +43,7 @@ public class ArtistsRepository : IArtistsRepository
     
     public async Task<Artist?> FindByNameAsync(string name)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Artist>()
+        return await _context.Set<Artist>()
             .Include(a => a.Albums)!
             .ThenInclude(a => a.Artists)
             .Include(a => a.Songs)
@@ -56,9 +52,7 @@ public class ArtistsRepository : IArtistsRepository
     
     public async Task<IEnumerable<Artist>> FindByNamePartAsync(string namePart)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-    
-        return await context.Set<Artist>()
+        return await _context.Set<Artist>()
             .Include(a => a.Albums)! 
             .ThenInclude(album => album.Artists) 
             .Include(a => a.Songs)
@@ -68,18 +62,16 @@ public class ArtistsRepository : IArtistsRepository
 
     public async Task DeleteAsync(Artist entity)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        context.Set<Artist>().Remove(entity);
-        await context.SaveChangesAsync();
+        _context.Set<Artist>().Remove(entity);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<Artist?> SaveAsync(Artist entity)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         try
         {
-            var artist = context.Set<Artist>().FirstOrDefault(a => a.Id == entity.Id 
+            var artist = _context.Set<Artist>().FirstOrDefault(a => a.Id == entity.Id 
                                                                    || a.Name.ToLower() == entity.Name.ToLower());
             if (artist is not null)
             {
@@ -87,8 +79,8 @@ public class ArtistsRepository : IArtistsRepository
                 return null;
             }
             
-            var result = await context.Set<Artist>().AddAsync(entity);
-            await context.SaveChangesAsync();
+            var result = await _context.Set<Artist>().AddAsync(entity);
+            await _context.SaveChangesAsync();
             await transaction.CommitAsync();
             return result.Entity;
         }
@@ -101,17 +93,15 @@ public class ArtistsRepository : IArtistsRepository
 
     public async Task<Artist> UpdateAsync(Artist entity)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var result = context.Set<Artist>().Attach(entity);
-        context.Entry(entity).State = EntityState.Modified;
-        await context.SaveChangesAsync();
+        var result = _context.Set<Artist>().Attach(entity);
+        _context.Entry(entity).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
         return result.Entity;
     }
 
     public async Task<IEnumerable<Album>> FindAllAlbumsAsync(Guid artistId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var artist = await context.Set<Artist>()
+        var artist = await _context.Set<Artist>()
             .Include(a => a.Albums)!
             .ThenInclude(a => a.Artists)
             .FirstOrDefaultAsync(a => a.Id == artistId);
@@ -125,8 +115,7 @@ public class ArtistsRepository : IArtistsRepository
 
     public async Task<IEnumerable<Song>> FindAllSongsAsync(Guid artistId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var artist = await context.Set<Artist>()
+        var artist = await _context.Set<Artist>()
             .AsNoTracking()
             .Include(a => a.Songs)
             .FirstOrDefaultAsync(a => a.Id == artistId);
@@ -137,8 +126,7 @@ public class ArtistsRepository : IArtistsRepository
 
     public async Task<IEnumerable<Song>> FindAllSongsByTitleAsync(Guid artistId, string titlePart)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var artist = await context.Set<Artist>()
+        var artist = await _context.Set<Artist>()
             .AsNoTracking()
             .Include(a => a.Songs)
             .FirstOrDefaultAsync(a => a.Id == artistId);

@@ -15,24 +15,15 @@ public static class ServicesConfigurator
     public static void ConfigureServices(IServiceCollection services, MusicServiceSettings settings)
     {
         // songs
-        services.AddScoped<ISongsRepository>(x =>
-            new SongsRepository(x.GetRequiredService<IDbContextFactory<MusicServiceDbContext>>()));
+        services.AddScoped<ISongsRepository, SongsRepository>();
         services.AddScoped<ISongsService, SongsService>();
         // albums
-        services.AddScoped<IAlbumsRepository>(x =>
-            new AlbumsRepository(x.GetRequiredService<IDbContextFactory<MusicServiceDbContext>>()));
-        services.AddScoped<IAlbumsService>(x =>
-            new AlbumsService(x.GetRequiredService<IAlbumsRepository>(),
-                x.GetRequiredService<IArtistsRepository>(),
-                x.GetRequiredService<IMapper>()));
+        services.AddScoped<IAlbumsRepository, AlbumsRepository>();
+        services.AddScoped<IAlbumsService, AlbumsService>();
         // artists
-        services.AddScoped<IArtistsRepository>(x =>
-            new ArtistsRepository(x.GetRequiredService<IDbContextFactory<MusicServiceDbContext>>()));
-        services.AddScoped<IArtistsService>(x =>
-            new ArtistsService(x.GetRequiredService<IArtistsRepository>(),
-                x.GetRequiredService<IMapper>()));
+        services.AddScoped<IArtistsRepository, ArtistsRepository>();
+        services.AddScoped<IArtistsService, ArtistsService>();
         // users
-        services.AddScoped<IUsersRepository>(x =>
-            new UsersRepository(x.GetRequiredService<IDbContextFactory<MusicServiceDbContext>>()));
+        services.AddScoped<IUsersRepository, UsersRepository>();
     }
 }

@@ -8,17 +8,17 @@ public static class DbContextConfigurator
 {
     public static void ConfigureServices(IServiceCollection services, MusicServiceSettings settings)
     {
-        services.AddDbContextFactory<MusicServiceDbContext>(options =>
-        {
-            options.UseNpgsql(settings.MusicServiceDbConnectionString);
-        }, ServiceLifetime.Scoped);
+        services.AddDbContextPool<MusicServiceDbContext>(options =>
+            options.UseNpgsql(settings.MusicServiceDbConnectionString),
+            poolSize: 100
+        );
+        //services.AddDbContextFactory<MusicServiceDbContext>();
     }
 
     public static void ConfigureApplication(IApplicationBuilder app)
     {
         using var scope = app.ApplicationServices.CreateScope();
-        var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<MusicServiceDbContext>>();
-        using var context = contextFactory.CreateDbContext();
+        var context = scope.ServiceProvider.GetRequiredService<MusicServiceDbContext>();
         context.Database.Migrate();
     }
 }

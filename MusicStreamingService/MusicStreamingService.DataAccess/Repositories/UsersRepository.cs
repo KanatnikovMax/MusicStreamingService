@@ -8,25 +8,23 @@ namespace MusicStreamingService.DataAccess.Repositories;
 
 public class UsersRepository : IUsersRepository
 {
-     private readonly IDbContextFactory<MusicServiceDbContext> _dbContextFactory;
+     private readonly MusicServiceDbContext _context;
 
-    public UsersRepository(IDbContextFactory<MusicServiceDbContext> dbContextFactory)
+    public UsersRepository(MusicServiceDbContext dbContext)
     {
-        _dbContextFactory = dbContextFactory;
+        _context = dbContext;
     }
 
     public async Task<IEnumerable<User>> FindAllAsync()
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<User>()
+        return await _context.Set<User>()
             .AsNoTracking()
             .ToListAsync();
     }
 
     public async Task<IEnumerable<User>> FindAllAsync(Expression<Func<User, bool>> predicate)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<User>()
+        return await _context.Set<User>()
             .AsNoTracking()
             .Where(predicate)
             .ToListAsync();
@@ -34,45 +32,40 @@ public class UsersRepository : IUsersRepository
 
     public async Task<User?> FindByIdAsync(Guid id)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<User>()
+        return await _context.Set<User>()
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
     public async Task DeleteAsync(User entity)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        context.Set<User>().Remove(entity);
-        await context.SaveChangesAsync();
+        _context.Set<User>().Remove(entity);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<User?> SaveAsync(User entity)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var user = context.Set<User>().FirstOrDefault(a => a.Id == entity.Id);
+        var user = _context.Set<User>().FirstOrDefault(a => a.Id == entity.Id);
         
         if (user is not null) 
             return null;
         
-        var result = await context.Set<User>().AddAsync(entity);
-        await context.SaveChangesAsync();
+        var result = await _context.Set<User>().AddAsync(entity);
+        await _context.SaveChangesAsync();
         return result.Entity;
     }
 
     public async Task<User> UpdateAsync(User entity)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var result = context.Set<User>().Attach(entity);
-        context.Entry(entity).State = EntityState.Modified;
-        await context.SaveChangesAsync();
+        var result = _context.Set<User>().Attach(entity);
+        _context.Entry(entity).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
         return result.Entity;
     }
 
     public async Task<IEnumerable<User>> FindByEmailAsync(string email)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<User>()
+        return await _context.Set<User>()
             .AsNoTracking()
             .Where(a => a.Email == email)
             .ToListAsync();
@@ -80,8 +73,7 @@ public class UsersRepository : IUsersRepository
 
     public async Task<IEnumerable<Album>> FindAllAlbumsAsync(Guid userId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<UserAlbum>()
+        return await _context.Set<UserAlbum>()
             .Where(ua => ua.UserId == userId)
             .Include(ua => ua.Album)
             .OrderByDescending(ua => ua.AddedTime)
@@ -91,8 +83,7 @@ public class UsersRepository : IUsersRepository
 
     public async Task<IEnumerable<Album>> FindAllAlbumsByTitleAsync(Guid userId, string titlePart)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<UserAlbum>()
+        return await _context.Set<UserAlbum>()
             .Where(ua => ua.UserId == userId)
             .Include(ua => ua.Album)
             .OrderByDescending(ua => ua.AddedTime)
@@ -103,8 +94,7 @@ public class UsersRepository : IUsersRepository
 
     public async Task<IEnumerable<Song>> FindAllSongsAsync(Guid userId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<UserSong>()
+        return await _context.Set<UserSong>()
             .Where(us => us.UserId == userId)
             .Include(us => us.Song)
             .OrderByDescending(us => us.AddedTime)
@@ -114,8 +104,7 @@ public class UsersRepository : IUsersRepository
 
     public async Task<IEnumerable<Song>> FindAllSongsByTitleAsync(Guid userId, string titlePart)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<UserSong>()
+        return await _context.Set<UserSong>()
             .Where(us => us.UserId == userId)
             .Include(us => us.Song)
             .OrderByDescending(us => us.AddedTime)
@@ -126,8 +115,7 @@ public class UsersRepository : IUsersRepository
 
     public async Task<UserAlbum> AddAlbumAsync(Guid userId, Guid albumId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var userAlbum = context.Set<UserAlbum>()
+        var userAlbum = _context.Set<UserAlbum>()
             .FirstOrDefault(a => a.UserId == userId && a.AlbumId == albumId);
         
         if (userAlbum is null)
@@ -140,15 +128,14 @@ public class UsersRepository : IUsersRepository
             AddedTime = DateTime.UtcNow
         };
         
-        await context.Set<UserAlbum>().AddAsync(userAlbum);
+        await _context.Set<UserAlbum>().AddAsync(userAlbum);
         
         return userAlbum;
     }
 
     public async Task<UserSong> AddSongAsync(Guid userId, Guid songId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var userSong = context.Set<UserSong>()
+        var userSong = _context.Set<UserSong>()
             .FirstOrDefault(s => s.UserId == userId && s.SongId == songId);
         
         if (userSong is null)
@@ -161,7 +148,7 @@ public class UsersRepository : IUsersRepository
             AddedTime = DateTime.UtcNow
         };
         
-        await context.Set<UserSong>().AddAsync(userSong);
+        await _context.Set<UserSong>().AddAsync(userSong);
         
         return userSong;
     }
