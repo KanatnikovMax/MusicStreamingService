@@ -12,7 +12,6 @@ public static class DbContextConfigurator
             options.UseNpgsql(settings.MusicServiceDbConnectionString),
             poolSize: 100
         );
-        //services.AddDbContextFactory<MusicServiceDbContext>();
     }
 
     public static void ConfigureApplication(IApplicationBuilder app)
