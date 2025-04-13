@@ -2,7 +2,15 @@
 
 namespace MusicStreamingService.BusinessLogic.Exceptions;
 
-public class EntityNotFoundException(string entityName, Guid id) : BusinessLogicException(
-    $"{entityName} was not found. Id: {id}",
-    "ENTITY_NOT_FOUND",
-    404);
+public class EntityNotFoundException : BusinessLogicException
+{
+    public EntityNotFoundException(string entityName, Guid id) : base($"{entityName} was not found. Id: {id}",
+        "ENTITY_NOT_FOUND",
+        404)
+    {}
+
+    public EntityNotFoundException(string entityName) : base($"{entityName} was not found.",
+        "ENTITY_NOT_FOUND",
+        404)
+    {}
+}

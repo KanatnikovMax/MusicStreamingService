@@ -13,6 +13,8 @@ public static class ApplicationConfigurator
         SwaggerConfigurator.ConfigureServices(builder.Services);
         MapperConfigurator.ConfigureServices(builder.Services);
         ServicesConfigurator.ConfigureServices(builder.Services, settings);
+        
+        builder.Services.AddControllers();
     }
 
     public static void ConfigureApplication(WebApplication app)
@@ -22,5 +24,7 @@ public static class ApplicationConfigurator
         AuthorizationConfigurator.ConfigureApplication(app);
         SwaggerConfigurator.ConfigureApplication(app);
         DbContextConfigurator.ConfigureApplication(app);
+        
+        app.MapControllers();
     }
 }

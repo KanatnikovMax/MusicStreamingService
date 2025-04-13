@@ -9,6 +9,8 @@ public static class UsersContextConfigurator
     public static void ConfigureUsers(this ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().ToTable("users");
+        modelBuilder.Entity<User>().Property(u => u.Id)
+            .HasDefaultValueSql("gen_random_uuid()");
         modelBuilder.Entity<Role>().ToTable("user_roles");
         modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("user_tokens").HasNoKey();
         modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("user_role_owners").HasNoKey();

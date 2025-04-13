@@ -6,7 +6,7 @@ using MusicStreamingService.DataAccess.Repositories.Interfaces;
 
 namespace MusicStreamingService.DataAccess.Repositories;
 
-public class SongsRepository : ISongsRepository
+public class SongsRepository : ISongsRepository // TODO: сделать пагинацию
 {
     private readonly IDbContextFactory<MusicServiceDbContext> _dbContextFactory;
 
@@ -63,23 +63,26 @@ public class SongsRepository : ISongsRepository
     public async Task<Song?> UpdateAsync(Song entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var song = context.Set<Song>().FirstOrDefault(a => a.Id == entity.Id);
-        
-        if (song is null) 
-            return null;
-        
         var result = context.Set<Song>().Attach(entity);
         context.Entry(entity).State = EntityState.Modified;
         await context.SaveChangesAsync();
         return result.Entity;
     }
-
-    public async Task<IEnumerable<Song>> FindByTitleAsync(string titlePart)
+    
+    public async Task<Song?> FindByTitleAsync(string title)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<Song>()
             .AsNoTracking()
-            .Where(a => a.Title.Contains(titlePart))
+            .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
+    }
+    
+    public async Task<IEnumerable<Song>> FindByTitlePartAsync(string titlePart)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Set<Song>()
+            .AsNoTracking()
+            .Where(a => EF.Functions.ILike(a.Title, $"%{titlePart}%"))
             .ToListAsync();
     }
 }

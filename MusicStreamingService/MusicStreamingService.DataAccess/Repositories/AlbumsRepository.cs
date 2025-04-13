@@ -1,8 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System.Data;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using MusicStreamingService.BusinessLogic.Helpers;
 using MusicStreamingService.DataAccess.Context;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.DataAccess.Repositories.Interfaces;
+using Npgsql;
+using NpgsqlTypes;
 
 namespace MusicStreamingService.DataAccess.Repositories;
 
@@ -19,6 +23,8 @@ public class AlbumsRepository : IAlbumsRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<Album>()
+            .Include(a => a.Artists)
+            .Include(a => a.Songs)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -36,6 +42,8 @@ public class AlbumsRepository : IAlbumsRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<Album>()
+            .Include(a => a.Artists)
+            .Include(a => a.Songs)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == id);
     }
@@ -47,39 +55,120 @@ public class AlbumsRepository : IAlbumsRepository
         await context.SaveChangesAsync();
     }
 
-    public async Task<Album?> SaveAsync(Album entity)
+    public async Task<Album?> SaveAsync(Album entity, IEnumerable<string> artistNames)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var album = context.Set<Album>().FirstOrDefault(a => a.Id == entity.Id);
+        await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        try
+        {
+            if (entity.Id != Guid.Empty && await context.Set<Album>()
+                    .AnyAsync(a => a.Id == entity.Id))
+            {
+                await transaction.RollbackAsync();
+                return null;
+            }
+            var album = await context.Set<Album>()
+                .Include(a => a.Artists)
+                .FirstOrDefaultAsync(a => a.Title.ToLower() == entity.Title.ToLower());
+            if (album is not null)
+            {
+                var artistIds = album.Artists
+                    .Select(a => a.Id)
+                    .OrderBy(id => id);
+
+                var existingArtistIds = album.Artists
+                    .Select(a => a.Id)
+                    .OrderBy(id => id);
+                
+                var isDuplicate = artistIds
+                    .OrderBy(id => id)
+                    .SequenceEqual(existingArtistIds);
+            
+                if (isDuplicate)
+                {
+                    await transaction.RollbackAsync();
+                    return null;
+                }
+            }
+            
+            var artists = await ProcessArtists(context, artistNames);
         
-        if (album is not null) 
-            return null;
+            entity.Artists = artists;
+            context.Albums.Add(entity);
         
-        var result = await context.Set<Album>().AddAsync(entity);
-        await context.SaveChangesAsync();
-        return result.Entity;
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        
+            return entity;
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
-    public async Task<Album?> UpdateAsync(Album entity)
+    private static async Task<List<Artist>> ProcessArtists(DbContext context, IEnumerable<string> names)
+    {
+        var nameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var name in names)
+        {
+            var trimmedName = name.Trim();
+            var normalized = trimmedName.ToLowerInvariant();
+            nameMap.TryAdd(normalized, trimmedName);
+        }
+        var normalizedNames = nameMap.Keys.ToList();
+
+        var existingArtists = await context.Set<Artist>()
+            .Where(a => normalizedNames.Contains(a.Name.ToLower()))
+            .ToListAsync();
+
+        var existingNames = new HashSet<string>(
+            existingArtists.Select(a => a.Name.ToLower()), 
+            StringComparer.OrdinalIgnoreCase
+        );
+
+        var newArtists = normalizedNames
+            .Where(n => !existingNames.Contains(n))
+            .Select(n => new Artist { Name = nameMap[n] }) 
+            .ToList();
+
+        if (newArtists.Count > 0)
+        {
+            await context.Set<Artist>().AddRangeAsync(newArtists);
+            await context.SaveChangesAsync();
+        }
+
+        return existingArtists.Concat(newArtists).ToList();
+    }
+    
+    public async Task<Album> UpdateAsync(Album entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var album = context.Set<Album>().FirstOrDefault(a => a.Id == entity.Id);
-        
-        if (album is null) 
-            return null;
-        
         var result = context.Set<Album>().Attach(entity);
         context.Entry(entity).State = EntityState.Modified;
         await context.SaveChangesAsync();
         return result.Entity;
     }
 
-    public async Task<IEnumerable<Album>> FindByTitleAsync(string titlePart)
+    public async Task<Album?> FindByTitleAsync(string title)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<Album>()
+            .Include(a => a.Artists)
+            .Include(a => a.Songs)
             .AsNoTracking()
-            .Where(a => a.Title.Contains(titlePart))
+            .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
+    }
+    
+    public async Task<IEnumerable<Album>> FindByTitlePartAsync(string titlePart)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Set<Album>()
+            .Include(a => a.Artists)
+            .Include(a => a.Songs)
+            .AsNoTracking()
+            .Where(a => EF.Functions.ILike(a.Title, $"%{titlePart}%"))
             .ToListAsync();
     }
 
@@ -87,8 +176,8 @@ public class AlbumsRepository : IAlbumsRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var album = await context.Set<Album>()
-            .AsNoTracking()
             .Include(a => a.Songs)
+            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == albumId);
 
         if (album is null)

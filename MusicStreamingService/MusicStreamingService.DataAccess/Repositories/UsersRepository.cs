@@ -60,14 +60,9 @@ public class UsersRepository : IUsersRepository
         return result.Entity;
     }
 
-    public async Task<User?> UpdateAsync(User entity)
+    public async Task<User> UpdateAsync(User entity)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var user = context.Set<User>().FirstOrDefault(a => a.Id == entity.Id);
-        
-        if (user is null) 
-            return null;
-        
         var result = context.Set<User>().Attach(entity);
         context.Entry(entity).State = EntityState.Modified;
         await context.SaveChangesAsync();
@@ -94,7 +89,7 @@ public class UsersRepository : IUsersRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Album>> FindAllAlbumsByTitleAsync(Guid userId, string titleParts)
+    public async Task<IEnumerable<Album>> FindAllAlbumsByTitleAsync(Guid userId, string titlePart)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<UserAlbum>()
@@ -102,7 +97,7 @@ public class UsersRepository : IUsersRepository
             .Include(ua => ua.Album)
             .OrderByDescending(ua => ua.AddedTime)
             .Select(ua => ua.Album)
-            .Where(a => a.Title.Contains(titleParts))
+            .Where(a => EF.Functions.ILike(a.Title, $"{titlePart}%"))
             .ToListAsync(); 
     }
 
@@ -125,7 +120,7 @@ public class UsersRepository : IUsersRepository
             .Include(us => us.Song)
             .OrderByDescending(us => us.AddedTime)
             .Select(us => us.Song)
-            .Where(s => s.Title.Contains(titlePart))
+            .Where(s => EF.Functions.ILike(s.Title, $"{titlePart}%"))
             .ToListAsync();
     }
 

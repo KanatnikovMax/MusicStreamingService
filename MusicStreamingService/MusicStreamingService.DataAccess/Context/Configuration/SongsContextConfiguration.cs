@@ -8,6 +8,8 @@ public static class SongsContextConfiguration
     public static void ConfigureSongs(this ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Song>().ToTable("songs");
+        modelBuilder.Entity<Song>().Property(s => s.Id)
+            .HasDefaultValueSql("gen_random_uuid()");
         modelBuilder.Entity<Song>().Property(x => x.Title).IsRequired();
         modelBuilder.Entity<Song>().Property(x => x.CassandraId).IsRequired();
         modelBuilder.Entity<Song>().Property(x => x.Duration).IsRequired();

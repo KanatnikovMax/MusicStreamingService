@@ -8,6 +8,8 @@ public static class ArtistsContextConfigurator
     public static void ConfigureArtists(this ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Artist>().ToTable("artists");
+        modelBuilder.Entity<Artist>().Property(a => a.Id)
+            .HasDefaultValueSql("gen_random_uuid()");
         modelBuilder.Entity<Artist>().Property(x => x.Name).IsRequired();
         modelBuilder.Entity<Artist>().Property(x => x.Name).HasMaxLength(50);
         modelBuilder.Entity<Artist>().HasIndex(x => x.Name).IsUnique();

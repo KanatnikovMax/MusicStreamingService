@@ -9,6 +9,6 @@ public class AlbumsServiceProfile : Profile
     public AlbumsServiceProfile()
     {
         CreateMap<CreateAlbumRequest, CreateAlbumModel>();
-        CreateMap<UpdateAlbumRequest, CreateAlbumModel>();
+        CreateMap<UpdateAlbumRequest, UpdateAlbumModel>();
     }
 }
