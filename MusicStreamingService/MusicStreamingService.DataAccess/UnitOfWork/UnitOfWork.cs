@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using MusicStreamingService.DataAccess.Context;
+using MusicStreamingService.DataAccess.Repositories;
 using MusicStreamingService.DataAccess.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
 
@@ -15,16 +16,15 @@ public class UnitOfWork : IUnitOfWork
     public ISongsRepository Songs { get; }
     public IUsersRepository Users { get; }
 
-    public UnitOfWork(MusicServiceDbContext context, 
-        IArtistsRepository artists, IAlbumsRepository albums, ISongsRepository songs, IUsersRepository users)
+    public UnitOfWork(MusicServiceDbContext context)
     {
         _context = context;
-        Artists = artists;
-        Albums = albums;
-        Songs = songs;
-        Users = users;
+        Artists = new ArtistsRepository(context);
+        Albums = new AlbumsRepository(context);
+        Songs = new SongsRepository(context);
+        Users = new UsersRepository(context);
     }
-
+    
     public IDbContextTransaction BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
     {
         return _context.Database.BeginTransaction(isolationLevel);

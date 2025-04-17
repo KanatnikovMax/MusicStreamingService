@@ -37,10 +37,9 @@ public class UsersRepository : IUsersRepository
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
-    public async Task DeleteAsync(User entity)
+    public void Delete(User entity)
     {
         _context.Set<User>().Remove(entity);
-        await _context.SaveChangesAsync();
     }
 
     public async Task<User?> SaveAsync(User entity)
@@ -51,15 +50,13 @@ public class UsersRepository : IUsersRepository
             return null;
         
         var result = await _context.Set<User>().AddAsync(entity);
-        await _context.SaveChangesAsync();
         return result.Entity;
     }
 
-    public async Task<User> UpdateAsync(User entity)
+    public User Update(User entity)
     {
         var result = _context.Set<User>().Attach(entity);
         _context.Entry(entity).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
         return result.Entity;
     }
 

@@ -37,10 +37,9 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
-    public async Task DeleteAsync(Song entity)
+    public void Delete(Song entity)
     {
         _context.Set<Song>().Remove(entity);
-        await _context.SaveChangesAsync();
     }
 
     public async Task<Song?> SaveAsync(Song entity)
@@ -51,15 +50,13 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
             return null;
         
         var result = await _context.Set<Song>().AddAsync(entity);
-        await _context.SaveChangesAsync();
         return result.Entity;
     }
 
-    public async Task<Song?> UpdateAsync(Song entity)
+    public Song Update(Song entity)
     {
         var result = _context.Set<Song>().Attach(entity);
         _context.Entry(entity).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
         return result.Entity;
     }
     

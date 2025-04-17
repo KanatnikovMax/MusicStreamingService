@@ -41,14 +41,13 @@ public class AlbumsRepository : IAlbumsRepository
         return await _context.Set<Album>()
             .Include(a => a.Artists)
             .Include(a => a.Songs)
-            .AsNoTracking()
+            //.AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
-    public async Task DeleteAsync(Album entity)
+    public void Delete(Album entity)
     {
         _context.Set<Album>().Remove(entity);
-        await _context.SaveChangesAsync();
     }
 
     public async Task<Album?> SaveAsync(Album entity, IEnumerable<string> artistNames)
@@ -64,20 +63,22 @@ public class AlbumsRepository : IAlbumsRepository
             }
             var album = await _context.Set<Album>()
                 .Include(a => a.Artists)
-                .FirstOrDefaultAsync(a => a.Title.ToLower() == entity.Title.ToLower());
+                .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, entity.Title));
+            var names = artistNames.ToList();
             if (album is not null)
             {
-                var artistIds = album.Artists
-                    .Select(a => a.Id)
-                    .OrderBy(id => id);
+                var artistsNames = album.Artists
+                    .Select(a => a.Name.ToLower())
+                    .OrderBy(name => name)
+                    .ToList();
 
-                var existingArtistIds = album.Artists
-                    .Select(a => a.Id)
-                    .OrderBy(id => id);
+                var existingArtistsNames = names
+                    .Select(n => n.ToLower())
+                    .OrderBy(name => name)
+                    .ToList();
                 
-                var isDuplicate = artistIds
-                    .OrderBy(id => id)
-                    .SequenceEqual(existingArtistIds);
+                var isDuplicate = artistsNames
+                    .SequenceEqual(existingArtistsNames);
             
                 if (isDuplicate)
                 {
@@ -86,12 +87,11 @@ public class AlbumsRepository : IAlbumsRepository
                 }
             }
             
-            var artists = await ProcessArtists(_context, artistNames);
+            var artists = await ProcessArtists(_context, names);
         
             entity.Artists = artists;
             _context.Albums.Add(entity);
         
-            await _context.SaveChangesAsync();
             await transaction.CommitAsync();
         
             return entity;
@@ -137,11 +137,10 @@ public class AlbumsRepository : IAlbumsRepository
         return existingArtists.Concat(newArtists).ToList();
     }
     
-    public async Task<Album> UpdateAsync(Album entity)
+    public Album Update(Album entity)
     {
         var result = _context.Set<Album>().Attach(entity);
         _context.Entry(entity).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
         return result.Entity;
     }
 

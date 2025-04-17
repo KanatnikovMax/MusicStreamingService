@@ -60,42 +60,28 @@ public class ArtistsRepository : IArtistsRepository
             .ToListAsync();
     }
 
-    public async Task DeleteAsync(Artist entity)
+    public void Delete(Artist entity)
     {
         _context.Set<Artist>().Remove(entity);
-        await _context.SaveChangesAsync();
     }
 
     public async Task<Artist?> SaveAsync(Artist entity)
     {
-        var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
-        try
+        var artist = _context.Set<Artist>().FirstOrDefault(a => a.Id == entity.Id 
+                                                               || a.Name.ToLower() == entity.Name.ToLower());
+        if (artist is not null)
         {
-            var artist = _context.Set<Artist>().FirstOrDefault(a => a.Id == entity.Id 
-                                                                   || a.Name.ToLower() == entity.Name.ToLower());
-            if (artist is not null)
-            {
-                await transaction.RollbackAsync();
-                return null;
-            }
-            
-            var result = await _context.Set<Artist>().AddAsync(entity);
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-            return result.Entity;
+            return null;
         }
-        catch (Exception)
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+        
+        var result = await _context.Set<Artist>().AddAsync(entity);
+        return result.Entity;
     }
 
-    public async Task<Artist> UpdateAsync(Artist entity)
+    public Artist Update(Artist entity)
     {
         var result = _context.Set<Artist>().Attach(entity);
         _context.Entry(entity).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
         return result.Entity;
     }
 

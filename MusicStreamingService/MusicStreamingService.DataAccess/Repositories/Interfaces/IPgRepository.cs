@@ -10,7 +10,7 @@ public interface IPgRepository<T>
     
     Task<T?> FindByIdAsync(Guid id);
     
-    Task DeleteAsync(T entity);
+    void Delete(T entity);
     
-    Task<T> UpdateAsync(T entity);
+    T Update(T entity);
 }
