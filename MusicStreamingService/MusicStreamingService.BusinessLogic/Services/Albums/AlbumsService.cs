@@ -61,7 +61,7 @@ public class AlbumsService : IAlbumsService
 
     public async Task<AlbumModel> UpdateAlbumAsync(UpdateAlbumModel model, Guid id)
     {
-        await using var transaction = _unitOfWork.BeginTransaction(IsolationLevel.ReadCommitted);
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.ReadCommitted);
         try
         {
             var album = await _unitOfWork.Albums.FindByIdAsync(id)
@@ -96,15 +96,13 @@ public class AlbumsService : IAlbumsService
             }
             _unitOfWork.Albums.Update(album);
             await _unitOfWork.CommitAsync();
-            await transaction.CommitAsync();
 
             return _mapper.Map<AlbumModel>(album);
         }
-        catch
+        catch (Exception)
         {
-            await transaction.RollbackAsync();
+            await _unitOfWork.RollbackAsync();
             throw;
         }
-        
     }
 }

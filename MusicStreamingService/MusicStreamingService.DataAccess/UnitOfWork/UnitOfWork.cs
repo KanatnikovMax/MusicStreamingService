@@ -11,6 +11,7 @@ namespace MusicStreamingService.DataAccess.UnitOfWork;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly MusicServiceDbContext _context;
+    private IDbContextTransaction? _transaction;
     public IArtistsRepository Artists { get; }
     public IAlbumsRepository Albums { get; }
     public ISongsRepository Songs { get; }
@@ -19,30 +20,47 @@ public class UnitOfWork : IUnitOfWork
     public UnitOfWork(MusicServiceDbContext context)
     {
         _context = context;
+        _transaction = null;
         Artists = new ArtistsRepository(context);
         Albums = new AlbumsRepository(context);
         Songs = new SongsRepository(context);
         Users = new UsersRepository(context);
     }
     
-    public IDbContextTransaction BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
+    public async Task<IDbContextTransaction> BeginTransactionAsync(
+        IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
     {
-        return _context.Database.BeginTransaction(isolationLevel);
+        _transaction = await _context.Database.BeginTransactionAsync(isolationLevel);
+        return _transaction;
     }
 
     public async Task CommitAsync()
     {
        await _context.SaveChangesAsync();
+       if (_transaction is not null)
+           await _transaction.CommitAsync();
     }
 
-    public void Rollback()
+    public async Task RollbackAsync()
+    {
+        if (_transaction is not null)
+        {
+            await _transaction.RollbackAsync();
+            await _transaction.DisposeAsync();
+        }
+        
+        _transaction = null;
+        DetachAllEntities();
+    }
+
+    private void DetachAllEntities()
     {
         foreach (var entry in _context.ChangeTracker.Entries())
         {
             entry.State = EntityState.Detached;
         }
     }
-    
+
     private bool _disposed = false;
  
     protected virtual void Dispose(bool disposing)
@@ -51,6 +69,7 @@ public class UnitOfWork : IUnitOfWork
         {
             if (disposing)
             {
+                _transaction?.Dispose();
                 _context.Dispose();
             }
             _disposed = true;

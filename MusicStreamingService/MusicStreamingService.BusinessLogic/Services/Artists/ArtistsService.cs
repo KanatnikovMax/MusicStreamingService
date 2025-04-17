@@ -47,24 +47,22 @@ public class ArtistsService : IArtistsService
     public async Task<ArtistModel> CreateArtistAsync(CreateArtistModel model)
     {
         var artist = _mapper.Map<Artist>(model);
-        await using var transaction = _unitOfWork.BeginTransaction(IsolationLevel.Serializable);
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable);
         try
         {
             artist = await _unitOfWork.Artists.SaveAsync(artist);
             if (artist is null)
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw new EntityAlreadyExistsException("Artist");
             }
             
             await _unitOfWork.CommitAsync();
-            await transaction.CommitAsync();
-            
             return _mapper.Map<ArtistModel>(artist);
         }
         catch (Exception)
         {
-            await transaction.RollbackAsync();
+            await _unitOfWork.RollbackAsync();
             throw;
         }
     }
