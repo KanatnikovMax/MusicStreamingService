@@ -4,5 +4,5 @@ public record CreateSongModel(
     string Title, 
     int Duration,
     int TrackNumber, 
-    string AlbumTitle,
+    Guid AlbumId,
     List<string> Artists);

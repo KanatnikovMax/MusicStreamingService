@@ -50,93 +50,18 @@ public class AlbumsRepository : IAlbumsRepository
         _context.Set<Album>().Remove(entity);
     }
 
-    public async Task<Album?> SaveAsync(Album entity, IEnumerable<string> artistNames)
+    public async Task<Album?> SaveAsync(Album entity)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
-        try
+        if (entity.Id != Guid.Empty && await _context.Set<Album>()
+                .AnyAsync(a => a.Id == entity.Id))
         {
-            if (entity.Id != Guid.Empty && await _context.Set<Album>()
-                    .AnyAsync(a => a.Id == entity.Id))
-            {
-                await transaction.RollbackAsync();
-                return null;
-            }
-            var album = await _context.Set<Album>()
-                .Include(a => a.Artists)
-                .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, entity.Title));
-            var names = artistNames.ToList();
-            if (album is not null)
-            {
-                var artistsNames = album.Artists
-                    .Select(a => a.Name.ToLower())
-                    .OrderBy(name => name)
-                    .ToList();
+            return null;
+        }
 
-                var existingArtistsNames = names
-                    .Select(n => n.ToLower())
-                    .OrderBy(name => name)
-                    .ToList();
-                
-                var isDuplicate = artistsNames
-                    .SequenceEqual(existingArtistsNames);
-            
-                if (isDuplicate)
-                {
-                    await transaction.RollbackAsync();
-                    return null;
-                }
-            }
-            
-            var artists = await ProcessArtists(_context, names);
-        
-            entity.Artists = artists;
-            _context.Albums.Add(entity);
-        
-            await transaction.CommitAsync();
-        
-            return entity;
-        }
-        catch (Exception)
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+        var result = await _context.Albums.AddAsync(entity);
+        return result.Entity;
     }
-
-    private static async Task<List<Artist>> ProcessArtists(DbContext context, IEnumerable<string> names)
-    {
-        var nameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var name in names)
-        {
-            var trimmedName = name.Trim();
-            var normalized = trimmedName.ToLowerInvariant();
-            nameMap.TryAdd(normalized, trimmedName);
-        }
-        var normalizedNames = nameMap.Keys.ToList();
-
-        var existingArtists = await context.Set<Artist>()
-            .Where(a => normalizedNames.Contains(a.Name.ToLower()))
-            .ToListAsync();
-
-        var existingNames = new HashSet<string>(
-            existingArtists.Select(a => a.Name.ToLower()), 
-            StringComparer.OrdinalIgnoreCase
-        );
-
-        var newArtists = normalizedNames
-            .Where(n => !existingNames.Contains(n))
-            .Select(n => new Artist { Name = nameMap[n] }) 
-            .ToList();
-
-        if (newArtists.Count > 0)
-        {
-            await context.Set<Artist>().AddRangeAsync(newArtists);
-            await context.SaveChangesAsync();
-        }
-
-        return existingArtists.Concat(newArtists).ToList();
-    }
-    
+        
     public Album Update(Album entity)
     {
         var result = _context.Set<Album>().Attach(entity);
@@ -148,7 +73,7 @@ public class AlbumsRepository : IAlbumsRepository
     {
         return await _context.Set<Album>()
             .Include(a => a.Artists)
-            .Include(a => a.Songs)
+            //.Include(a => a.Songs)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
     }

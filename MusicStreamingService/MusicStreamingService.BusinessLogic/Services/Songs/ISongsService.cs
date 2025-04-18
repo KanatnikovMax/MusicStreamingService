@@ -5,7 +5,7 @@ namespace MusicStreamingService.BusinessLogic.Services.Songs;
 public interface ISongsService
 {
     Task<IEnumerable<SongModel>> GetAllSongsAsync();
-    Task<SongModel> GetSongsByIdAsync(Guid id);
+    Task<SongModel> GetSongByIdAsync(Guid id);
     Task<IEnumerable<SongModel>> GetSongByNameAsync(string titlePart);
     Task<SongModel> CreateSongAsync(CreateSongModel model);
     Task<SongModel> DeleteSongAsync(Guid id);

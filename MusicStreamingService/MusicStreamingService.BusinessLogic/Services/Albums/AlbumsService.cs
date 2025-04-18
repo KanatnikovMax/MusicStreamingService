@@ -99,7 +99,7 @@ public class AlbumsService : IAlbumsService
 
     public async Task<AlbumModel> UpdateAlbumAsync(UpdateAlbumModel model, Guid id)
     {
-        await _unitOfWork.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        await _unitOfWork.BeginTransactionAsync();
         try
         {
             var album = await _unitOfWork.Albums.FindByIdAsync(id)

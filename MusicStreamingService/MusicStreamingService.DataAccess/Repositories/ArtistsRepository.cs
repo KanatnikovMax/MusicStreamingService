@@ -123,4 +123,37 @@ public class ArtistsRepository : IArtistsRepository
         return artist.Songs?.Where(s => s.Title.IndexOf(titlePart, StringComparison.OrdinalIgnoreCase) >= 0)
                ?? Enumerable.Empty<Song>();
     }
+    
+    public async Task<List<Artist>> GetOrCreateArtistsAsync(IEnumerable<string> names)
+    {
+        var nameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var name in names)
+        {
+            var trimmedName = name.Trim();
+            var normalized = trimmedName.ToLowerInvariant();
+            nameMap.TryAdd(normalized, trimmedName);
+        }
+        var normalizedNames = nameMap.Keys.ToList();
+
+        var existingArtists = await _context.Set<Artist>()
+            .Where(a => normalizedNames.Contains(a.Name.ToLower()))
+            .ToListAsync();
+
+        var existingNames = new HashSet<string>(
+            existingArtists.Select(a => a.Name.ToLower()), 
+            StringComparer.OrdinalIgnoreCase
+        );
+
+        var newArtists = normalizedNames
+            .Where(n => !existingNames.Contains(n))
+            .Select(n => new Artist { Name = nameMap[n] }) 
+            .ToList();
+
+        if (newArtists.Count > 0)
+        {
+            await _context.Set<Artist>().AddRangeAsync(newArtists);
+        }
+
+        return existingArtists.Concat(newArtists).ToList();
+    }
 }

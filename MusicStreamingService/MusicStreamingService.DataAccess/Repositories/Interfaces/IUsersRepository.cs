@@ -4,7 +4,6 @@ namespace MusicStreamingService.DataAccess.Repositories.Interfaces;
 
 public interface IUsersRepository : IPgRepository<User>
 {
-    Task<User?> SaveAsync(User entity);
     Task<IEnumerable<User>> FindByEmailAsync(string email);
     
     Task<IEnumerable<Album>> FindAllAlbumsAsync(Guid userId);
