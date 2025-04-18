@@ -41,12 +41,50 @@ public class AlbumsService : IAlbumsService
 
     public async Task<AlbumModel> CreateAlbumAsync(CreateAlbumModel model)
     {
-        var album = _mapper.Map<Album>(model);
-        album = await _unitOfWork.Albums.SaveAsync(album, model.Artists)
-            ?? throw new EntityAlreadyExistsException("Album");
-        await _unitOfWork.CommitAsync();
+        var entity = _mapper.Map<Album>(model);
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            var album = await _unitOfWork.Albums.FindByTitleAsync(entity.Title);
+            if (album is not null)
+            {
+                var artistsNames = album.Artists
+                    .Select(a => a.Name.ToLower())
+                    .OrderBy(name => name)
+                    .ToList();
+
+                var existingArtistsNames = model.Artists
+                    .Select(n => n.ToLower())
+                    .OrderBy(name => name)
+                    .ToList();
+
+                var isDuplicate = artistsNames
+                    .SequenceEqual(existingArtistsNames);
+
+                if (isDuplicate)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    throw new EntityAlreadyExistsException("Album");
+                }
+            }
         
-        return _mapper.Map<AlbumModel>(album);
+            var artists = await _unitOfWork.Artists.GetOrCreateArtistsAsync(model.Artists);
+            entity.Artists = artists;
+            entity = await _unitOfWork.Albums.SaveAsync(entity);
+            if (entity is null)
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new EntityAlreadyExistsException("Album");
+            }
+            await _unitOfWork.CommitAsync();
+        
+            return _mapper.Map<AlbumModel>(entity);
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<AlbumModel> DeleteAlbumAsync(Guid id)
