@@ -18,6 +18,7 @@ public static class SongsContextConfiguration
         modelBuilder.Entity<Song>().Property(x => x.Title).HasMaxLength(50);
 
         modelBuilder.Entity<Song>().HasOne(x => x.Album).WithMany(x => x.Songs)
-            .HasForeignKey(x => x.AlbumId);
+            .HasForeignKey(x => x.AlbumId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
