@@ -69,12 +69,35 @@ public class ArtistsService : IArtistsService
 
     public async Task<ArtistModel> DeleteArtistAsync(Guid id)
     {
-        var artist = await _unitOfWork.Artists.FindByIdAsync(id)
-            ?? throw new EntityNotFoundException("Artist", id);
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable);
+        try
+        {
+            var artist = await _unitOfWork.Artists.FindByIdAsync(id);
+            if (artist is null)
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new EntityNotFoundException("Artist", id);
+            }
+
+            var albums = await _unitOfWork.Artists.FindAllAlbumsAsync(id);
+            var albumsToDelete = albums.Where(a => a.Artists.Count == 1).ToList();
+
+            foreach (var album in albumsToDelete)
+            {
+                _unitOfWork.Albums.Delete(album);
+            }
+
+            _unitOfWork.Artists.Delete(artist);
         
-        _unitOfWork.Artists.Delete(artist);
-        await _unitOfWork.CommitAsync();
-        return _mapper.Map<ArtistModel>(artist);
+            await _unitOfWork.CommitAsync();
+
+            return _mapper.Map<ArtistModel>(artist);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<ArtistModel> UpdateArtistAsync(UpdateArtistModel model, Guid id)
