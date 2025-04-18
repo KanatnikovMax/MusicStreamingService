@@ -1,91 +1,128 @@
-﻿using AutoMapper;
+﻿using System.Data;
+using AutoMapper;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.DataAccess.Repositories.Interfaces;
+using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
 
 namespace MusicStreamingService.BusinessLogic.Services.Songs;
 
 public class SongsService : ISongsService
 {
-    private readonly ISongsRepository _songsRepository;
-    private readonly IArtistsRepository _artistsRepository;
-    private readonly IAlbumsRepository _albumsRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public SongsService(ISongsRepository songsRepository, IMapper mapper)
+    public SongsService(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _songsRepository = songsRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<IEnumerable<SongModel>> GetAllSongsAsync()
     {
-        var songs = await _songsRepository.FindAllAsync();
+        var songs = await _unitOfWork.Songs.FindAllAsync();
         return _mapper.Map<IEnumerable<SongModel>>(songs);
     }
 
-    public async Task<SongModel> GetSongsByIdAsync(Guid id)
+    public async Task<SongModel> GetSongByIdAsync(Guid id)
     {
-        var song = await _songsRepository.FindByIdAsync(id)
+        var song = await _unitOfWork.Songs.FindByIdAsync(id)
             ?? throw new EntityNotFoundException("Song", id);
         return _mapper.Map<SongModel>(song);
     }
 
-    public async Task<IEnumerable<SongModel>> GetSongByNameAsync(string titlePart)
+    public async Task<IEnumerable<SongModel>> GetSongByTitleAsync(string titlePart)
     {
-        var songs = await _songsRepository.FindByTitlePartAsync(titlePart);
+        var songs = await _unitOfWork.Songs.FindByTitlePartAsync(titlePart);
         return _mapper.Map<IEnumerable<SongModel>>(songs);
     }
 
-    public async Task<SongModel> CreateSongAsync(CreateSongModel model) // TODO: проверку согласованности имён
+    public async Task<SongModel> CreateSongAsync(CreateSongModel model)
     {
         var song = _mapper.Map<Song>(model);
-        song = await _songsRepository.SaveAsync(song)
-               ?? throw new EntityAlreadyExistsException("song");
-        return _mapper.Map<SongModel>(song);
+        
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
+        try
+        {
+            var album = await _unitOfWork.Albums.FindByIdAsync(model.AlbumId);
+            if (album is null)
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new EntityNotFoundException("Album", model.AlbumId);
+            }
+        
+            if (!album.Artists.Any(a => model.Artists.Contains(a.Name, StringComparer.OrdinalIgnoreCase)))
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new WrongArtistNameConsistencyException();
+            }
+            song.Album = album;
+            song.Artists = await _unitOfWork.Artists.GetOrCreateArtistsAsync(model.Artists);
+
+            song = await _unitOfWork.Songs.SaveAsync(song);
+            
+            if (song is null)
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new EntityAlreadyExistsException("song");
+            }
+            
+            await _unitOfWork.CommitAsync();
+            return _mapper.Map<SongModel>(song);
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<SongModel> DeleteSongAsync(Guid id)
     {
-        var song = await _songsRepository.FindByIdAsync(id)
-            ?? throw new EntityNotFoundException("Song", id);
-        await _songsRepository.DeleteAsync(song);
-        return _mapper.Map<SongModel>(song);
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
+        try
+        {
+            var song = await _unitOfWork.Songs.FindByIdAsync(id);
+            if (song is null)
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new EntityNotFoundException("Song", id);
+            }
+            _unitOfWork.Songs.Delete(song);
+            await _unitOfWork.CommitAsync();
+            return _mapper.Map<SongModel>(song);
+        }
+        catch (Exception )
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<SongModel> UpdateSongAsync(UpdateSongModel model, Guid id)
     {
-        var song = await _songsRepository.FindByIdAsync(id)
-                   ?? throw new EntityNotFoundException("Song", id);
-        song.Title = model?.Title ?? song.Title;
-        song.Duration = model?.Duration ?? song.Duration;
-        song.TrackNumber = model?.TrackNumber ?? song.TrackNumber;
-        if (model.AlbumTitle is not null)
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
+        try
         {
-            song.Album = await _albumsRepository.FindByTitleAsync(model.Title)
-                ?? throw new EntityNotFoundException("Album");
-        }
-
-        if (model.Artists is not null)
-        {
-            var artists = new List<Artist>();
-            foreach (var name in model.Artists)
+            var song = await _unitOfWork.Songs.FindByIdAsync(id);
+            if (song is null)
             {
-                var artist = await _artistsRepository.FindByNameAsync(name)
-                    ?? throw new EntityNotFoundException("Artist");
-                artists.Add(artist);
-            }
-
-            if (!song.Album.Artists.Intersect(artists).Any())
-            {
-                throw new WrongArtistNameConsistencyException();
+                await _unitOfWork.RollbackAsync();
+                throw new EntityNotFoundException("Song", id);
             }
             
-            song.Artists = artists;
+            song.Title = model?.Title ?? song.Title;
+            song.TrackNumber = model?.TrackNumber ?? song.TrackNumber;
+            song = _unitOfWork.Songs.Update(song);
+            await _unitOfWork.CommitAsync();
+            
+            return _mapper.Map<SongModel>(song);
         }
-
-        song = await _songsRepository.UpdateAsync(song);
-        return _mapper.Map<SongModel>(song);
+        catch (Exception)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 }

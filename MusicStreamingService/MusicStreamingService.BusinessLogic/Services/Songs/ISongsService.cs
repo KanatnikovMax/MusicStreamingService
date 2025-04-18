@@ -6,7 +6,7 @@ public interface ISongsService
 {
     Task<IEnumerable<SongModel>> GetAllSongsAsync();
     Task<SongModel> GetSongByIdAsync(Guid id);
-    Task<IEnumerable<SongModel>> GetSongByNameAsync(string titlePart);
+    Task<IEnumerable<SongModel>> GetSongByTitleAsync(string titlePart);
     Task<SongModel> CreateSongAsync(CreateSongModel model);
     Task<SongModel> DeleteSongAsync(Guid id);
 

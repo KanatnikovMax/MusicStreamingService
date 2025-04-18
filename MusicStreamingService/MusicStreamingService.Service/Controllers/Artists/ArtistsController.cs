@@ -5,6 +5,7 @@ using MusicStreamingService.BusinessLogic.Services.Artists.Models;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.Service.Controllers.Albums.Models;
 using MusicStreamingService.Service.Controllers.Artists.Models;
+using MusicStreamingService.Service.Controllers.Songs.Models;
 
 namespace MusicStreamingService.Service.Controllers.Artists;
 
@@ -43,7 +44,7 @@ public class ArtistsController : ControllerBase
 
     [HttpGet]
     [Route("{id:guid}")]
-    public async Task<ActionResult<ArtistsListResponse>> GetArtist(Guid id)
+    public async Task<ActionResult<ArtistsListResponse>> GetArtistById(Guid id)
     {
         var artist = await _artistsService.GetArtistByIdAsync(id);
         return Ok(new ArtistsListResponse([artist]));
@@ -51,7 +52,7 @@ public class ArtistsController : ControllerBase
 
     [HttpGet]
     [Route("by_name")]
-    public async Task<ActionResult<ArtistsListResponse>> GetArtistByName([FromQuery] string namePart)
+    public async Task<ActionResult<ArtistsListResponse>> GetArtistsByName([FromQuery] string namePart)
     {
         var artists = await _artistsService.GetArtistByNameAsync(namePart);
         return Ok(new ArtistsListResponse(artists.ToList()));
@@ -63,6 +64,22 @@ public class ArtistsController : ControllerBase
     {
         var albums = await _artistsService.GetAllAlbumsAsync(id);
         return Ok(new AlbumsListResponse(albums.ToList()));
+    }
+    
+    [HttpGet]
+    [Route("{id:guid}/songs")]
+    public async Task<ActionResult<SongsListResponse>> GetAllArtistSongs(Guid id)
+    {
+        var songs = await _artistsService.GetAllSongsAsync(id);
+        return Ok(new SongsListResponse(songs.ToList()));
+    }
+    
+    [HttpGet]
+    [Route("{id:guid}/songs/by_title")]
+    public async Task<ActionResult<SongsListResponse>> GetArtistSongsByTitle(Guid id, [FromQuery] string titlePart)
+    {
+        var songs = await _artistsService.GetSongsByTitleAsync(id, titlePart);
+        return Ok(new SongsListResponse(songs.ToList()));
     }
     
     [HttpDelete]

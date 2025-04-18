@@ -70,7 +70,7 @@ public class AlbumsRepository : IAlbumsRepository
     {
         return await _context.Set<Album>()
             .Include(a => a.Artists)
-            //.Include(a => a.Songs)
+            .Include(a => a.Songs)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
     }
@@ -79,7 +79,8 @@ public class AlbumsRepository : IAlbumsRepository
     {
         return await _context.Set<Album>()
             .Include(a => a.Artists)
-            .Include(a => a.Songs)
+            .Include(a => a.Songs)!
+            .ThenInclude(s => s.Artists)
             .AsNoTracking()
             .Where(a => EF.Functions.ILike(a.Title, $"%{titlePart}%"))
             .ToListAsync();
@@ -88,7 +89,8 @@ public class AlbumsRepository : IAlbumsRepository
     public async Task<IEnumerable<Song>> FindAllSongsAsync(Guid albumId)
     {
         var album = await _context.Set<Album>()
-            .Include(a => a.Songs)
+            .Include(a => a.Songs)!
+            .ThenInclude(s => s.Artists)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == albumId);
 

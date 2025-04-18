@@ -34,18 +34,20 @@ public class ArtistsRepository : IArtistsRepository
     public async Task<Artist?> FindByIdAsync(Guid id)
     {
         return await _context.Set<Artist>()
-            .Include(a => a.Albums)!
-            .ThenInclude(a => a.Artists)
-            .Include(a => a.Songs)
+            .Include(a => a.Albums)! 
+            .ThenInclude(a => a.Artists) 
+            .Include(a => a.Songs)!
+            .ThenInclude(s => s.Artists)
             .FirstOrDefaultAsync(a => a.Id == id);
     }
     
     public async Task<Artist?> FindByNameAsync(string name)
     {
         return await _context.Set<Artist>()
-            .Include(a => a.Albums)!
-            .ThenInclude(a => a.Artists)
-            .Include(a => a.Songs)
+            .Include(a => a.Albums)! 
+            .ThenInclude(a => a.Artists) 
+            .Include(a => a.Songs)!
+            .ThenInclude(s => s.Artists)
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Name, name));
    }
     
@@ -53,8 +55,9 @@ public class ArtistsRepository : IArtistsRepository
     {
         return await _context.Set<Artist>()
             .Include(a => a.Albums)! 
-            .ThenInclude(album => album.Artists) 
-            .Include(a => a.Songs)
+            .ThenInclude(a => a.Artists) 
+            .Include(a => a.Songs)!
+            .ThenInclude(s => s.Artists)
             .Where(a => EF.Functions.ILike(a.Name, $"%{namePart}%")) 
             .ToListAsync();
     }
@@ -101,8 +104,8 @@ public class ArtistsRepository : IArtistsRepository
     public async Task<IEnumerable<Song>> FindAllSongsAsync(Guid artistId)
     {
         var artist = await _context.Set<Artist>()
-            .AsNoTracking()
-            .Include(a => a.Songs)
+            .Include(a => a.Songs)!
+            .ThenInclude(s => s.Artists)
             .FirstOrDefaultAsync(a => a.Id == artistId);
         
         return artist?.Songs
@@ -112,8 +115,8 @@ public class ArtistsRepository : IArtistsRepository
     public async Task<IEnumerable<Song>> FindAllSongsByTitleAsync(Guid artistId, string titlePart)
     {
         var artist = await _context.Set<Artist>()
-            .AsNoTracking()
-            .Include(a => a.Songs)
+            .Include(a => a.Songs)!
+            .ThenInclude(s => s.Artists)
             .FirstOrDefaultAsync(a => a.Id == artistId);
         
         if (artist is null)

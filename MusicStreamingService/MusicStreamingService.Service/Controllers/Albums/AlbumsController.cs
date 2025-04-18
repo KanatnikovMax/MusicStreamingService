@@ -4,6 +4,7 @@ using MusicStreamingService.BusinessLogic.Services.Albums;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.Service.Controllers.Albums.Models;
+using MusicStreamingService.Service.Controllers.Songs.Models;
 
 namespace MusicStreamingService.Service.Controllers.Albums;
 
@@ -42,7 +43,7 @@ public class AlbumsController : ControllerBase
 
     [HttpGet]
     [Route("{id:guid}")]
-    public async Task<ActionResult<Album>> GetAlbum(Guid id)
+    public async Task<ActionResult<AlbumsListResponse>> GetAlbumById(Guid id)
     {
         var album = await _albumsService.GetAlbumByIdAsync(id);
         return Ok(new AlbumsListResponse([album]));
@@ -50,15 +51,23 @@ public class AlbumsController : ControllerBase
     
     [HttpGet]
     [Route("by_name")]
-    public async Task<ActionResult<AlbumsListResponse>> GetArtistByName([FromQuery] string namePart)
+    public async Task<ActionResult<AlbumsListResponse>> GetAlbumsByName([FromQuery] string namePart)
     {
         var artists = await _albumsService.GetAlbumByNameAsync(namePart);
         return Ok(new AlbumsListResponse(artists.ToList()));
     }
 
+    [HttpGet]
+    [Route("{id:guid}/songs")]
+    public async Task<ActionResult<SongsListResponse>> GetAlbumsBySongs(Guid id)
+    {
+        var songs = await _albumsService.GetAllAlbumSongsAsync(id);
+        return Ok(new SongsListResponse(songs.ToList()));
+    }
+
     [HttpDelete]
     [Route("delete/{id:guid}")]
-    public async Task<ActionResult<Album>> DeleteAlbum(Guid id)
+    public async Task<ActionResult<AlbumsListResponse>> DeleteAlbum(Guid id)
     {
         var album = await _albumsService.DeleteAlbumAsync(id);
         return Ok(new AlbumsListResponse([album]));
@@ -66,7 +75,7 @@ public class AlbumsController : ControllerBase
 
     [HttpPut]
     [Route("update/{id:guid}")]
-    public async Task<ActionResult<Album>> UpdateAlbum(Guid id, [FromBody] UpdateAlbumRequest request)
+    public async Task<ActionResult<AlbumsListResponse>> UpdateAlbum(Guid id, [FromBody] UpdateAlbumRequest request)
     {
         var updateAlbumModel = _mapper.Map<UpdateAlbumModel>(request);
         

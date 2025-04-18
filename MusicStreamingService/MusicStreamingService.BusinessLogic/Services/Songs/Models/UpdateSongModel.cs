@@ -2,7 +2,4 @@
 
 public record UpdateSongModel(
     string? Title, 
-    int? Duration,
-    int? TrackNumber, 
-    string? AlbumTitle,
-    List<string>? Artists);
+    int? TrackNumber);

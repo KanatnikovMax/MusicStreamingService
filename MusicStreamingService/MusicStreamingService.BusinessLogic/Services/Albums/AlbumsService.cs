@@ -1,6 +1,8 @@
-﻿using AutoMapper;
+﻿using System.Data;
+using AutoMapper;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
+using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
 
@@ -36,10 +38,17 @@ public class AlbumsService : IAlbumsService
         return _mapper.Map<IEnumerable<AlbumModel>>(albums);
     }
 
+    public async Task<IEnumerable<SongModel>> GetAllAlbumSongsAsync(Guid albumId)
+    {
+        var songs = await _unitOfWork.Albums.FindAllSongsAsync(albumId);
+        
+        return _mapper.Map<IEnumerable<SongModel>>(songs);
+    }
+    
     public async Task<AlbumModel> CreateAlbumAsync(CreateAlbumModel model)
     {
         var entity = _mapper.Map<Album>(model);
-        await _unitOfWork.BeginTransactionAsync();
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
             var album = await _unitOfWork.Albums.FindByTitleAsync(entity.Title);
@@ -86,17 +95,30 @@ public class AlbumsService : IAlbumsService
 
     public async Task<AlbumModel> DeleteAlbumAsync(Guid id)
     {
-        var album = await _unitOfWork.Albums.FindByIdAsync(id)
-                     ?? throw new EntityNotFoundException("Album", id);
-        
-        _unitOfWork.Albums.Delete(album);
-        await _unitOfWork.CommitAsync();
-        return _mapper.Map<AlbumModel>(album);
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
+        try
+        {
+            var album = await _unitOfWork.Albums.FindByIdAsync(id);
+            if (album is null)
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new EntityNotFoundException("Album", id);
+            }
+
+            _unitOfWork.Albums.Delete(album);
+            await _unitOfWork.CommitAsync();
+            return _mapper.Map<AlbumModel>(album);
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<AlbumModel> UpdateAlbumAsync(UpdateAlbumModel model, Guid id)
     {
-        await _unitOfWork.BeginTransactionAsync();
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
             var album = await _unitOfWork.Albums.FindByIdAsync(id)
@@ -112,17 +134,8 @@ public class AlbumsService : IAlbumsService
             }
             if (model.Artists != null)
             {
-                var artists = new List<Artist>();
-                foreach (var name in model.Artists)
-                {
-                    var artist = await _unitOfWork.Artists.FindByNameAsync(name);
-                    if (artist == null)
-                    {
-                        artist = new Artist { Name = name };
-                        await _unitOfWork.Artists.SaveAsync(artist);
-                    }
-                    artists.Add(artist);
-                }
+                var artists = await _unitOfWork.Artists.GetOrCreateArtistsAsync(model.Artists);
+                
                 album.Artists.Clear();
                 foreach (var artist in artists)
                 {

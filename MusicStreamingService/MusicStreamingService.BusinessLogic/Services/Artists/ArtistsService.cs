@@ -3,6 +3,7 @@ using AutoMapper;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Artists.Models;
+using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
 
@@ -42,6 +43,18 @@ public class ArtistsService : IArtistsService
     {
         var albums = await _unitOfWork.Artists.FindAllAlbumsAsync(artistId);
         return _mapper.Map<IEnumerable<AlbumModel>>(albums);
+    }
+    
+    public async Task<IEnumerable<SongModel>> GetAllSongsAsync(Guid artistId)
+    {
+        var songs = await _unitOfWork.Artists.FindAllSongsAsync(artistId);
+        return _mapper.Map<IEnumerable<SongModel>>(songs);
+    }
+    
+    public async Task<IEnumerable<SongModel>> GetSongsByTitleAsync(Guid artistId, string titlePart)
+    {
+        var songs = await _unitOfWork.Artists.FindAllSongsByTitleAsync(artistId, titlePart);
+        return _mapper.Map<IEnumerable<SongModel>>(songs);
     }
 
     public async Task<ArtistModel> CreateArtistAsync(CreateArtistModel model)
@@ -102,11 +115,25 @@ public class ArtistsService : IArtistsService
 
     public async Task<ArtistModel> UpdateArtistAsync(UpdateArtistModel model, Guid id)
     {
-        var artist = await _unitOfWork.Artists.FindByIdAsync(id)
-                     ?? throw new EntityNotFoundException("Artist", id);
-        artist.Name = model.Name ?? artist.Name;
-        artist = _unitOfWork.Artists.Update(artist);
-        await _unitOfWork.CommitAsync();
-        return _mapper.Map<ArtistModel>(artist);
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
+        try
+        {
+            var artist = await _unitOfWork.Artists.FindByIdAsync(id);
+            if (artist is null)
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new EntityNotFoundException("Artist", id);
+            }
+            artist.Name = model.Name ?? artist.Name;
+            artist = _unitOfWork.Artists.Update(artist);
+            await _unitOfWork.CommitAsync();
+            return _mapper.Map<ArtistModel>(artist);
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+        
     }
 }

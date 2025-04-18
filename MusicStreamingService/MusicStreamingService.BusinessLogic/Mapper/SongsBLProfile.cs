@@ -11,10 +11,6 @@ public class SongsBLProfile : Profile
         CreateMap<Song, SongSimpleModel>();
         CreateMap<Song, SongModel>();
         CreateMap<CreateSongModel, Song>()
-            .ForMember(dest => dest.Artists, opt => opt.Ignore())
-            .ForMember(dest => dest.Album, opt => opt.Ignore());
-        CreateMap<UpdateSongModel, Song>()
-            .ForMember(dest => dest.Artists, opt => opt.Ignore())
-            .ForMember(dest => dest.Album, opt => opt.Ignore());
+            .ForMember(dest => dest.Artists, opt => opt.Ignore());
     }
 }

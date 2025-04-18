@@ -15,7 +15,5 @@ public class AlbumsBLProfile : Profile
                 opt => opt.MapFrom(src => (src.Songs ?? Enumerable.Empty<Song>()).OrderBy(s => s.TrackNumber)));
         CreateMap<CreateAlbumModel, Album>()
             .ForMember(dest => dest.Artists, opt => opt.Ignore());
-        CreateMap<UpdateAlbumModel, Album>()
-            .ForMember(dest => dest.Artists, opt => opt.Ignore());
     }
 }

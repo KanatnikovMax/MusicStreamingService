@@ -16,8 +16,5 @@ public class ArtistsBLProfile : Profile
         CreateMap<CreateArtistModel, Artist>()
             .ForMember(dest => dest.Albums, opt => opt.Ignore())
             .ForMember(dest => dest.Songs, opt => opt.Ignore());
-        CreateMap<UpdateArtistModel, Artist>()
-            .ForMember(dest => dest.Albums, opt => opt.Ignore())
-            .ForMember(dest => dest.Songs, opt => opt.Ignore());
     }
 }

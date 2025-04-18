@@ -18,6 +18,7 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
     public async Task<IEnumerable<Song>> FindAllAsync()
     {
         return await _context.Set<Song>()
+            .Include(s => s.Artists)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -33,6 +34,7 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
     public async Task<Song?> FindByIdAsync(Guid id)
     {
         return await _context.Set<Song>()
+            .Include(s => s.Artists)
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Id == id);
     }
@@ -63,6 +65,7 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
     public async Task<Song?> FindByTitleAsync(string title)
     {
         return await _context.Set<Song>()
+            .Include(s => s.Artists)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
     }
@@ -70,6 +73,7 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
     public async Task<IEnumerable<Song>> FindByTitlePartAsync(string titlePart)
     {
         return await _context.Set<Song>()
+            .Include(s => s.Artists)
             .AsNoTracking()
             .Where(a => EF.Functions.ILike(a.Title, $"%{titlePart}%"))
             .ToListAsync();
