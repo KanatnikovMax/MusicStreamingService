@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using MusicStreamingService.DataAccess.Context;
 using MusicStreamingService.DataAccess.Entities;

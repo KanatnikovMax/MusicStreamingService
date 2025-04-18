@@ -1,10 +1,7 @@
-﻿using System.Data;
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.DataAccess.Entities;
-using MusicStreamingService.DataAccess.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
 
 namespace MusicStreamingService.BusinessLogic.Services.Albums;

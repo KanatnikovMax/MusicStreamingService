@@ -1,12 +1,9 @@
-﻿using System.Data;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using MusicStreamingService.BusinessLogic.Helpers;
 using MusicStreamingService.DataAccess.Context;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.DataAccess.Repositories.Interfaces;
-using Npgsql;
-using NpgsqlTypes;
+
 
 namespace MusicStreamingService.DataAccess.Repositories;
 
