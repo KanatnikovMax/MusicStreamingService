@@ -20,7 +20,8 @@ public class AlbumsRepository : IAlbumsRepository
     {
         return await _context.Set<Album>()
             .Include(a => a.Artists)
-            .Include(a => a.Songs)
+            .Include(a => a.Songs)!
+            .ThenInclude(s => s.Artists)
             .AsNoTracking()
             .ToListAsync();
     }
