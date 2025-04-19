@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicStreamingService.BusinessLogic.Services.Albums;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
+using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.Service.Controllers.Albums.Models;
 using MusicStreamingService.Service.Controllers.Songs.Models;
@@ -35,10 +36,10 @@ public class AlbumsController : ControllerBase
 
     [HttpGet]
     [Route("")]
-    public async Task<ActionResult<AlbumsListResponse>> GetAllAlbums()
+    public async Task<ActionResult<PaginatedResponse<AlbumModel>>> GetAllAlbums([FromQuery] PaginationParams request)
     {
-        var albums = await _albumsService.GetAllAlbumsAsync();
-        return Ok(new AlbumsListResponse(albums.ToList()));
+        var albums = await _albumsService.GetAllAlbumsAsync(request);
+        return Ok(albums);
     }
 
     [HttpGet]
@@ -51,18 +52,20 @@ public class AlbumsController : ControllerBase
     
     [HttpGet]
     [Route("by_name")]
-    public async Task<ActionResult<AlbumsListResponse>> GetAlbumsByName([FromQuery] string namePart)
+    public async Task<ActionResult<PaginatedResponse<AlbumModel>>> GetAlbumsByName([FromQuery] string titlePart,
+        PaginationParams request)
     {
-        var artists = await _albumsService.GetAlbumByNameAsync(namePart);
-        return Ok(new AlbumsListResponse(artists.ToList()));
+        var albums = await _albumsService.GetAlbumByTitleAsync(titlePart, request);
+        return Ok(albums);
     }
 
     [HttpGet]
     [Route("{id:guid}/songs")]
-    public async Task<ActionResult<SongsListResponse>> GetAlbumsBySongs(Guid id)
+    public async Task<ActionResult<PaginatedResponse<SongModel>>> GetAlbumsBySongs(Guid id,
+        [FromQuery] PaginationParams request)
     {
-        var songs = await _albumsService.GetAllAlbumSongsAsync(id);
-        return Ok(new SongsListResponse(songs.ToList()));
+        var songs = await _albumsService.GetAllAlbumSongsAsync(id, request);
+        return Ok(songs);
     }
 
     [HttpDelete]

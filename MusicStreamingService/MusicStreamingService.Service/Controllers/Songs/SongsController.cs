@@ -34,10 +34,10 @@ public class SongsController : ControllerBase
     
     [HttpGet]
     [Route("")]
-    public async Task<ActionResult<SongsListResponse>> GetAllSongs()
+    public async Task<ActionResult<PaginatedResponse<SongModel>>> GetAllSongs([FromQuery] PaginationParams request)
     {
-        var songs = await _songsService.GetAllSongsAsync();
-        return Ok(new SongsListResponse(songs.ToList()));
+        var songs = await _songsService.GetAllSongsAsync(request);
+        return Ok(songs);
     }
 
     [HttpGet]
@@ -50,10 +50,11 @@ public class SongsController : ControllerBase
     
     [HttpGet]
     [Route("by_title")]
-    public async Task<ActionResult<SongsListResponse>> GetSongsByName([FromQuery] string namePart)
+    public async Task<ActionResult<PaginatedResponse<SongModel>>> GetSongsByName([FromQuery] string namePart, 
+        PaginationParams request)
     {
-        var songs = await _songsService.GetSongByTitleAsync(namePart);
-        return Ok(new SongsListResponse(songs.ToList()));
+        var songs = await _songsService.GetSongByTitleAsync(namePart, request);
+        return Ok(songs);
     }
 
     [HttpDelete]

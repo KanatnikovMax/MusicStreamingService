@@ -19,10 +19,14 @@ public class AlbumsService : IAlbumsService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<AlbumModel>> GetAllAlbumsAsync()
+    public async Task<PaginatedResponse<AlbumModel>> GetAllAlbumsAsync(PaginationParams request)
     {
-        var albums = await _unitOfWork.Albums.FindAllAsync();
-        return _mapper.Map<IEnumerable<AlbumModel>>(albums);
+        var albums = await _unitOfWork.Albums.FindAllAsync(request);
+        return new PaginatedResponse<AlbumModel>
+        {
+            Cursor = albums.Cursor,
+            Items = _mapper.Map<List<AlbumModel>>(albums.Items)
+        };
     }
 
     public async Task<AlbumModel> GetAlbumByIdAsync(Guid id)
@@ -32,17 +36,25 @@ public class AlbumsService : IAlbumsService
         return _mapper.Map<AlbumModel>(album);
     }
 
-    public async Task<IEnumerable<AlbumModel>> GetAlbumByNameAsync(string titlePart)
+    public async Task<PaginatedResponse<AlbumModel>> GetAlbumByTitleAsync(string titlePart, PaginationParams request)
     {
-        var albums = await _unitOfWork.Albums.FindByTitlePartAsync(titlePart);
-        return _mapper.Map<IEnumerable<AlbumModel>>(albums);
+        var albums = await _unitOfWork.Albums.FindByTitlePartAsync(titlePart, request);
+        return new PaginatedResponse<AlbumModel>
+        {
+            Cursor = albums.Cursor,
+            Items = _mapper.Map<List<AlbumModel>>(albums.Items)
+        };
     }
 
-    public async Task<IEnumerable<SongModel>> GetAllAlbumSongsAsync(Guid albumId)
+    public async Task<PaginatedResponse<SongModel>> GetAllAlbumSongsAsync(Guid albumId, PaginationParams request)
     {
-        var songs = await _unitOfWork.Albums.FindAllSongsAsync(albumId);
+        var songs = await _unitOfWork.Albums.FindAllSongsAsync(albumId, request);
         
-        return _mapper.Map<IEnumerable<SongModel>>(songs);
+        return new PaginatedResponse<SongModel>
+        {
+            Cursor = songs.Cursor,
+            Items = _mapper.Map<List<SongModel>>(songs.Items)
+        };
     }
     
     public async Task<AlbumModel> CreateAlbumAsync(CreateAlbumModel model)

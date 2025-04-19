@@ -15,12 +15,26 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
         _context = dbContext;
     }
 
-    public async Task<IEnumerable<Song>> FindAllAsync()
+    public async Task<PaginatedResponse<Song>> FindAllAsync(PaginationParams request)
     {
-        return await _context.Set<Song>()
+        var songs = _context.Set<Song>()
             .Include(s => s.Artists)
-            .AsNoTracking()
+            .AsNoTracking();
+        
+        if (request.Cursor is not null)
+        {
+            songs = songs.Where(s => s.CreatedAt >= request.Cursor);
+        }
+
+        var items = await songs.OrderBy(s => s.CreatedAt)
+            .Take(request.PageSize + 1)
             .ToListAsync();
+
+        return new PaginatedResponse<Song>
+        {
+            Cursor = items.LastOrDefault()?.CreatedAt,
+            Items = items
+        };
     }
 
     public async Task<IEnumerable<Song>> FindAllAsync(Expression<Func<Song, bool>> predicate)
@@ -70,12 +84,26 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
     }
     
-    public async Task<IEnumerable<Song>> FindByTitlePartAsync(string titlePart)
+    public async Task<PaginatedResponse<Song>> FindByTitlePartAsync(string titlePart, PaginationParams request)
     {
-        return await _context.Set<Song>()
+        var songs = _context.Set<Song>()
             .Include(s => s.Artists)
             .AsNoTracking()
-            .Where(a => EF.Functions.ILike(a.Title, $"%{titlePart}%"))
+            .Where(a => EF.Functions.ILike(a.Title, $"%{titlePart}%"));
+        
+        if (request.Cursor is not null)
+        {
+            songs = songs.Where(s => s.CreatedAt >= request.Cursor);
+        }
+
+        var items = await songs.OrderBy(s => s.CreatedAt)
+            .Take(request.PageSize + 1)
             .ToListAsync();
+
+        return new PaginatedResponse<Song>
+        {
+            Cursor = items.LastOrDefault()?.CreatedAt,
+            Items = items
+        };
     }
 }

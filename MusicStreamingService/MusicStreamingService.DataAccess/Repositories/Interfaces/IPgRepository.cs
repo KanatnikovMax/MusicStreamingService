@@ -1,11 +1,12 @@
 ﻿using System.Linq.Expressions;
+using MusicStreamingService.DataAccess.Entities;
 
 namespace MusicStreamingService.DataAccess.Repositories.Interfaces;
 
 public interface IPgRepository<T>
 {
     Task<T?> SaveAsync(T entity);
-    Task<IEnumerable<T>> FindAllAsync();
+    
     
     Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> predicate);
     

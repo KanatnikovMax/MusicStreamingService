@@ -4,15 +4,19 @@ namespace MusicStreamingService.DataAccess.Repositories.Interfaces;
 
 public interface IArtistsRepository : IPgRepository<Artist>
 {
+    Task<PaginatedResponse<Artist>> FindAllAsync(PaginationParams request);
+    Task<IEnumerable<Album>> FindAllAlbumsAsync(Guid artistId);
+
+    Task<IEnumerable<Song>> FindAllSongsAsync(Guid artistId);
     Task<Artist?> FindByNameAsync(string name);
 
-    Task<IEnumerable<Artist>> FindByNamePartAsync(string namePart);
+    Task<PaginatedResponse<Artist>> FindByNamePartAsync(string namePart, PaginationParams request);
 
-    Task<IEnumerable<Album>> FindAllAlbumsAsync(Guid artistId);
+    Task<PaginatedResponse<Album>> FindAllAlbumsAsync(Guid artistId, PaginationParams request);
     
-    Task<IEnumerable<Song>> FindAllSongsAsync(Guid artistId);
+    Task<PaginatedResponse<Song>> FindAllSongsAsync(Guid artistId, PaginationParams request);
     
-    Task<IEnumerable<Song>> FindAllSongsByTitleAsync(Guid artistId, string titlePart);
+    Task<PaginatedResponse<Song>> FindAllSongsByTitleAsync(Guid artistId, string titlePart, PaginationParams request);
 
     Task<List<Artist>> GetOrCreateArtistsAsync(IEnumerable<string> names);
 }

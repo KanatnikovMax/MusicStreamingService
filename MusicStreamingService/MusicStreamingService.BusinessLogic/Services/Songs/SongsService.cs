@@ -19,10 +19,14 @@ public class SongsService : ISongsService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<SongModel>> GetAllSongsAsync()
+    public async Task<PaginatedResponse<SongModel>> GetAllSongsAsync(PaginationParams request)
     {
-        var songs = await _unitOfWork.Songs.FindAllAsync();
-        return _mapper.Map<IEnumerable<SongModel>>(songs);
+        var songs = await _unitOfWork.Songs.FindAllAsync(request);
+        return new PaginatedResponse<SongModel>
+        {
+            Cursor = songs.Cursor,
+            Items = _mapper.Map<List<SongModel>>(songs.Items),
+        };
     }
 
     public async Task<SongModel> GetSongByIdAsync(Guid id)
@@ -32,10 +36,14 @@ public class SongsService : ISongsService
         return _mapper.Map<SongModel>(song);
     }
 
-    public async Task<IEnumerable<SongModel>> GetSongByTitleAsync(string titlePart)
+    public async Task<PaginatedResponse<SongModel>> GetSongByTitleAsync(string titlePart, PaginationParams request)
     {
-        var songs = await _unitOfWork.Songs.FindByTitlePartAsync(titlePart);
-        return _mapper.Map<IEnumerable<SongModel>>(songs);
+        var songs = await _unitOfWork.Songs.FindByTitlePartAsync(titlePart, request);
+        return new PaginatedResponse<SongModel>
+        {
+            Cursor = songs.Cursor,
+            Items = _mapper.Map<List<SongModel>>(songs.Items),
+        };
     }
 
     public async Task<SongModel> CreateSongAsync(CreateSongModel model)

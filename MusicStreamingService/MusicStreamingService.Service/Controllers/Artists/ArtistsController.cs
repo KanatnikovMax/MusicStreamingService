@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Artists;
 using MusicStreamingService.BusinessLogic.Services.Artists.Models;
+using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Entities;
-using MusicStreamingService.Service.Controllers.Albums.Models;
 using MusicStreamingService.Service.Controllers.Artists.Models;
 using MusicStreamingService.Service.Controllers.Songs.Models;
 
@@ -36,10 +37,10 @@ public class ArtistsController : ControllerBase
 
     [HttpGet]
     [Route("")]
-    public async Task<ActionResult<ArtistsListResponse>> GetAllArtists()
+    public async Task<ActionResult<PaginatedResponse<ArtistModel>>> GetAllArtists([FromQuery] PaginationParams request)
     {
-        var artists = await _artistsService.GetAllArtistsAsync();
-        return Ok(new ArtistsListResponse(artists.ToList()));
+        var artists = await _artistsService.GetAllArtistsAsync(request);
+        return Ok(artists);
     }
 
     [HttpGet]
@@ -52,34 +53,38 @@ public class ArtistsController : ControllerBase
 
     [HttpGet]
     [Route("by_name")]
-    public async Task<ActionResult<ArtistsListResponse>> GetArtistsByName([FromQuery] string namePart)
+    public async Task<ActionResult<PaginatedResponse<ArtistModel>>> GetArtistsByName([FromQuery] string namePart,
+        PaginationParams request)
     {
-        var artists = await _artistsService.GetArtistByNameAsync(namePart);
-        return Ok(new ArtistsListResponse(artists.ToList()));
+        var artists = await _artistsService.GetArtistByNameAsync(namePart, request);
+        return Ok(artists);
     }
 
     [HttpGet]
     [Route("{id:guid}/albums")]
-    public async Task<ActionResult<AlbumsListResponse>> GetAllArtistAlbums(Guid id)
+    public async Task<ActionResult<PaginatedResponse<AlbumModel>>> GetAllArtistAlbums(Guid id,
+        [FromQuery] PaginationParams request)
     {
-        var albums = await _artistsService.GetAllAlbumsAsync(id);
-        return Ok(new AlbumsListResponse(albums.ToList()));
+        var albums = await _artistsService.GetAllAlbumsAsync(id, request);
+        return Ok(albums);
     }
     
     [HttpGet]
     [Route("{id:guid}/songs")]
-    public async Task<ActionResult<SongsListResponse>> GetAllArtistSongs(Guid id)
+    public async Task<ActionResult<PaginatedResponse<SongModel>>> GetAllArtistSongs(Guid id,
+        [FromQuery] PaginationParams request)
     {
-        var songs = await _artistsService.GetAllSongsAsync(id);
-        return Ok(new SongsListResponse(songs.ToList()));
+        var songs = await _artistsService.GetAllSongsAsync(id, request);
+        return Ok(songs);
     }
     
     [HttpGet]
     [Route("{id:guid}/songs/by_title")]
-    public async Task<ActionResult<SongsListResponse>> GetArtistSongsByTitle(Guid id, [FromQuery] string titlePart)
+    public async Task<ActionResult<PaginatedResponse<SongModel>>> GetArtistSongsByTitle(Guid id, [FromQuery] string titlePart,
+        PaginationParams request)
     {
-        var songs = await _artistsService.GetSongsByTitleAsync(id, titlePart);
-        return Ok(new SongsListResponse(songs.ToList()));
+        var songs = await _artistsService.GetSongsByTitleAsync(id, titlePart, request);
+        return Ok(songs);
     }
     
     [HttpDelete]
