@@ -16,11 +16,6 @@ public static class ServicesConfigurator
 {
     public static void ConfigureServices(IServiceCollection services, MusicServiceSettings settings)
     {
-        // repositories
-        /*services.AddScoped<ISongsRepository, SongsRepository>();
-        services.AddScoped<IAlbumsRepository, AlbumsRepository>();
-        services.AddScoped<IArtistsRepository, ArtistsRepository>();
-        services.AddScoped<IUsersRepository, UsersRepository>();*/
         // Unit Of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         // services

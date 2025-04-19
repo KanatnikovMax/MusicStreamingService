@@ -19,8 +19,7 @@ public static class ArtistsContextConfigurator
         
         modelBuilder.Entity<Artist>().HasMany(x => x.Albums).WithMany(x => x.Artists)
             .UsingEntity(t => t.ToTable("artists_albums"));
-        /*modelBuilder.Entity<Artist>().HasMany(x => x.Songs).WithMany(x => x.Artists)
-            .UsingEntity(t => t.ToTable("artists_songs"));*/
+        
         modelBuilder.Entity<Artist>().HasMany(x => x.Songs).WithMany(x => x.Artists)
             .UsingEntity<ArtistSong>(
                 j => j.HasOne<Song>(x => x.Song).WithMany().OnDelete(DeleteBehavior.Cascade),
