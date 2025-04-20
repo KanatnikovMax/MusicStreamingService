@@ -1,4 +1,4 @@
-﻿namespace MusicStreamingService.Service.Controllers.Albums.Models;
+﻿namespace MusicStreamingService.Service.Controllers.Requests.Albums;
 
 public record CreateAlbumRequest(
     string Title,

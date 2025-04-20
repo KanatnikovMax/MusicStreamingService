@@ -7,15 +7,15 @@ namespace MusicStreamingService.BusinessLogic.Services.Artists;
 
 public interface IArtistsService
 {
-    Task<PaginatedResponse<DateTime?, ArtistModel>> GetAllArtistsAsync(PaginationParams<DateTime?> request);
+    Task<CursorResponse<DateTime?, ArtistModel>> GetAllArtistsAsync(PaginationParams<DateTime?> request);
     Task<ArtistModel> GetArtistByIdAsync(Guid id);
-    Task<PaginatedResponse<DateTime?, ArtistModel>> GetArtistByNameAsync(string namePart, 
+    Task<CursorResponse<DateTime?, ArtistModel>> GetArtistByNameAsync(string namePart, 
         PaginationParams<DateTime?> request);
-    Task<PaginatedResponse<DateTime?, AlbumModel>> GetAllAlbumsAsync(Guid artistId, 
+    Task<CursorResponse<DateTime?, AlbumModel>> GetAllAlbumsAsync(Guid artistId, 
         PaginationParams<DateTime?> request);
-    Task<PaginatedResponse<DateTime?, SongModel>> GetAllSongsAsync(Guid artistId, PaginationParams<DateTime?> request);
+    Task<CursorResponse<DateTime?, SongModel>> GetAllSongsAsync(Guid artistId, PaginationParams<DateTime?> request);
 
-    Task<PaginatedResponse<DateTime?, SongModel>> GetSongsByTitleAsync(Guid artistId, string titlePart, 
+    Task<CursorResponse<DateTime?, SongModel>> GetSongsByTitleAsync(Guid artistId, string titlePart, 
         PaginationParams<DateTime?> request);
     Task<ArtistModel> CreateArtistAsync(CreateArtistModel model);
     Task<ArtistModel> DeleteArtistAsync(Guid id);

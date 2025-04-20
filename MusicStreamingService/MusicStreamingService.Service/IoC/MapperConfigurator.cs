@@ -12,7 +12,7 @@ public static class MapperConfigurator
             // artists
             config.AddProfile<ArtistsBLProfile>();
             config.AddProfile<ArtistsServiceProfile>();
-            //albums
+            // albums
             config.AddProfile<AlbumsBLProfile>();
             config.AddProfile<AlbumsServiceProfile>();
             // songs
@@ -21,6 +21,8 @@ public static class MapperConfigurator
             // users
             config.AddProfile<UsersBLProfile>();
             config.AddProfile<UsersServiceProfile>();
+            // pagination
+            config.AddProfile<PaginationServiceProfile>();
         });
     }
 }

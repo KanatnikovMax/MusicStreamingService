@@ -19,10 +19,10 @@ public class AlbumsService : IAlbumsService
         _mapper = mapper;
     }
 
-    public async Task<PaginatedResponse<DateTime?, AlbumModel>> GetAllAlbumsAsync(PaginationParams<DateTime?> request)
+    public async Task<CursorResponse<DateTime?, AlbumModel>> GetAllAlbumsAsync(PaginationParams<DateTime?> request)
     {
         var albums = await _unitOfWork.Albums.FindAllAsync(request);
-        return new PaginatedResponse<DateTime?, AlbumModel>
+        return new CursorResponse<DateTime?, AlbumModel>
         {
             Cursor = albums.Cursor,
             Items = _mapper.Map<List<AlbumModel>>(albums.Items)
@@ -36,23 +36,23 @@ public class AlbumsService : IAlbumsService
         return _mapper.Map<AlbumModel>(album);
     }
 
-    public async Task<PaginatedResponse<DateTime?, AlbumModel>> GetAlbumByTitleAsync(string titlePart, 
+    public async Task<CursorResponse<DateTime?, AlbumModel>> GetAlbumByTitleAsync(string titlePart, 
         PaginationParams<DateTime?> request)
     {
         var albums = await _unitOfWork.Albums.FindByTitlePartAsync(titlePart, request);
-        return new PaginatedResponse<DateTime?, AlbumModel>
+        return new CursorResponse<DateTime?, AlbumModel>
         {
             Cursor = albums.Cursor,
             Items = _mapper.Map<List<AlbumModel>>(albums.Items)
         };
     }
 
-    public async Task<PaginatedResponse<int?, SongModel>> GetAllAlbumSongsAsync(Guid albumId, 
+    public async Task<CursorResponse<int?, SongModel>> GetAllAlbumSongsAsync(Guid albumId, 
         PaginationParams<int?> request)
     {
         var songs = await _unitOfWork.Albums.FindAllSongsAsync(albumId, request);
         
-        return new PaginatedResponse<int?, SongModel>
+        return new CursorResponse<int?, SongModel>
         {
             Cursor = songs.Cursor,
             Items = _mapper.Map<List<SongModel>>(songs.Items)

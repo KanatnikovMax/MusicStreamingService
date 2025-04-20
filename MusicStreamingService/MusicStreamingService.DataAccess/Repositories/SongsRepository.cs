@@ -15,7 +15,7 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
         _context = dbContext;
     }
 
-    public async Task<PaginatedResponse<DateTime?, Song>> FindAllAsync(PaginationParams<DateTime?> request)
+    public async Task<CursorResponse<DateTime?, Song>> FindAllAsync(PaginationParams<DateTime?> request)
     {
         var songs = _context.Set<Song>()
             .Include(s => s.Artists)
@@ -32,7 +32,7 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
         
         var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.CreatedAt : null;
 
-        return new PaginatedResponse<DateTime?, Song>
+        return new CursorResponse<DateTime?, Song>
         {
             Cursor = cursor,
             Items = items
@@ -86,7 +86,7 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
     }
     
-    public async Task<PaginatedResponse<DateTime?, Song>> FindByTitlePartAsync(string titlePart, 
+    public async Task<CursorResponse<DateTime?, Song>> FindByTitlePartAsync(string titlePart, 
         PaginationParams<DateTime?> request)
     {
         var songs = _context.Set<Song>()
@@ -105,7 +105,7 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
         
         var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.CreatedAt : null;
         
-        return new PaginatedResponse<DateTime?, Song>
+        return new CursorResponse<DateTime?, Song>
         {
             Cursor = cursor,
             Items = items

@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
-using MusicStreamingService.Service.Controllers.Songs.Models;
+using MusicStreamingService.Service.Controllers.Requests.Songs;
 
 namespace MusicStreamingService.Service.Mapper;
 

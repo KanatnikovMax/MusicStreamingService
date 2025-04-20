@@ -4,10 +4,12 @@ using MusicStreamingService.BusinessLogic.Services.Albums;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Entities;
-using MusicStreamingService.Service.Controllers.Albums.Models;
-using MusicStreamingService.Service.Controllers.Songs.Models;
+using MusicStreamingService.Service.Controllers.Requests.Albums;
+using MusicStreamingService.Service.Controllers.Requests.Pagination;
+using MusicStreamingService.Service.Controllers.Responses.Albums;
+using MusicStreamingService.Service.Controllers.Responses.Pagination;
 
-namespace MusicStreamingService.Service.Controllers.Albums;
+namespace MusicStreamingService.Service.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -37,10 +39,11 @@ public class AlbumsController : ControllerBase
     [HttpGet]
     [Route("")]
     public async Task<ActionResult<PaginatedResponse<DateTime?, AlbumModel>>> GetAllAlbums(
-        [FromQuery] PaginationParams<DateTime?> request)
+        [FromQuery] PaginationRequest<DateTime?> request)
     {
-        var albums = await _albumsService.GetAllAlbumsAsync(request);
-        return Ok(albums);
+        var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request);
+        var albums = await _albumsService.GetAllAlbumsAsync(paginationParams);
+        return Ok(_mapper.Map<PaginatedResponse<DateTime?, AlbumModel>>(albums));
     }
 
     [HttpGet]
@@ -54,19 +57,21 @@ public class AlbumsController : ControllerBase
     [HttpGet]
     [Route("by_name")]
     public async Task<ActionResult<PaginatedResponse<DateTime?, AlbumModel>>> GetAlbumsByName([FromQuery] string titlePart,
-        [FromQuery] PaginationParams<DateTime?> request)
+        [FromQuery] PaginationRequest<DateTime?> request)
     {
-        var albums = await _albumsService.GetAlbumByTitleAsync(titlePart, request);
-        return Ok(albums);
+        var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request);
+        var albums = await _albumsService.GetAlbumByTitleAsync(titlePart, paginationParams);
+        return Ok(_mapper.Map<PaginatedResponse<DateTime?, AlbumModel>>(albums));
     }
 
     [HttpGet]
     [Route("{id:guid}/songs")]
     public async Task<ActionResult<PaginatedResponse<int?, SongModel>>> GetAlbumsBySongs(Guid id,
-        [FromQuery] PaginationParams<int?> request)
+        [FromQuery] PaginationRequest<int?> request)
     {
-        var songs = await _albumsService.GetAllAlbumSongsAsync(id, request);
-        return Ok(songs);
+        var paginationParams = _mapper.Map <PaginationParams<int?>>(request);
+        var songs = await _albumsService.GetAllAlbumSongsAsync(id, paginationParams);
+        return Ok(_mapper.Map<PaginatedResponse<int?, SongModel>>(songs));
     }
 
     [HttpDelete]

@@ -3,9 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using MusicStreamingService.BusinessLogic.Services.Songs;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Entities;
-using MusicStreamingService.Service.Controllers.Songs.Models;
+using MusicStreamingService.Service.Controllers.Requests.Pagination;
+using MusicStreamingService.Service.Controllers.Requests.Songs;
+using MusicStreamingService.Service.Controllers.Responses.Pagination;
+using MusicStreamingService.Service.Controllers.Responses.Songs;
 
-namespace MusicStreamingService.Service.Controllers.Songs;
+namespace MusicStreamingService.Service.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -35,10 +38,11 @@ public class SongsController : ControllerBase
     [HttpGet]
     [Route("")]
     public async Task<ActionResult<PaginatedResponse<DateTime?, SongModel>>> GetAllSongs(
-        [FromQuery] PaginationParams<DateTime?> request)
+        [FromQuery] PaginationRequest<DateTime?> request)
     {
-        var songs = await _songsService.GetAllSongsAsync(request);
-        return Ok(songs);
+        var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request);
+        var songs = await _songsService.GetAllSongsAsync(paginationParams);
+        return Ok(_mapper.Map<PaginatedResponse<DateTime?, SongModel>>(songs));
     }
 
     [HttpGet]
@@ -52,10 +56,11 @@ public class SongsController : ControllerBase
     [HttpGet]
     [Route("by_title")]
     public async Task<ActionResult<PaginatedResponse<DateTime?, SongModel>>> GetSongsByName([FromQuery] string namePart, 
-        [FromQuery] PaginationParams<DateTime?> request)
+        [FromQuery] PaginationRequest<DateTime?> request)
     {
-        var songs = await _songsService.GetSongByTitleAsync(namePart, request);
-        return Ok(songs);
+        var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request);
+        var songs = await _songsService.GetSongByTitleAsync(namePart, paginationParams);
+        return Ok(_mapper.Map<PaginatedResponse<DateTime?, SongModel>>(songs));
     }
 
     [HttpDelete]

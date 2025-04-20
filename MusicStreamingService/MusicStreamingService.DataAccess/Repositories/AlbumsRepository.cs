@@ -16,7 +16,7 @@ public class AlbumsRepository : IAlbumsRepository
         _context = dbContext;
     }
 
-    public async Task<PaginatedResponse<DateTime?, Album>> FindAllAsync(PaginationParams<DateTime?> request)
+    public async Task<CursorResponse<DateTime?, Album>> FindAllAsync(PaginationParams<DateTime?> request)
     {
         var albums = _context.Set<Album>()
             .Include(a => a.Artists)
@@ -35,7 +35,7 @@ public class AlbumsRepository : IAlbumsRepository
         
         var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.ReleaseDate : null;
         
-        return new PaginatedResponse<DateTime?, Album>
+        return new CursorResponse<DateTime?, Album>
         {
             Cursor = cursor,
             Items = items
@@ -91,7 +91,7 @@ public class AlbumsRepository : IAlbumsRepository
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
     }
     
-    public async Task<PaginatedResponse<DateTime?, Album>> FindByTitlePartAsync(string titlePart, 
+    public async Task<CursorResponse<DateTime?, Album>> FindByTitlePartAsync(string titlePart, 
         PaginationParams<DateTime?> request)
     {
         var albums = _context.Set<Album>()
@@ -112,14 +112,14 @@ public class AlbumsRepository : IAlbumsRepository
         
         var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.ReleaseDate : null;
         
-        return new PaginatedResponse<DateTime?, Album>
+        return new CursorResponse<DateTime?, Album>
         {
             Cursor = cursor,
             Items = items
         };
     }
 
-    public async Task<PaginatedResponse<int?, Song>> FindAllSongsAsync(Guid albumId, PaginationParams<int?> request)
+    public async Task<CursorResponse<int?, Song>> FindAllSongsAsync(Guid albumId, PaginationParams<int?> request)
     {
         var album = await _context.Set<Album>()
             .Include(a => a.Songs)!
@@ -129,7 +129,7 @@ public class AlbumsRepository : IAlbumsRepository
 
         if (album is null)
         {
-            return new PaginatedResponse<int?, Song>
+            return new CursorResponse<int?, Song>
             {
                 Cursor = null,
                 Items = []
@@ -149,7 +149,7 @@ public class AlbumsRepository : IAlbumsRepository
         
         var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.TrackNumber : null;
 
-        return new PaginatedResponse<int?,Song>
+        return new CursorResponse<int?,Song>
         {
             Cursor = cursor,
             Items = items

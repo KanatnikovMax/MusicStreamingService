@@ -1,4 +1,4 @@
-﻿namespace MusicStreamingService.Service.Controllers.Songs.Models;
+﻿namespace MusicStreamingService.Service.Controllers.Requests.Songs;
 
 public record UpdateSongRequest(
     string? Title, 

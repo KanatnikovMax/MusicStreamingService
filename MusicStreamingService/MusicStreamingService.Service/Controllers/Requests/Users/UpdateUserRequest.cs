@@ -1,4 +1,4 @@
-﻿namespace MusicStreamingService.Service.Controllers.Users.Models;
+﻿namespace MusicStreamingService.Service.Controllers.Requests.Users;
 
 public record UpdateUserRequest(
     string? Email,

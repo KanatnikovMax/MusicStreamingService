@@ -20,10 +20,10 @@ public class ArtistsService : IArtistsService
         _mapper = mapper;
     }
 
-    public async Task<PaginatedResponse<DateTime?, ArtistModel>> GetAllArtistsAsync(PaginationParams<DateTime?> request)
+    public async Task<CursorResponse<DateTime?, ArtistModel>> GetAllArtistsAsync(PaginationParams<DateTime?> request)
     {
         var artists = await _unitOfWork.Artists.FindAllAsync(request);
-        return new PaginatedResponse<DateTime?, ArtistModel>
+        return new CursorResponse<DateTime?, ArtistModel>
         {
             Cursor = artists.Cursor,
             Items = _mapper.Map<List<ArtistModel>>(artists.Items)
@@ -37,44 +37,44 @@ public class ArtistsService : IArtistsService
         return _mapper.Map<ArtistModel>(artist);
     }
 
-    public async Task<PaginatedResponse<DateTime?, ArtistModel>> GetArtistByNameAsync(string namePart, 
+    public async Task<CursorResponse<DateTime?, ArtistModel>> GetArtistByNameAsync(string namePart, 
         PaginationParams<DateTime?> request)
     {
         var artists = await _unitOfWork.Artists.FindByNamePartAsync(namePart, request);
-        return new PaginatedResponse<DateTime?, ArtistModel>
+        return new CursorResponse<DateTime?, ArtistModel>
         {
             Cursor = artists.Cursor,
             Items = _mapper.Map<List<ArtistModel>>(artists.Items)
         };
     }
 
-    public async Task<PaginatedResponse<DateTime?, AlbumModel>> GetAllAlbumsAsync(Guid artistId, 
+    public async Task<CursorResponse<DateTime?, AlbumModel>> GetAllAlbumsAsync(Guid artistId, 
         PaginationParams<DateTime?> request)
     {
         var albums = await _unitOfWork.Artists.FindAllAlbumsAsync(artistId, request);
-        return new PaginatedResponse<DateTime?, AlbumModel>
+        return new CursorResponse<DateTime?, AlbumModel>
         {
             Cursor = albums.Cursor,
             Items = _mapper.Map<List<AlbumModel>>(albums.Items)
         };
     }
     
-    public async Task<PaginatedResponse<DateTime?, SongModel>> GetAllSongsAsync(Guid artistId, 
+    public async Task<CursorResponse<DateTime?, SongModel>> GetAllSongsAsync(Guid artistId, 
         PaginationParams<DateTime?> request)
     {
         var songs = await _unitOfWork.Artists.FindAllSongsAsync(artistId, request);
-        return new PaginatedResponse<DateTime?, SongModel>
+        return new CursorResponse<DateTime?, SongModel>
         {
             Cursor = songs.Cursor,
             Items = _mapper.Map<List<SongModel>>(songs.Items)
         };
     }
     
-    public async Task<PaginatedResponse<DateTime?, SongModel>> GetSongsByTitleAsync(Guid artistId, string titlePart,
+    public async Task<CursorResponse<DateTime?, SongModel>> GetSongsByTitleAsync(Guid artistId, string titlePart,
         PaginationParams<DateTime?> request)
     {
         var songs = await _unitOfWork.Artists.FindAllSongsByTitleAsync(artistId, titlePart, request);
-        return new PaginatedResponse<DateTime?, SongModel>
+        return new CursorResponse<DateTime?, SongModel>
         {
             Cursor = songs.Cursor,
             Items = _mapper.Map<List<SongModel>>(songs.Items)
