@@ -1,10 +1,12 @@
 ﻿using System.Data;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.DataAccess.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
+using Npgsql;
 
 namespace MusicStreamingService.BusinessLogic.Services.Songs;
 
@@ -80,7 +82,12 @@ public class SongsService : ISongsService
             await _unitOfWork.CommitAsync();
             return _mapper.Map<SongModel>(song);
         }
-        catch (Exception)
+        catch (DbUpdateException)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+        catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
             throw;
@@ -102,7 +109,12 @@ public class SongsService : ISongsService
             await _unitOfWork.CommitAsync();
             return _mapper.Map<SongModel>(song);
         }
-        catch (Exception )
+        catch (DbUpdateException)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+        catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
             throw;
@@ -128,7 +140,12 @@ public class SongsService : ISongsService
             
             return _mapper.Map<SongModel>(song);
         }
-        catch (Exception)
+        catch (DbUpdateException)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+        catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
             throw;

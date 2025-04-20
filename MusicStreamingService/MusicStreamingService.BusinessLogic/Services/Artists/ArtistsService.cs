@@ -1,11 +1,13 @@
 ﻿using System.Data;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Artists.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
+using Npgsql;
 
 namespace MusicStreamingService.BusinessLogic.Services.Artists;
 
@@ -97,7 +99,17 @@ public class ArtistsService : IArtistsService
             await _unitOfWork.CommitAsync();
             return _mapper.Map<ArtistModel>(artist);
         }
-        catch (Exception)
+        catch (DbUpdateException e)
+        {
+            await _unitOfWork.RollbackAsync();
+            if (e.InnerException is PostgresException { SqlState: "23505" })
+            {
+                throw new EntityAlreadyExistsException("Artist");
+            }
+        
+            throw;
+        }
+        catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
             throw;
@@ -130,7 +142,12 @@ public class ArtistsService : IArtistsService
 
             return _mapper.Map<ArtistModel>(artist);
         }
-        catch
+        catch (DbUpdateException)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+        catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
             throw;
@@ -142,22 +159,38 @@ public class ArtistsService : IArtistsService
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
+            if (model.Name is not null && await _unitOfWork.Artists.FindByNameAsync(model.Name) is not null)
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new EntityAlreadyExistsException("Artist");
+            }
+            
             var artist = await _unitOfWork.Artists.FindByIdAsync(id);
             if (artist is null)
             {
                 await _unitOfWork.RollbackAsync();
                 throw new EntityNotFoundException("Artist", id);
             }
+            
             artist.Name = model.Name ?? artist.Name;
             artist = _unitOfWork.Artists.Update(artist);
             await _unitOfWork.CommitAsync();
             return _mapper.Map<ArtistModel>(artist);
         }
-        catch (Exception)
+        catch (DbUpdateException e)
+        {
+            await _unitOfWork.RollbackAsync();
+            if (e.InnerException is PostgresException { SqlState: "23505" })
+            {
+                throw new EntityAlreadyExistsException("Artist");
+            }
+        
+            throw;
+        }
+        catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
             throw;
         }
-        
     }
 }

@@ -1,10 +1,12 @@
 ﻿using System.Data;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
+using Npgsql;
 
 namespace MusicStreamingService.BusinessLogic.Services.Albums;
 
@@ -100,7 +102,12 @@ public class AlbumsService : IAlbumsService
         
             return _mapper.Map<AlbumModel>(entity);
         }
-        catch (Exception)
+        catch (DbUpdateException)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+        catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
             throw;
@@ -123,7 +130,12 @@ public class AlbumsService : IAlbumsService
             await _unitOfWork.CommitAsync();
             return _mapper.Map<AlbumModel>(album);
         }
-        catch (Exception)
+        catch (DbUpdateException)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+        catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
             throw;
@@ -135,8 +147,12 @@ public class AlbumsService : IAlbumsService
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
-            var album = await _unitOfWork.Albums.FindByIdAsync(id)
-                        ?? throw new EntityNotFoundException("Album", id);
+            var album = await _unitOfWork.Albums.FindByIdAsync(id);
+            if (album is null)
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new EntityNotFoundException("Album", id);
+            }
 
             if (!string.IsNullOrEmpty(model.Title))
             {
@@ -161,7 +177,12 @@ public class AlbumsService : IAlbumsService
 
             return _mapper.Map<AlbumModel>(album);
         }
-        catch (Exception)
+        catch (DbUpdateException)
+        {
+            await _unitOfWork.RollbackAsync();
+            throw;
+        }
+        catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
             throw;
