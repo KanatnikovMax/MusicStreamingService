@@ -1,11 +1,11 @@
 ﻿namespace MusicStreamingService.DataAccess.Entities;
 
-public class PaginationParams
+public class PaginationParams<T>
 {
     private const int MaxPageSize = 100; 
     private int _pageSize = 10;
 
-    public DateTime? Cursor { get; set; }
+    public T? Cursor { get; set; }
     public int PageSize
     {
         get => _pageSize;

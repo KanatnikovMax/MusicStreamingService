@@ -15,7 +15,7 @@ public class ArtistsRepository : IArtistsRepository
         _context = dbContext;
     }
 
-    public async Task<PaginatedResponse<Artist>> FindAllAsync(PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, Artist>> FindAllAsync(PaginationParams<DateTime?> request)
     {
         var artists = _context.Set<Artist>()
             .Include(a => a.Albums)
@@ -33,7 +33,7 @@ public class ArtistsRepository : IArtistsRepository
         
         var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.CreatedAt : null;
         
-        return new PaginatedResponse<Artist>
+        return new PaginatedResponse<DateTime?, Artist>
         {
             Cursor = cursor,
             Items = items.Take(request.PageSize).ToList(),
@@ -93,7 +93,8 @@ public class ArtistsRepository : IArtistsRepository
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Name, name));
    }
     
-    public async Task<PaginatedResponse<Artist>> FindByNamePartAsync(string namePart, PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, Artist>> FindByNamePartAsync(string namePart, 
+        PaginationParams<DateTime?> request)
     {
         var artists = _context.Set<Artist>()
             .Include(a => a.Albums)! 
@@ -113,7 +114,7 @@ public class ArtistsRepository : IArtistsRepository
         
         var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.CreatedAt : null;
         
-        return new PaginatedResponse<Artist>
+        return new PaginatedResponse<DateTime?, Artist>
         {
             Cursor = cursor,
             Items = items.Take(request.PageSize).ToList(),
@@ -145,7 +146,8 @@ public class ArtistsRepository : IArtistsRepository
         return result.Entity;
     }
 
-    public async Task<PaginatedResponse<Album>> FindAllAlbumsAsync(Guid artistId, PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, Album>> FindAllAlbumsAsync(Guid artistId, 
+        PaginationParams<DateTime?> request)
     {
         var artist = await _context.Set<Artist>()
             .Include(a => a.Albums)!
@@ -154,35 +156,37 @@ public class ArtistsRepository : IArtistsRepository
 
         if (artist is null)
         {
-            return new PaginatedResponse<Album>
+            return new PaginatedResponse<DateTime?, Album>
             {
                 Cursor = null,
                 Items = []
             };
         }
         
-        var albums =  artist.Albums?.OrderByDescending(a => a.ReleaseDate)
+        var albums =  artist.Albums
             ?? Enumerable.Empty<Album>();
         
         if (request.Cursor is not null)
         {
-            albums = albums.Where(s => s.CreatedAt >= request.Cursor);
+            albums = albums.Where(s => s.ReleaseDate <= request.Cursor);
         }
 
-        var items = albums.OrderBy(s => s.CreatedAt)
+        var items = albums.OrderByDescending(s => s.ReleaseDate)
+            .ThenBy(s => s.CreatedAt)
             .Take(request.PageSize + 1)
             .ToList();
         
-        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.CreatedAt : null;
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.ReleaseDate : null;
         
-        return new PaginatedResponse<Album>
+        return new PaginatedResponse<DateTime?, Album>
         {
             Cursor = cursor,
             Items = items.Take(request.PageSize).ToList(),
         };
     }
 
-    public async Task<PaginatedResponse<Song>> FindAllSongsAsync(Guid artistId, PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, Song>> FindAllSongsAsync(Guid artistId, 
+        PaginationParams<DateTime?> request)
     {
         var artist = await _context.Set<Artist>()
             .Include(a => a.Songs)!
@@ -191,7 +195,7 @@ public class ArtistsRepository : IArtistsRepository
 
         if (artist is null)
         {
-            return new PaginatedResponse<Song>
+            return new PaginatedResponse<DateTime?, Song>
             {
                 Cursor = null,
                 Items = []
@@ -211,15 +215,15 @@ public class ArtistsRepository : IArtistsRepository
         
         var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.CreatedAt : null;
         
-        return new PaginatedResponse<Song>
+        return new PaginatedResponse<DateTime?, Song>
         {
             Cursor = cursor,
             Items = items.Take(request.PageSize).ToList(),
         };
     }
 
-    public async Task<PaginatedResponse<Song>> FindAllSongsByTitleAsync(Guid artistId, string titlePart, 
-        PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, Song>> FindAllSongsByTitleAsync(Guid artistId, string titlePart, 
+        PaginationParams<DateTime?> request)
     {
         var artist = await _context.Set<Artist>()
             .Include(a => a.Songs)!
@@ -228,7 +232,7 @@ public class ArtistsRepository : IArtistsRepository
 
         if (artist is null)
         {
-            return new PaginatedResponse<Song>
+            return new PaginatedResponse<DateTime?, Song>
             {
                 Cursor = null,
                 Items = []
@@ -250,7 +254,7 @@ public class ArtistsRepository : IArtistsRepository
         
         var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.CreatedAt : null;
         
-        return new PaginatedResponse<Song>
+        return new PaginatedResponse<DateTime?, Song>
         {
             Cursor = cursor,
             Items = items.Take(request.PageSize).ToList(),

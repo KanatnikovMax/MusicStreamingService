@@ -4,7 +4,8 @@ namespace MusicStreamingService.DataAccess.Repositories.Interfaces;
 
 public interface ISongsRepository : IPgRepository<Song>
 {
-    Task<PaginatedResponse<Song>> FindAllAsync(PaginationParams request);
+    Task<PaginatedResponse<DateTime?, Song>> FindAllAsync(PaginationParams<DateTime?> request);
     Task<Song?> FindByTitleAsync(string title);
-    Task<PaginatedResponse<Song>> FindByTitlePartAsync(string titlePart, PaginationParams request);
+    Task<PaginatedResponse<DateTime?, Song>> FindByTitlePartAsync(string titlePart, 
+        PaginationParams<DateTime?> request);
 }

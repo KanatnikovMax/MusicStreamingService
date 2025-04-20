@@ -1,7 +1,7 @@
 ﻿namespace MusicStreamingService.DataAccess.Entities;
 
-public class PaginatedResponse<T>
+public class PaginatedResponse<TCursor, TItems>
 {
-    public DateTime? Cursor { get; set; }
-    public List<T> Items { get; set; }
+    public TCursor? Cursor { get; set; }
+    public List<TItems> Items { get; set; }
 }

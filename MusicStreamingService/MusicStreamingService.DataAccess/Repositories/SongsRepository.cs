@@ -15,7 +15,7 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
         _context = dbContext;
     }
 
-    public async Task<PaginatedResponse<Song>> FindAllAsync(PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, Song>> FindAllAsync(PaginationParams<DateTime?> request)
     {
         var songs = _context.Set<Song>()
             .Include(s => s.Artists)
@@ -29,10 +29,12 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
         var items = await songs.OrderBy(s => s.CreatedAt)
             .Take(request.PageSize + 1)
             .ToListAsync();
+        
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.CreatedAt : null;
 
-        return new PaginatedResponse<Song>
+        return new PaginatedResponse<DateTime?, Song>
         {
-            Cursor = items.LastOrDefault()?.CreatedAt,
+            Cursor = cursor,
             Items = items
         };
     }
@@ -84,7 +86,8 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
     }
     
-    public async Task<PaginatedResponse<Song>> FindByTitlePartAsync(string titlePart, PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, Song>> FindByTitlePartAsync(string titlePart, 
+        PaginationParams<DateTime?> request)
     {
         var songs = _context.Set<Song>()
             .Include(s => s.Artists)
@@ -99,10 +102,12 @@ public class SongsRepository : ISongsRepository // TODO: сделать паги
         var items = await songs.OrderBy(s => s.CreatedAt)
             .Take(request.PageSize + 1)
             .ToListAsync();
-
-        return new PaginatedResponse<Song>
+        
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.CreatedAt : null;
+        
+        return new PaginatedResponse<DateTime?, Song>
         {
-            Cursor = items.LastOrDefault()?.CreatedAt,
+            Cursor = cursor,
             Items = items
         };
     }

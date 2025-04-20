@@ -34,7 +34,8 @@ public class SongsController : ControllerBase
     
     [HttpGet]
     [Route("")]
-    public async Task<ActionResult<PaginatedResponse<SongModel>>> GetAllSongs([FromQuery] PaginationParams request)
+    public async Task<ActionResult<PaginatedResponse<DateTime?, SongModel>>> GetAllSongs(
+        [FromQuery] PaginationParams<DateTime?> request)
     {
         var songs = await _songsService.GetAllSongsAsync(request);
         return Ok(songs);
@@ -50,8 +51,8 @@ public class SongsController : ControllerBase
     
     [HttpGet]
     [Route("by_title")]
-    public async Task<ActionResult<PaginatedResponse<SongModel>>> GetSongsByName([FromQuery] string namePart, 
-        PaginationParams request)
+    public async Task<ActionResult<PaginatedResponse<DateTime?, SongModel>>> GetSongsByName([FromQuery] string namePart, 
+        [FromQuery] PaginationParams<DateTime?> request)
     {
         var songs = await _songsService.GetSongByTitleAsync(namePart, request);
         return Ok(songs);

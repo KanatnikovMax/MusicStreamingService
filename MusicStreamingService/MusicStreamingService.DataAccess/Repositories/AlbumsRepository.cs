@@ -16,7 +16,7 @@ public class AlbumsRepository : IAlbumsRepository
         _context = dbContext;
     }
 
-    public async Task<PaginatedResponse<Album>> FindAllAsync(PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, Album>> FindAllAsync(PaginationParams<DateTime?> request)
     {
         var albums = _context.Set<Album>()
             .Include(a => a.Artists)
@@ -26,16 +26,18 @@ public class AlbumsRepository : IAlbumsRepository
         
         if (request.Cursor is not null)
         {
-            albums = albums.Where(s => s.CreatedAt >= request.Cursor);
+            albums = albums.Where(s => s.ReleaseDate <= request.Cursor);
         }
 
-        var items = await albums.OrderBy(s => s.CreatedAt)
+        var items = await albums.OrderBy(s => s.ReleaseDate)
             .Take(request.PageSize + 1)
             .ToListAsync();
-
-        return new PaginatedResponse<Album>
+        
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.ReleaseDate : null;
+        
+        return new PaginatedResponse<DateTime?, Album>
         {
-            Cursor = items.LastOrDefault()?.CreatedAt,
+            Cursor = cursor,
             Items = items
         };
     }
@@ -89,7 +91,8 @@ public class AlbumsRepository : IAlbumsRepository
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
     }
     
-    public async Task<PaginatedResponse<Album>> FindByTitlePartAsync(string titlePart, PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, Album>> FindByTitlePartAsync(string titlePart, 
+        PaginationParams<DateTime?> request)
     {
         var albums = _context.Set<Album>()
             .Include(a => a.Artists)
@@ -100,21 +103,23 @@ public class AlbumsRepository : IAlbumsRepository
         
         if (request.Cursor is not null)
         {
-            albums = albums.Where(s => s.CreatedAt >= request.Cursor);
+            albums = albums.Where(s => s.ReleaseDate <= request.Cursor);
         }
 
-        var items = await albums.OrderBy(s => s.CreatedAt)
+        var items = await albums.OrderBy(s => s.ReleaseDate)
             .Take(request.PageSize + 1)
             .ToListAsync();
-
-        return new PaginatedResponse<Album>
+        
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.ReleaseDate : null;
+        
+        return new PaginatedResponse<DateTime?, Album>
         {
-            Cursor = items.LastOrDefault()?.CreatedAt,
+            Cursor = cursor,
             Items = items
         };
     }
 
-    public async Task<PaginatedResponse<Song>> FindAllSongsAsync(Guid albumId, PaginationParams request)
+    public async Task<PaginatedResponse<int?, Song>> FindAllSongsAsync(Guid albumId, PaginationParams<int?> request)
     {
         var album = await _context.Set<Album>()
             .Include(a => a.Songs)!
@@ -124,7 +129,7 @@ public class AlbumsRepository : IAlbumsRepository
 
         if (album is null)
         {
-            return new PaginatedResponse<Song>
+            return new PaginatedResponse<int?, Song>
             {
                 Cursor = null,
                 Items = []
@@ -135,16 +140,18 @@ public class AlbumsRepository : IAlbumsRepository
         
         if (request.Cursor is not null)
         {
-            songs = songs.Where(s => s.CreatedAt >= request.Cursor).ToList();
+            songs = songs.Where(s => s.TrackNumber >= request.Cursor).ToList();
         }
 
-        var items = songs.OrderBy(s => s.CreatedAt)
+        var items = songs.OrderBy(s => s.TrackNumber)
             .Take(request.PageSize + 1)
             .ToList();
+        
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.TrackNumber : null;
 
-        return new PaginatedResponse<Song>
+        return new PaginatedResponse<int?,Song>
         {
-            Cursor = items.LastOrDefault()?.CreatedAt,
+            Cursor = cursor,
             Items = items
         };
     }

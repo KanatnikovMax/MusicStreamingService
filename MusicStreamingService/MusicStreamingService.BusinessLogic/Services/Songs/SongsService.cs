@@ -19,10 +19,10 @@ public class SongsService : ISongsService
         _mapper = mapper;
     }
 
-    public async Task<PaginatedResponse<SongModel>> GetAllSongsAsync(PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, SongModel>> GetAllSongsAsync(PaginationParams<DateTime?> request)
     {
         var songs = await _unitOfWork.Songs.FindAllAsync(request);
-        return new PaginatedResponse<SongModel>
+        return new PaginatedResponse<DateTime?, SongModel>
         {
             Cursor = songs.Cursor,
             Items = _mapper.Map<List<SongModel>>(songs.Items),
@@ -36,10 +36,11 @@ public class SongsService : ISongsService
         return _mapper.Map<SongModel>(song);
     }
 
-    public async Task<PaginatedResponse<SongModel>> GetSongByTitleAsync(string titlePart, PaginationParams request)
+    public async Task<PaginatedResponse<DateTime?, SongModel>> GetSongByTitleAsync(string titlePart, 
+        PaginationParams<DateTime?> request)
     {
         var songs = await _unitOfWork.Songs.FindByTitlePartAsync(titlePart, request);
-        return new PaginatedResponse<SongModel>
+        return new PaginatedResponse<DateTime?, SongModel>
         {
             Cursor = songs.Cursor,
             Items = _mapper.Map<List<SongModel>>(songs.Items),
