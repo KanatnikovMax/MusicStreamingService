@@ -1,0 +1,39 @@
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using MusicStreamingService.BusinessLogic.Services.Users;
+using MusicStreamingService.BusinessLogic.Services.Users.Models;
+using MusicStreamingService.Service.Controllers.Requests.Users;
+
+namespace MusicStreamingService.Service.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class AuthorizationController : ControllerBase
+{
+    private readonly IMapper _mapper;
+    private readonly IUsersService _usersService;
+
+    public AuthorizationController(IMapper mapper, IUsersService usersService)
+    {
+        _mapper = mapper;
+        _usersService = usersService;
+    }
+
+    [HttpPost]
+    [Route("register")]
+    public async Task<ActionResult<TokenResponce>> RegisterUser([FromForm] RegisterUserRequest request)
+    {
+        var registerModel = _mapper.Map<RegisterUserModel>(request);
+        var tokens = await _usersService.RegisterUserAsync(registerModel);
+        return Ok(tokens);
+    }
+
+    [HttpPost]
+    [Route("login")]
+    public async Task<ActionResult<TokenResponce>> LoginUser([FromForm] LoginUserRequest request)
+    {
+        var authorizeModel = _mapper.Map<LoginUserModel>(request);
+        var tokens = await _usersService.LoginUserAsync(authorizeModel);
+        return Ok(tokens);
+    }
+}
