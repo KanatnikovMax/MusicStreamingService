@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MusicStreamingService.BusinessLogic.Services.Albums;
 using MusicStreamingService.BusinessLogic.Services.Artists;
 using MusicStreamingService.BusinessLogic.Services.Songs;
+using MusicStreamingService.BusinessLogic.Services.Users;
 using MusicStreamingService.DataAccess.Context;
+using MusicStreamingService.DataAccess.Entities;
 using MusicStreamingService.DataAccess.Repositories;
 using MusicStreamingService.DataAccess.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.UnitOfWork;
@@ -22,5 +25,16 @@ public static class ServicesConfigurator
         services.AddScoped<IArtistsService, ArtistsService>();
         services.AddScoped<IAlbumsService, AlbumsService>();
         services.AddScoped<ISongsService, SongsService>();
+        //services.AddScoped<IUsersService, UsersService>();
+        services.AddScoped<IUsersService>(x =>
+            new UsersService(
+                x.GetRequiredService<MusicServiceDbContext>(),
+                x.GetRequiredService<SignInManager<User>>(),
+                x.GetRequiredService<UserManager<User>>(),
+                x.GetRequiredService<IHttpClientFactory>(),
+                x.GetRequiredService<IMapper>(),
+                settings.IdentityServerUri,
+                settings.ClientId,
+                settings.ClientSecret));
     }
 }

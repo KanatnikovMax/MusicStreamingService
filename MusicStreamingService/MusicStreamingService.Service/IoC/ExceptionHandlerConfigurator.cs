@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using System.Security.Authentication;
+using Microsoft.AspNetCore.Diagnostics;
 using MusicStreamingService.BusinessLogic.Exceptions.Common;
 
 namespace MusicStreamingService.Service.IoC;
@@ -31,9 +32,18 @@ public static class ExceptionHandlerConfigurator
                 }
                 else
                 {
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                    errorCode = "INTERNAL_ERROR";
-                    message = "Internal Server Error";
+                    if (exception is AuthenticationException authenticationException)
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        errorCode = "AUTHENTICATION_ERROR";
+                        message = authenticationException.Message;
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                        errorCode = "INTERNAL_ERROR";
+                        message = "Internal Server Error";   
+                    }
                 }
                 
                 var environment = context.RequestServices.GetRequiredService<IHostEnvironment>();

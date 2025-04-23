@@ -10,7 +10,15 @@ public static class IdentityServerConfigSettings
         new IdentityResources.Profile(),
         new IdentityResource("roles", ["role"])
     ];
-
+    
+    public static IEnumerable<ApiResource> ApiResources =>
+    [
+        new ApiResource("api", "Music API") 
+        {
+            Scopes = ["api"] 
+        }
+    ];
+    
     public static IEnumerable<ApiScope> ApiScopes => [new ApiScope("api", "Music API")];
 
     public static IEnumerable<Client> GetClients(MusicServiceSettings settings) =>
@@ -35,6 +43,7 @@ public static class IdentityServerConfigSettings
             AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
             ClientSecrets = [new Secret("swagger".Sha256())],
             AllowedScopes = ["api"]
+            
         }
     ];
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -27,6 +28,7 @@ public static class AuthorizationConfigurator
         services.AddIdentityServer()
             .AddInMemoryIdentityResources(IdentityServerConfigSettings.IdentityResources)
             .AddInMemoryApiScopes(IdentityServerConfigSettings.ApiScopes)
+            .AddInMemoryApiResources(IdentityServerConfigSettings.ApiResources)
             .AddInMemoryClients(IdentityServerConfigSettings.GetClients(settings))
             .AddAspNetIdentity<User>();
 
@@ -42,16 +44,17 @@ public static class AuthorizationConfigurator
                 options.Authority = settings.IdentityServerUri;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuerSigningKey = false,
-                    ValidateIssuer = false, 
-                    ValidateAudience = false, 
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(settings.ClientSecret)),
+                    ValidateIssuer = true, 
+                    ValidateAudience = true, 
                     ValidIssuer = settings.IdentityServerUri,
                     ValidAudience = "api",
                     RequireExpirationTime = true,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromMinutes(5)
                 };
-                options.Audience = "api";
             });
 
         services.AddAuthorization();
