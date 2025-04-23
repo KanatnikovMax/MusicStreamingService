@@ -10,6 +10,8 @@ public class User : IdentityUser<Guid>
     public ICollection<UserAlbum>? UsersAlbums { get; set; }
     
     public ICollection<UserSong>? UsersSongs { get; set; }
+    
+    public ICollection<UserRole>? Roles { get; set; }
 }
 
 public class Role : IdentityRole<Guid>

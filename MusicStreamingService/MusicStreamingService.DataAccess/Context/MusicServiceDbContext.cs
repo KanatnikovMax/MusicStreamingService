@@ -1,10 +1,21 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MusicStreamingService.DataAccess.Context.Configuration;
 using MusicStreamingService.DataAccess.Entities;
 
 namespace MusicStreamingService.DataAccess.Context;
 
-public class MusicServiceDbContext : DbContext
+public class MusicServiceDbContext : IdentityDbContext<
+    User, 
+    Role, 
+    Guid, 
+    IdentityUserClaim<Guid>, 
+    UserRole, 
+    IdentityUserLogin<Guid>, 
+    IdentityRoleClaim<Guid>, 
+    IdentityUserToken<Guid>
+>
 {
     public DbSet<Album> Albums { get; set; }
     public DbSet<Artist> Artists { get; set; }

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using MusicStreamingService.BusinessLogic.Services.Users;
 using MusicStreamingService.BusinessLogic.Services.Users.Models;
 using MusicStreamingService.Service.Controllers.Requests.Users;
-using MusicStreamingService.Service.Controllers.Responses.Users;
 
 namespace MusicStreamingService.Service.Controllers;
 
@@ -11,14 +10,11 @@ namespace MusicStreamingService.Service.Controllers;
 [Route("[controller]")]
 public class AuthorizationController : ControllerBase
 {
-    private readonly ILogger<AuthorizationController> _logger;
     private readonly IMapper _mapper;
     private readonly IUsersService _usersService;
 
-    public AuthorizationController(ILogger<AuthorizationController> logger, 
-        IMapper mapper, IUsersService usersService)
+    public AuthorizationController(IMapper mapper, IUsersService usersService)
     {
-        _logger = logger;
         _mapper = mapper;
         _usersService = usersService;
     }
@@ -27,7 +23,6 @@ public class AuthorizationController : ControllerBase
     [Route("register")]
     public async Task<ActionResult<TokenResponce>> RegisterUser([FromForm] RegisterUserRequest request)
     {
-
         var registerModel = _mapper.Map<RegisterUserModel>(request);
         var tokens = await _usersService.RegisterUserAsync(registerModel);
         return Ok(tokens);
@@ -39,7 +34,6 @@ public class AuthorizationController : ControllerBase
     {
         var authorizeModel = _mapper.Map<LoginUserModel>(request);
         var tokens = await _usersService.LoginUserAsync(authorizeModel);
-
         return Ok(tokens);
     }
 }

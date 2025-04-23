@@ -12,12 +12,12 @@ public static class UsersContextConfigurator
         modelBuilder.Entity<User>().Property(u => u.Id)
             .HasDefaultValueSql("gen_random_uuid()");
         modelBuilder.Entity<Role>().ToTable("user_roles");
-        modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("user_tokens").HasNoKey();
-        modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("user_role_owners").HasNoKey();
+        modelBuilder.Entity<UserRole>().HasKey(ur => new { ur.UserId, ur.RoleId });
+        modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("user_tokens");
+        //modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("user_role_owners");
         modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("user_role_claims");
-        modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("user_logins").HasNoKey();
+        modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("user_logins");
         modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("user_claims");
-        
         
         modelBuilder.Entity<User>().HasMany(x => x.Albums).WithMany(x => x.Users)
             .UsingEntity<UserAlbum>(
@@ -54,5 +54,6 @@ public static class UsersContextConfigurator
                     t.ToTable("users_songs");
                     t.Property(us => us.AddedTime).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 });
+        
     }
 }

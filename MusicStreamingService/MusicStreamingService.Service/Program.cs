@@ -1,4 +1,5 @@
 using MusicStreamingService.Service.DI;
+using MusicStreamingService.Service.Init;
 using MusicStreamingService.Service.Settings;
 
 var configuration = new ConfigurationBuilder()
@@ -12,6 +13,8 @@ ApplicationConfigurator.ConfigureServices(builder, settings);
 
 var app = builder.Build();
 ApplicationConfigurator.ConfigureApplication(app);
+
+await PostgresInitializer.InitializeAsync(app, settings);
 
 app.MapGet("/", () => "Hello World!");
 

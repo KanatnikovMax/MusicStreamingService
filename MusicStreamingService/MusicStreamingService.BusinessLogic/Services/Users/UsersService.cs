@@ -55,11 +55,11 @@ public class UsersService : IUsersService
                 throw new Exception(string.Join(Environment.NewLine, createResult.Errors.Select(e => e.Description)) );
             }
 
-            /*var roleResult = await _userManager.AddToRoleAsync(user, "user");
+            var roleResult = await _userManager.AddToRoleAsync(user, "user");
             if (!roleResult.Succeeded)
             {
                 throw new Exception(string.Join(Environment.NewLine, roleResult.Errors.Select(e => e.Description)));
-            }*/
+            }
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -95,7 +95,7 @@ public class UsersService : IUsersService
         }
         catch
         {
-            //await transaction.RollbackAsync();
+            await transaction.RollbackAsync();
             throw;
         }
     }

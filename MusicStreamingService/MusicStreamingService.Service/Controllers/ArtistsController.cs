@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Artists;
@@ -27,6 +28,7 @@ public class ArtistsController : ControllerBase
         _logger = logger;
     }
     
+    [Authorize(Roles = "admin")]
     [HttpPost]
     [Route("create")]
     public async Task<ActionResult<ArtistsListResponse>> CreateArtist([FromBody] CreateArtistRequest request)
@@ -46,7 +48,7 @@ public class ArtistsController : ControllerBase
         var artists = await _artistsService.GetAllArtistsAsync(paginationParams);
         return Ok(_mapper.Map<PaginatedResponse<DateTime?, ArtistModel>>(artists));
     }
-
+    
     [HttpGet]
     [Route("{id:guid}")]
     public async Task<ActionResult<ArtistsListResponse>> GetArtistById(Guid id)
@@ -95,6 +97,7 @@ public class ArtistsController : ControllerBase
         return Ok(_mapper.Map<PaginatedResponse<DateTime?, SongModel>>(songs));
     }
     
+    [Authorize(Roles = "admin")]
     [HttpDelete]
     [Route("delete/{id:guid}")]
     public async Task<ActionResult<ArtistsListResponse>> DeleteArtist(Guid id)
@@ -102,7 +105,8 @@ public class ArtistsController : ControllerBase
         var artist = await _artistsService.DeleteArtistAsync(id);
         return Ok(new ArtistsListResponse([artist]));
     }
-
+    
+    [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("update/{id:guid}")]
     public async Task<ActionResult<ArtistsListResponse>> UpdateArtist(Guid id, [FromBody] UpdateArtistRequest request)

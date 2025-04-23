@@ -1,10 +1,13 @@
-﻿using System.Text;
+﻿using System.Security.Claims;
+using System.Text;
+using Duende.IdentityServer.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MusicStreamingService.DataAccess.Context;
 using MusicStreamingService.DataAccess.Entities;
+using MusicStreamingService.Service.Init;
 using MusicStreamingService.Service.Settings;
 
 namespace MusicStreamingService.Service.IoC;
@@ -53,11 +56,14 @@ public static class AuthorizationConfigurator
                     ValidAudience = "api",
                     RequireExpirationTime = true,
                     ValidateLifetime = true,
-                    ClockSkew = TimeSpan.FromMinutes(5)
+                    ClockSkew = TimeSpan.FromMinutes(5),
+                    RoleClaimType = ClaimTypes.Role
                 };
             });
 
         services.AddAuthorization();
+
+        services.AddTransient<IProfileService, IdentityProfileService>();
     }
 
     public static void ConfigureApplication(IApplicationBuilder app)

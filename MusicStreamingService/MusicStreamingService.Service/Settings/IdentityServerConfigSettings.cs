@@ -1,4 +1,5 @@
-﻿using Duende.IdentityServer.Models;
+﻿using Duende.IdentityModel;
+using Duende.IdentityServer.Models;
 
 namespace MusicStreamingService.Service.Settings;
 
@@ -8,7 +9,10 @@ public static class IdentityServerConfigSettings
     [
         new IdentityResources.OpenId(),
         new IdentityResources.Profile(),
-        new IdentityResource("roles", ["role"])
+        new IdentityResource(
+            name: "roles",
+            displayName: "Roles",
+            userClaims: [JwtClaimTypes.Role])
     ];
     
     public static IEnumerable<ApiResource> ApiResources =>
@@ -35,14 +39,14 @@ public static class IdentityServerConfigSettings
                 GrantType.ResourceOwnerPassword
             ],
             ClientSecrets = [new Secret(settings.ClientSecret.Sha256())],
-            AllowedScopes = ["api"]
+            AllowedScopes = ["api", "openid", "profile", "roles"]
         },
         new Client
         {
             ClientId = "swagger",
             AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
             ClientSecrets = [new Secret("swagger".Sha256())],
-            AllowedScopes = ["api"]
+            AllowedScopes = ["api", "openid", "profile", "roles"]
             
         }
     ];

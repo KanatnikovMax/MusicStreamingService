@@ -9,7 +9,9 @@ public static class MusicServiceSettingsReader
             MusicServiceDbConnectionString = configuration.GetValue<string>("MusicServiceDbContext"),
             IdentityServerUri = configuration.GetValue<string>("IdentityServerSettings:Uri"),
             ClientId = configuration.GetValue<string>("IdentityServerSettings:ClientId"),
-            ClientSecret = configuration.GetValue<string>("IdentityServerSettings:ClientSecret")
+            ClientSecret = configuration.GetValue<string>("IdentityServerSettings:ClientSecret"),
+            MasterAdminEmail = configuration.GetValue<string>("IdentityServerSettings:MasterAdminEmail"),
+            MasterAdminPassword = configuration.GetValue<string>("IdentityServerSettings:MasterAdminPassword")
         };
     }
 }

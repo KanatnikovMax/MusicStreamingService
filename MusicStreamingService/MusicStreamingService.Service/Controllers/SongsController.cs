@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicStreamingService.BusinessLogic.Services.Songs;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
@@ -25,6 +26,7 @@ public class SongsController : ControllerBase
         _logger = logger;
     }
 
+    [Authorize(Roles = "admin")]
     [HttpPost]
     [Route("create")]
     public async Task<ActionResult<SongsListResponse>> CreateSong([FromBody] CreateSongRequest model)
@@ -62,7 +64,8 @@ public class SongsController : ControllerBase
         var songs = await _songsService.GetSongByTitleAsync(namePart, paginationParams);
         return Ok(_mapper.Map<PaginatedResponse<DateTime?, SongModel>>(songs));
     }
-
+    
+    [Authorize(Roles = "admin")]
     [HttpDelete]
     [Route("delete/{id:guid}")]
     public async Task<ActionResult<SongsListResponse>> DeleteSong(Guid id)
@@ -70,7 +73,8 @@ public class SongsController : ControllerBase
         var song = await _songsService.DeleteSongAsync(id);
         return Ok(new SongsListResponse([song]));
     }
-
+    
+    [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("update/{id:guid}")]
     public async Task<ActionResult<SongsListResponse>> UpdateSong(Guid id, [FromBody] UpdateSongRequest request)
@@ -80,5 +84,4 @@ public class SongsController : ControllerBase
         var song = await _songsService.UpdateSongAsync(updateSongModel, id);
         return Ok(new SongsListResponse([song]));
     }
-    
 }
