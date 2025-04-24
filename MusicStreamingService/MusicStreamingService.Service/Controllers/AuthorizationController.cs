@@ -11,12 +11,12 @@ namespace MusicStreamingService.Service.Controllers;
 public class AuthorizationController : ControllerBase
 {
     private readonly IMapper _mapper;
-    private readonly IUsersService _usersService;
+    private readonly IAuthService _authService;
 
-    public AuthorizationController(IMapper mapper, IUsersService usersService)
+    public AuthorizationController(IMapper mapper, IAuthService authService)
     {
         _mapper = mapper;
-        _usersService = usersService;
+        _authService = authService;
     }
 
     [HttpPost]
@@ -24,7 +24,7 @@ public class AuthorizationController : ControllerBase
     public async Task<ActionResult<TokenResponce>> RegisterUser([FromForm] RegisterUserRequest request)
     {
         var registerModel = _mapper.Map<RegisterUserModel>(request);
-        var tokens = await _usersService.RegisterUserAsync(registerModel);
+        var tokens = await _authService.RegisterUserAsync(registerModel);
         return Ok(tokens);
     }
 
@@ -33,7 +33,7 @@ public class AuthorizationController : ControllerBase
     public async Task<ActionResult<TokenResponce>> LoginUser([FromForm] LoginUserRequest request)
     {
         var authorizeModel = _mapper.Map<LoginUserModel>(request);
-        var tokens = await _usersService.LoginUserAsync(authorizeModel);
+        var tokens = await _authService.LoginUserAsync(authorizeModel);
         return Ok(tokens);
     }
 }
