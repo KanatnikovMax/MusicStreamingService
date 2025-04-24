@@ -26,6 +26,7 @@ public static class ServicesConfigurator
         services.AddScoped<IAlbumsService, AlbumsService>();
         services.AddScoped<ISongsService, SongsService>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IUsersActionsService, UsersActionsService>();
         services.AddScoped<IAuthService>(x =>
             new AuthService(
                 x.GetRequiredService<MusicServiceDbContext>(),

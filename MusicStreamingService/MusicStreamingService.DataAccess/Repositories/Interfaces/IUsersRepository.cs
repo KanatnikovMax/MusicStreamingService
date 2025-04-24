@@ -10,13 +10,13 @@ public interface IUsersRepository : IPgRepository<User>
     Task<CursorResponse<DateTime?, Album>> FindAllAlbumsByTitleAsync(Guid userId, string titlePart, 
         PaginationParams<DateTime?> request);
     Task<CursorResponse<DateTime?, Song>> FindAllSongsAsync(Guid userId, PaginationParams<DateTime?> request);
-    Task<CursorResponse<DateTime?, Song>> FindAllSongsByTitleAsync(Guid userId, string namePart,
+    Task<CursorResponse<DateTime?, Song>> FindAllSongsByNameAsync(Guid userId, string namePart,
         PaginationParams<DateTime?> request);
     Task<UserAlbum?> AddAlbumAsync(Guid userId, Guid albumId);
     
     Task<UserSong> AddSongAsync(Guid userId, Guid songId);
-    Task<UserAlbum?> FindAlbumAsync(Guid userId, Guid albumId);
-    Task<UserSong?> FindSongAsync(Guid userId, Guid songId);
+    Task<UserAlbum?> FindAlbumByIdAsync(Guid userId, Guid albumId);
+    Task<UserSong?> FindSongByIdAsync(Guid userId, Guid songId);
     void DeleteAlbum(UserAlbum album);
     
     void DeleteSong(UserSong song);

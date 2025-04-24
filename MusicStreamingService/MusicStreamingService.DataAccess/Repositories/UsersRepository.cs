@@ -74,6 +74,7 @@ public class UsersRepository : IUsersRepository
         var userAlbums = _context.Set<UserAlbum>()
             .Where(ua => ua.UserId == userId)
             .Include(ua => ua.Album)
+            .ThenInclude(a => a.Artists)
             .AsNoTracking();
 
         if (!userAlbums.Any())
@@ -111,6 +112,7 @@ public class UsersRepository : IUsersRepository
         var userAlbums = _context.Set<UserAlbum>()
             .Where(ua => ua.UserId == userId)
             .Include(ua => ua.Album)
+            .ThenInclude(a => a.Artists)
             .Where(ua => EF.Functions.ILike(ua.Album.Title, $"%{titlePart}%"))
             .AsNoTracking();
 
@@ -149,6 +151,7 @@ public class UsersRepository : IUsersRepository
         var userSongs = _context.Set<UserSong>()
             .Where(ua => ua.UserId == userId)
             .Include(ua => ua.Song)
+            .ThenInclude(s => s.Artists)
             .AsNoTracking();
 
         if (!userSongs.Any())
@@ -180,7 +183,7 @@ public class UsersRepository : IUsersRepository
         };
     }
 
-    public async Task<CursorResponse<DateTime?, Song>> FindAllSongsByTitleAsync(Guid userId, string namePart,
+    public async Task<CursorResponse<DateTime?, Song>> FindAllSongsByNameAsync(Guid userId, string namePart,
         PaginationParams<DateTime?> request)
     {
         var userSongs = _context.Set<UserSong>()
@@ -225,7 +228,7 @@ public class UsersRepository : IUsersRepository
         var userAlbum = _context.Set<UserAlbum>()
             .FirstOrDefault(a => a.UserId == userId && a.AlbumId == albumId);
         
-        if (userAlbum is null)
+        if (userAlbum is not null)
             return null;
 
         userAlbum = new UserAlbum
@@ -245,7 +248,7 @@ public class UsersRepository : IUsersRepository
         var userSong = _context.Set<UserSong>()
             .FirstOrDefault(s => s.UserId == userId && s.SongId == songId);
         
-        if (userSong is null)
+        if (userSong is not null)
             return null;
 
         userSong = new UserSong
@@ -260,13 +263,13 @@ public class UsersRepository : IUsersRepository
         return userSong;
     }
 
-    public async Task<UserAlbum?> FindAlbumAsync(Guid userId, Guid albumId)
+    public async Task<UserAlbum?> FindAlbumByIdAsync(Guid userId, Guid albumId)
     {
         return await _context.Set<UserAlbum>()
             .FirstOrDefaultAsync(a => a.UserId == userId && a.AlbumId == albumId);
     }
 
-    public async Task<UserSong?> FindSongAsync(Guid userId, Guid songId)
+    public async Task<UserSong?> FindSongByIdAsync(Guid userId, Guid songId)
     {
         return await _context.Set<UserSong>()
             .FirstOrDefaultAsync(a => a.UserId == userId && a.SongId == songId);
