@@ -10,6 +10,8 @@ public class UsersServiceProfile : Profile
     {
         CreateMap<RegisterUserRequest, RegisterUserModel>();
         CreateMap<LoginUserRequest, LoginUserModel>();
-        CreateMap<UpdateUserRequest, UpdateUserModel>();
+        CreateMap<ChangeUserNameRequest, ChangeUserNameModel>();
+        CreateMap<ChangePasswordRequest, ChangePasswordModel>();
+        CreateMap<ChangeEmailRequest, ChangeEmailModel>();
     }
 }

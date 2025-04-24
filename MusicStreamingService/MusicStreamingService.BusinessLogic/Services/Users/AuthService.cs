@@ -10,7 +10,7 @@ using MusicStreamingService.DataAccess.Entities;
 
 namespace MusicStreamingService.BusinessLogic.Services.Users;
 
-public class UsersService : IUsersService
+public class AuthService : IAuthService
 {
     private readonly MusicServiceDbContext _context;
     private readonly SignInManager<User> _signInManager;
@@ -21,7 +21,7 @@ public class UsersService : IUsersService
     private readonly string _clientId;
     private readonly string _clientSecret;
 
-    public UsersService(MusicServiceDbContext context, SignInManager<User> signInManager, UserManager<User> userManager, 
+    public AuthService(MusicServiceDbContext context, SignInManager<User> signInManager, UserManager<User> userManager, 
         IHttpClientFactory httpClientFactory, IMapper mapper, 
         string identityServerUri, string clientId, string clientSecret)
     {
@@ -41,7 +41,7 @@ public class UsersService : IUsersService
 
         try
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByNameAsync(model.UserName);
             if (user is not null)
             {
                 throw new EntityAlreadyExistsException("User");
@@ -52,13 +52,15 @@ public class UsersService : IUsersService
             var createResult = await _userManager.CreateAsync(user, model.Password);
             if (!createResult.Succeeded)
             {
-                throw new Exception(string.Join(Environment.NewLine, createResult.Errors.Select(e => e.Description)) );
+                throw new RegistrationException(
+                    string.Join(Environment.NewLine, createResult.Errors.Select(e => e.Description)) );
             }
 
             var roleResult = await _userManager.AddToRoleAsync(user, "user");
             if (!roleResult.Succeeded)
             {
-                throw new Exception(string.Join(Environment.NewLine, roleResult.Errors.Select(e => e.Description)));
+                throw new RegistrationException(
+                    string.Join(Environment.NewLine, roleResult.Errors.Select(e => e.Description)));
             }
 
             await _context.SaveChangesAsync();

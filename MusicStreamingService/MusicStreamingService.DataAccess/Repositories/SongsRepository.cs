@@ -6,7 +6,7 @@ using MusicStreamingService.DataAccess.Repositories.Interfaces;
 
 namespace MusicStreamingService.DataAccess.Repositories;
 
-public class SongsRepository : ISongsRepository // TODO: сделать пагинацию
+public class SongsRepository : ISongsRepository
 {
     private readonly MusicServiceDbContext _context;
 

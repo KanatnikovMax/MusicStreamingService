@@ -68,54 +68,167 @@ public class UsersRepository : IUsersRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Album>> FindAllAlbumsAsync(Guid userId)
+    public async Task<CursorResponse<DateTime?, Album>> FindAllAlbumsAsync(Guid userId,
+        PaginationParams<DateTime?> request)
     {
-        return await _context.Set<UserAlbum>()
+        var userAlbums = _context.Set<UserAlbum>()
             .Where(ua => ua.UserId == userId)
             .Include(ua => ua.Album)
-            .OrderByDescending(ua => ua.AddedTime)
-            .Select(ua => ua.Album)
+            .ThenInclude(a => a.Artists)
+            .AsNoTracking();
+
+        if (!userAlbums.Any())
+        {
+            return new CursorResponse<DateTime?, Album>
+            {
+                Cursor = null,
+                Items = []
+            };
+        }
+
+        if (request.Cursor is not null)
+        {
+            userAlbums = userAlbums.Where(ua => ua.AddedTime <= request.Cursor);
+        }
+
+        var items = await userAlbums.OrderByDescending(ua => ua.AddedTime)
+            .Take(request.PageSize + 1)
             .ToListAsync();
+        
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.AddedTime : null;
+        
+        return new CursorResponse<DateTime?, Album>
+        {
+            Cursor = cursor,
+            Items = items.Take(request.PageSize)
+                .Select(ua => ua.Album)
+                .ToList(),
+        };
     }
 
-    public async Task<IEnumerable<Album>> FindAllAlbumsByTitleAsync(Guid userId, string titlePart)
+    public async Task<CursorResponse<DateTime?, Album>> FindAllAlbumsByTitleAsync(Guid userId, string titlePart,
+        PaginationParams<DateTime?> request)
     {
-        return await _context.Set<UserAlbum>()
+        var userAlbums = _context.Set<UserAlbum>()
             .Where(ua => ua.UserId == userId)
             .Include(ua => ua.Album)
-            .OrderByDescending(ua => ua.AddedTime)
-            .Select(ua => ua.Album)
-            .Where(a => EF.Functions.ILike(a.Title, $"{titlePart}%"))
-            .ToListAsync(); 
-    }
+            .ThenInclude(a => a.Artists)
+            .Where(ua => EF.Functions.ILike(ua.Album.Title, $"%{titlePart}%"))
+            .AsNoTracking();
 
-    public async Task<IEnumerable<Song>> FindAllSongsAsync(Guid userId)
-    {
-        return await _context.Set<UserSong>()
-            .Where(us => us.UserId == userId)
-            .Include(us => us.Song)
-            .OrderByDescending(us => us.AddedTime)
-            .Select(us => us.Song)
+        if (!userAlbums.Any())
+        {
+            return new CursorResponse<DateTime?, Album>
+            {
+                Cursor = null,
+                Items = []
+            };
+        }
+
+        if (request.Cursor is not null)
+        {
+            userAlbums = userAlbums.Where(ua => ua.AddedTime <= request.Cursor);
+        }
+
+        var items = await userAlbums.OrderByDescending(ua => ua.AddedTime)
+            .Take(request.PageSize + 1)
             .ToListAsync();
+        
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.AddedTime : null;
+        
+        return new CursorResponse<DateTime?, Album>
+        {
+            Cursor = cursor,
+            Items = items.Take(request.PageSize)
+                .Select(ua => ua.Album)
+                .ToList(),
+        };
     }
 
-    public async Task<IEnumerable<Song>> FindAllSongsByTitleAsync(Guid userId, string titlePart)
+    public async Task<CursorResponse<DateTime?, Song>> FindAllSongsAsync(Guid userId, 
+        PaginationParams<DateTime?> request)
     {
-        return await _context.Set<UserSong>()
-            .Where(us => us.UserId == userId)
-            .Include(us => us.Song)
-            .OrderByDescending(us => us.AddedTime)
-            .Select(us => us.Song)
-            .Where(s => EF.Functions.ILike(s.Title, $"{titlePart}%"))
+        var userSongs = _context.Set<UserSong>()
+            .Where(ua => ua.UserId == userId)
+            .Include(ua => ua.Song)
+            .ThenInclude(s => s.Artists)
+            .AsNoTracking();
+
+        if (!userSongs.Any())
+        {
+            return new CursorResponse<DateTime?, Song>
+            {
+                Cursor = null,
+                Items = []
+            };
+        }
+
+        if (request.Cursor is not null)
+        {
+            userSongs = userSongs.Where(us => us.AddedTime <= request.Cursor);
+        }
+
+        var items = await userSongs.OrderByDescending(us => us.AddedTime)
+            .Take(request.PageSize + 1)
             .ToListAsync();
+        
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.AddedTime : null;
+        
+        return new CursorResponse<DateTime?, Song>
+        {
+            Cursor = cursor,
+            Items = items.Take(request.PageSize)
+                .Select(us => us.Song)
+                .ToList(),
+        };
     }
 
-    public async Task<UserAlbum> AddAlbumAsync(Guid userId, Guid albumId)
+    public async Task<CursorResponse<DateTime?, Song>> FindAllSongsByNameAsync(Guid userId, string namePart,
+        PaginationParams<DateTime?> request)
+    {
+        var userSongs = _context.Set<UserSong>()
+            .Where(ua => ua.UserId == userId)
+            .Include(ua => ua.Song)
+            .ThenInclude(s => s.Artists)
+            .Where(us => EF.Functions.ILike(us.Song.Title, $"%{namePart}%") 
+                         || us.Song.Artists.Any(a => EF.Functions.ILike(a.Name, $"%{namePart}%")))
+            .AsNoTracking();
+
+        if (!userSongs.Any())
+        {
+            return new CursorResponse<DateTime?, Song>
+            {
+                Cursor = null,
+                Items = []
+            };
+        }
+
+        if (request.Cursor is not null)
+        {
+            userSongs = userSongs.Where(us => us.AddedTime <= request.Cursor);
+        }
+
+        var items = await userSongs.OrderByDescending(us => us.AddedTime)
+            .Take(request.PageSize + 1)
+            .ToListAsync();
+        
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.AddedTime : null;
+        
+        return new CursorResponse<DateTime?, Song>
+        {
+            Cursor = cursor,
+            Items = items.Take(request.PageSize)
+                .Select(us => us.Song)
+                .ToList(),
+        };
+    }
+
+    public async Task<UserAlbum?> AddAlbumAsync(Guid userId, Guid albumId)
     {
         var userAlbum = _context.Set<UserAlbum>()
             .FirstOrDefault(a => a.UserId == userId && a.AlbumId == albumId);
         
-        if (userAlbum is null)
+        if (userAlbum is not null)
             return null;
 
         userAlbum = new UserAlbum
@@ -135,7 +248,7 @@ public class UsersRepository : IUsersRepository
         var userSong = _context.Set<UserSong>()
             .FirstOrDefault(s => s.UserId == userId && s.SongId == songId);
         
-        if (userSong is null)
+        if (userSong is not null)
             return null;
 
         userSong = new UserSong
@@ -148,5 +261,27 @@ public class UsersRepository : IUsersRepository
         await _context.Set<UserSong>().AddAsync(userSong);
         
         return userSong;
+    }
+
+    public async Task<UserAlbum?> FindAlbumByIdAsync(Guid userId, Guid albumId)
+    {
+        return await _context.Set<UserAlbum>()
+            .FirstOrDefaultAsync(a => a.UserId == userId && a.AlbumId == albumId);
+    }
+
+    public async Task<UserSong?> FindSongByIdAsync(Guid userId, Guid songId)
+    {
+        return await _context.Set<UserSong>()
+            .FirstOrDefaultAsync(a => a.UserId == userId && a.SongId == songId);
+    }
+
+    public void DeleteAlbum(UserAlbum album)
+    {
+        _context.Set<UserAlbum>().Remove(album);
+    }
+
+    public void DeleteSong(UserSong song)
+    {
+        _context.Set<UserSong>().Remove(song);
     }
 }

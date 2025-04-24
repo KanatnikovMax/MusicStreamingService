@@ -11,10 +11,10 @@ public static class UsersContextConfigurator
         modelBuilder.Entity<User>().ToTable("users");
         modelBuilder.Entity<User>().Property(u => u.Id)
             .HasDefaultValueSql("gen_random_uuid()");
+        modelBuilder.Entity<User>().HasIndex(u => u.UserName).IsUnique();
         modelBuilder.Entity<Role>().ToTable("user_roles");
         modelBuilder.Entity<UserRole>().HasKey(ur => new { ur.UserId, ur.RoleId });
         modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("user_tokens");
-        //modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("user_role_owners");
         modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("user_role_claims");
         modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("user_logins");
         modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("user_claims");

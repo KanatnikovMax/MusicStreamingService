@@ -21,6 +21,8 @@ public class MusicServiceDbContext : IdentityDbContext<
     public DbSet<Artist> Artists { get; set; }
     public DbSet<Song> Songs { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<UserSong> UsersSongs { get; set; }
+    public DbSet<UserAlbum> UsersAlbums { get; set; }
     
     public MusicServiceDbContext(DbContextOptions options) : base(options) { }
 
