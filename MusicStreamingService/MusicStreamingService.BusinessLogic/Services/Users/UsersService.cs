@@ -41,7 +41,7 @@ public class UsersService : IUsersService
 
         try
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByNameAsync(model.UserName);
             if (user is not null)
             {
                 throw new EntityAlreadyExistsException("User");
