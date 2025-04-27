@@ -10,11 +10,11 @@ public static class PostgresInitializer
     {
         using var scope = app.ApplicationServices.CreateScope();
 
-        await AddRolesAsync(app, scope);
-        await CreateMasterAdminAsync(app, scope, settings);
+        await AddRolesAsync(scope);
+        await CreateMasterAdminAsync(scope, settings);
     }
 
-    private static async Task AddRolesAsync(IApplicationBuilder app, IServiceScope scope)
+    private static async Task AddRolesAsync(IServiceScope scope)
     {
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
         
@@ -31,8 +31,7 @@ public static class PostgresInitializer
         }
     }
 
-    private static async Task CreateMasterAdminAsync(IApplicationBuilder app, IServiceScope scope, 
-        MusicServiceSettings settings)
+    private static async Task CreateMasterAdminAsync(IServiceScope scope, MusicServiceSettings settings)
     {
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         
