@@ -11,6 +11,7 @@ using MusicStreamingService.DataAccess.Repositories;
 using MusicStreamingService.DataAccess.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.UnitOfWork;
 using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
+using MusicStreamingService.Service.Init;
 using MusicStreamingService.Service.Settings;
 
 namespace MusicStreamingService.Service.IoC;
@@ -37,5 +38,12 @@ public static class ServicesConfigurator
                 settings.IdentityServerUri,
                 settings.ClientId,
                 settings.ClientSecret));
+        services.AddSingleton<CassandraCluster>(x =>
+            new CassandraCluster(
+                x.GetRequiredService<ILogger<CassandraCluster>>(),
+                settings.CassandraContactPoints,
+                settings.CassandraKeyspace,
+                settings.CassandraPort,
+                settings.CassandraReplicationFactor));
     }
 }

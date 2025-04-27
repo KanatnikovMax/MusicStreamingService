@@ -8,4 +8,8 @@ public class MusicServiceSettings
     public string ClientSecret { get; set; }
     public string MasterAdminEmail { get; set; }
     public string MasterAdminPassword { get; set; }
+    public string[] CassandraContactPoints { get; set; }
+    public string CassandraKeyspace { get; set; }
+    public int CassandraPort { get; set; }
+    public int CassandraReplicationFactor { get; set; }
 }
