@@ -61,8 +61,6 @@ public class CassandraCluster : IDisposable
 
     private async Task CreateTableAsync()
     {
-        await Session.ExecuteAsync(new SimpleStatement($"USE {_keyspace}"));
-
         const string query = """
                              CREATE TABLE IF NOT EXISTS songs (
                                  song_id uuid PRIMARY KEY,

@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
-using MusicStreamingService.DataAccess.Entities;
+using MusicStreamingService.DataAccess.Postgres.Entities;
 
 namespace MusicStreamingService.BusinessLogic.Mapper;
 

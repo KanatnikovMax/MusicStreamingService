@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using MusicStreamingService.DataAccess.Entities;
+using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.Service.Controllers.Requests.Pagination;
 using MusicStreamingService.Service.Controllers.Responses.Pagination;
 

@@ -35,7 +35,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\MusicStreamingService.BusinessLogic\MusicStreamingService.BusinessLogic.csproj" />
-      <ProjectReference Include="..\MusicStreamingService.DataAccess\MusicStreamingService.DataAccess.csproj" />
+      <ProjectReference Include="..\MusicStreamingService.DataAccess.Cassandra\MusicStreamingService.DataAccess.Cassandra.csproj" />
+      <ProjectReference Include="..\MusicStreamingService.DataAccess.Postgres\MusicStreamingService.DataAccess.Postgres.csproj" />
     </ItemGroup>
 
 </Project>

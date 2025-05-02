@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using MusicStreamingService.DataAccess.Entities;
+using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.Service.Settings;
 
 namespace MusicStreamingService.Service.Init;

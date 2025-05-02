@@ -1,16 +1,15 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using MusicStreamingService.BusinessLogic.Services.Albums;
 using MusicStreamingService.BusinessLogic.Services.Artists;
 using MusicStreamingService.BusinessLogic.Services.Songs;
 using MusicStreamingService.BusinessLogic.Services.Users;
-using MusicStreamingService.DataAccess.Context;
-using MusicStreamingService.DataAccess.Entities;
-using MusicStreamingService.DataAccess.Repositories;
-using MusicStreamingService.DataAccess.Repositories.Interfaces;
-using MusicStreamingService.DataAccess.UnitOfWork;
-using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
+using MusicStreamingService.DataAccess.Cassandra.Repositories;
+using MusicStreamingService.DataAccess.Cassandra.Repositories.Interfaces;
+using MusicStreamingService.DataAccess.Postgres.Context;
+using MusicStreamingService.DataAccess.Postgres.Entities;
+using MusicStreamingService.DataAccess.Postgres.UnitOfWork;
+using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
 using MusicStreamingService.Service.Init;
 using MusicStreamingService.Service.Settings;
 
@@ -45,5 +44,8 @@ public static class ServicesConfigurator
                 settings.CassandraKeyspace,
                 settings.CassandraPort,
                 settings.CassandraReplicationFactor));
+        // cassandra
+        services.AddScoped<ICassandraSongsRepository>(x =>
+            new CassandraSongsRepository(x.GetRequiredService<CassandraCluster>().Session));
     }
 }

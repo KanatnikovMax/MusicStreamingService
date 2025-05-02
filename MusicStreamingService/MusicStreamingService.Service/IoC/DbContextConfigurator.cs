@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MusicStreamingService.Service.Settings;
-using MusicStreamingService.DataAccess.Context;
+using MusicStreamingService.DataAccess.Postgres.Context;
 
 namespace MusicStreamingService.Service.IoC;
 

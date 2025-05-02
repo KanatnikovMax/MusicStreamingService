@@ -5,8 +5,8 @@ using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Artists.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
-using MusicStreamingService.DataAccess.Entities;
-using MusicStreamingService.DataAccess.UnitOfWork.Interfaces;
+using MusicStreamingService.DataAccess.Postgres.Entities;
+using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
 using Npgsql;
 
 namespace MusicStreamingService.BusinessLogic.Services.Artists;

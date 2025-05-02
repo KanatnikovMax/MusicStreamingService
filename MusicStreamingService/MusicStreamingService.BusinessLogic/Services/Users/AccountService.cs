@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Users.Models;
-using MusicStreamingService.DataAccess.Entities;
+using MusicStreamingService.DataAccess.Postgres.Entities;
 
 namespace MusicStreamingService.BusinessLogic.Services.Users;
 
