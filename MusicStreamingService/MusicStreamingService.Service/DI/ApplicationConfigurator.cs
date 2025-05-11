@@ -8,6 +8,16 @@ public static class ApplicationConfigurator
     public static void ConfigureServices(WebApplicationBuilder builder, MusicServiceSettings settings)
     {
         SerilogConfigurator.ConfigureServices(builder);
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AdminFrontend", policy =>
+            {
+                policy.WithOrigins(settings.AdminFrontendUrl)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
         AuthorizationConfigurator.ConfigureServices(builder.Services, settings);
         DbContextConfigurator.ConfigureServices(builder.Services, settings);
         SwaggerConfigurator.ConfigureServices(builder.Services);
@@ -20,6 +30,7 @@ public static class ApplicationConfigurator
     public static void ConfigureApplication(WebApplication app)
     {
         SerilogConfigurator.ConfigureApplication(app);
+        app.UseCors("AdminFrontend"); 
         ExceptionHandlerConfigurator.ConfigureApplication(app);
         AuthorizationConfigurator.ConfigureApplication(app);
         SwaggerConfigurator.ConfigureApplication(app);

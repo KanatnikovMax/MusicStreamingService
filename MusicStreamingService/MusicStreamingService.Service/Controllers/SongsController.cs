@@ -94,7 +94,7 @@ public class SongsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("update/{id:guid}")]
-    public async Task<ActionResult<SongsListResponse>> UpdateSong(Guid id, [FromBody] UpdateSongRequest request)
+    public async Task<ActionResult<SongsListResponse>> UpdateSong(Guid id, [FromForm] UpdateSongRequest request)
     {
         var updateSongModel = _mapper.Map<UpdateSongModel>(request);
         
