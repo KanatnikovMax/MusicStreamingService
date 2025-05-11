@@ -2,9 +2,11 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicStreamingService.Service", "MusicStreamingService.Service\MusicStreamingService.Service.csproj", "{4F110EE5-04D5-4048-9468-2816DA4347EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicStreamingService.DataAccess", "MusicStreamingService.DataAccess\MusicStreamingService.DataAccess.csproj", "{E9C1CB71-1170-4A56-B81F-46C3E2E4FE6C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicStreamingService.DataAccess.Postgres", "MusicStreamingService.DataAccess.Postgres\MusicStreamingService.DataAccess.Postgres.csproj", "{E9C1CB71-1170-4A56-B81F-46C3E2E4FE6C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicStreamingService.BusinessLogic", "MusicStreamingService.BusinessLogic\MusicStreamingService.BusinessLogic.csproj", "{43796FAC-31ED-48EC-AD6B-42C7B40F2ED9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicStreamingService.DataAccess.Cassandra", "MusicStreamingService.DataAccess.Cassandra\MusicStreamingService.DataAccess.Cassandra.csproj", "{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,6 +54,18 @@ Global
 		{43796FAC-31ED-48EC-AD6B-42C7B40F2ED9}.Release|x64.Build.0 = Release|Any CPU
 		{43796FAC-31ED-48EC-AD6B-42C7B40F2ED9}.Release|x86.ActiveCfg = Release|Any CPU
 		{43796FAC-31ED-48EC-AD6B-42C7B40F2ED9}.Release|x86.Build.0 = Release|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Debug|x64.Build.0 = Debug|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Debug|x86.Build.0 = Debug|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Release|x64.ActiveCfg = Release|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Release|x64.Build.0 = Release|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Release|x86.ActiveCfg = Release|Any CPU
+		{EFCC35F6-CAE2-4DFD-90A2-E2226838CCC0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

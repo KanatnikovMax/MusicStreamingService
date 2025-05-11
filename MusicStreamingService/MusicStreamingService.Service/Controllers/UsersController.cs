@@ -5,7 +5,7 @@ using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.BusinessLogic.Services.Users;
 using MusicStreamingService.BusinessLogic.Services.Users.Models;
-using MusicStreamingService.DataAccess.Entities;
+using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.Service.Controllers.Requests.Pagination;
 using MusicStreamingService.Service.Controllers.Responses.Pagination;
 
