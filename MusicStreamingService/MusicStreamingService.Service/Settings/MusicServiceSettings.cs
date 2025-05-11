@@ -12,4 +12,5 @@ public class MusicServiceSettings
     public string CassandraKeyspace { get; set; }
     public int CassandraPort { get; set; }
     public int CassandraReplicationFactor { get; set; }
+    public string AdminFrontendUrl { get; set; }
 }
