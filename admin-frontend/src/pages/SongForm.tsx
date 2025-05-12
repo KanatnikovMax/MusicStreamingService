@@ -23,6 +23,7 @@ const SongForm: React.FC = () => {
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showAlbumDropdown, setShowAlbumDropdown] = useState(false);
 
   const [title, setTitle] = useState('');
   const [trackNumber, setTrackNumber] = useState('1');
@@ -48,10 +49,20 @@ const SongForm: React.FC = () => {
   const isEditMode = !!id;
 
   useEffect(() => {
-    if (isEditMode) {
-      fetchSong();
-    }
-  }, [id]);
+    const abortController = new AbortController();
+
+    const fetchData = async () => {
+      if (isEditMode) {
+        await fetchSong();
+      } else {
+        await Promise.all([fetchAlbums(''), fetchArtists('')]);
+      }
+    };
+
+    fetchData();
+
+    return () => abortController.abort();
+  }, []);
 
   const fetchAlbums = useCallback(async (searchTerm: string, loadMore = false) => {
     try {
@@ -80,9 +91,9 @@ const SongForm: React.FC = () => {
         album: response.cursor ? new Date(response.cursor) : undefined
       }));
     } catch {
-      showToast('Failed to load albums', 'error');
+      if (!isEditMode) showToast('Failed to load albums', 'error');
     }
-  }, [cursor.album, pageSize, showToast]);
+  }, [cursor.album, pageSize, showToast, isEditMode]);
 
   const fetchArtists = useCallback(async (searchTerm: string, loadMore = false) => {
     try {
@@ -111,13 +122,14 @@ const SongForm: React.FC = () => {
         artist: response.cursor ? new Date(response.cursor) : undefined
       }));
     } catch {
-      showToast('Failed to load artists', 'error');
+      if (!isEditMode) showToast('Failed to load artists', 'error');
     }
-  }, [cursor.artist, pageSize, showToast]);
+  }, [cursor.artist, pageSize, showToast, isEditMode]);
 
   const handleAlbumInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setAlbumInput(value);
+    setShowAlbumDropdown(true);
 
     if (searchTimeout.album) clearTimeout(searchTimeout.album);
     setSearchTimeout(prev => ({
@@ -130,6 +142,12 @@ const SongForm: React.FC = () => {
         }
       }, 300)
     }));
+  };
+
+  const handleAlbumBlur = () => {
+    setTimeout(() => {
+      setShowAlbumDropdown(false);
+    }, 200);
   };
 
   const handleArtistInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,9 +171,9 @@ const SongForm: React.FC = () => {
     try {
       setIsLoading(true);
       const songData = await getSongById(id!);
-      setTitle(songData.songs[0].title);
-      setTrackNumber(songData.songs[0].trackNumber.toString());
-      setDuration(songData.songs[0].duration);
+      setTitle(songData.title);
+      setTrackNumber(songData.trackNumber.toString());
+      setDuration(songData.duration);
     } catch {
       showToast('Failed to load song data', 'error');
     } finally {
@@ -166,8 +184,14 @@ const SongForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim() || !trackNumber) {
-      showToast('Please fill in all required fields', 'error');
+    const trackNumberValue = parseInt(trackNumber);
+    if (isNaN(trackNumberValue)) {
+      showToast('Please enter a valid track number', 'error');
+      return;
+    }
+
+    if (!title.trim() || !trackNumberValue || trackNumberValue < 1) {
+      showToast('Please fill in all required fields correctly', 'error');
       return;
     }
 
@@ -176,7 +200,7 @@ const SongForm: React.FC = () => {
 
       const formData = new FormData();
       formData.append('Title', title);
-      formData.append('TrackNumber', trackNumber);
+      formData.append('TrackNumber', trackNumberValue.toString());
 
       if (!isEditMode) {
         if (!albumId || selectedArtists.length === 0 || !audioFile) {
@@ -247,6 +271,7 @@ const SongForm: React.FC = () => {
   const handleSelectAlbum = (albumId: string, albumTitle: string) => {
     setAlbumId(albumId);
     setAlbumInput(albumTitle);
+    setShowAlbumDropdown(false);
   };
 
   const handleRemoveArtist = (artistName: string) => {
@@ -263,7 +288,7 @@ const SongForm: React.FC = () => {
   if (isLoading) {
     return (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
         </div>
     );
   }
@@ -294,7 +319,7 @@ const SongForm: React.FC = () => {
                     id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                     placeholder="Enter song title"
                     required
                 />
@@ -310,7 +335,7 @@ const SongForm: React.FC = () => {
                     value={trackNumber}
                     onChange={(e) => setTrackNumber(e.target.value)}
                     min="1"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                     required
                 />
               </div>
@@ -328,10 +353,12 @@ const SongForm: React.FC = () => {
                           id="album"
                           value={albumInput}
                           onChange={handleAlbumInputChange}
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                          onFocus={() => setShowAlbumDropdown(true)}
+                          onBlur={handleAlbumBlur}
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                           placeholder="Search album..."
                       />
-                      {albumInput && filteredAlbums.length > 0 && (
+                      {showAlbumDropdown && filteredAlbums.length > 0 && (
                           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
                             {filteredAlbums.map((album) => (
                                 <div
@@ -366,7 +393,7 @@ const SongForm: React.FC = () => {
                               if (match) handleAddArtist(match.value);
                             }
                           }}
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                           placeholder="Type artist name"
                       />
                       {artistInput && filteredArtists.length > 0 && (
@@ -389,13 +416,13 @@ const SongForm: React.FC = () => {
                           {selectedArtists.map((artistName) => (
                               <div
                                   key={artistName}
-                                  className="bg-pink-100 text-pink-800 px-3 py-1 rounded-full text-sm flex items-center"
+                                  className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center"
                               >
                                 {artistName}
                                 <button
                                     type="button"
                                     onClick={() => handleRemoveArtist(artistName)}
-                                    className="ml-1 text-pink-600 hover:text-pink-800"
+                                    className="ml-1 text-purple-600 hover:text-purple-800"
                                 >
                                   <X size={16} />
                                 </button>
@@ -418,7 +445,7 @@ const SongForm: React.FC = () => {
                         <div className="flex text-sm text-gray-600">
                           <label
                               htmlFor="audioFile"
-                              className="relative cursor-pointer bg-white rounded-md font-medium text-pink-600 hover:text-pink-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-pink-500"
+                              className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500"
                           >
                             <span>Upload a file</span>
                             <input
@@ -450,14 +477,14 @@ const SongForm: React.FC = () => {
               <button
                   type="button"
                   onClick={() => navigate('/dashboard/songs')}
-                  className="mr-4 bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                  className="mr-4 bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
                 Cancel
               </button>
               <button
                   type="submit"
                   disabled={isSaving || (!isEditMode && (!audioFile || selectedArtists.length === 0 || !albumId))}
-                  className={`bg-pink-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 flex items-center ${
+                  className={`bg-purple-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 flex items-center ${
                       isSaving ? 'opacity-70 cursor-not-allowed' : ''
                   }`}
               >
