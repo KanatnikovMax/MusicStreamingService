@@ -40,10 +40,30 @@ const AlbumForm: React.FC = () => {
   const isEditMode = !!id;
 
   useEffect(() => {
-    fetchArtists('');
-    if (isEditMode) {
-      fetchAlbum();
-    }
+    const abortController = new AbortController();
+
+    const fetchData = async () => {
+      if (isEditMode) {
+        try {
+          setIsLoading(true);
+          const albumData = await getAlbumById(id!);
+          setTitle(albumData.albums[0].title);
+          setSelectedArtists(albumData.albums[0].artists.map((artist: Artist) => artist.name));
+        } catch {
+          if (!abortController.signal.aborted) {
+            showToast('Failed to load album data', 'error');
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        fetchArtists('');
+      }
+    };
+
+    fetchData();
+
+    return () => abortController.abort();
   }, [id]);
 
   const fetchArtists = useCallback(async (searchTerm: string, loadMore = false) => {
@@ -70,9 +90,9 @@ const AlbumForm: React.FC = () => {
 
       setCursor(response.cursor ? new Date(response.cursor) : undefined);
     } catch {
-      showToast('Failed to load artists', 'error');
+      if (!isEditMode) showToast('Failed to load artists', 'error');
     }
-  }, [cursor, pageSize, showToast]);
+  }, [cursor, pageSize, showToast, isEditMode]);
 
   const handleArtistInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -88,20 +108,6 @@ const AlbumForm: React.FC = () => {
           }
         }, 300)
     );
-  };
-
-  const fetchAlbum = async () => {
-    try {
-      setIsLoading(true);
-      const albumData = await getAlbumById(id!);
-      setTitle(albumData.title);
-      setReleaseDate(new Date(albumData.releaseDate).toISOString().split('T')[0]);
-      setSelectedArtists(albumData.artists.map((artist: Artist) => artist.name));
-    } catch {
-      showToast('Failed to load album data', 'error');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -230,8 +236,7 @@ const AlbumForm: React.FC = () => {
                     placeholder="Type artist name"
                 />
                 {filteredOptions.length > 0 && artistInput && (
-                    <div
-                        className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
                       {filteredOptions.map((option) => (
                           <div
                               key={option.value}

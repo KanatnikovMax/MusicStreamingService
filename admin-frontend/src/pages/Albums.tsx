@@ -129,7 +129,7 @@ const Albums: React.FC = () => {
               <input
                   type="text"
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                  placeholder="Search albums or artists..."
+                  placeholder="Search albums..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
               />

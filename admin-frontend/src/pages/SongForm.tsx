@@ -153,9 +153,9 @@ const SongForm: React.FC = () => {
     try {
       setIsLoading(true);
       const songData = await getSongById(id!);
-      setTitle(songData.title);
-      setTrackNumber(songData.trackNumber.toString());
-      setDuration(songData.duration);
+      setTitle(songData.songs[0].title);
+      setTrackNumber(songData.songs[0].trackNumber.toString());
+      setDuration(songData.songs[0].duration);
     } catch {
       showToast('Failed to load song data', 'error');
     } finally {

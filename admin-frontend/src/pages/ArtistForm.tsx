@@ -24,7 +24,7 @@ const ArtistForm: React.FC = () => {
     try {
       setIsLoading(true);
       const artistData = await getArtistById(id!);
-      setName(artistData.name);
+      setName(artistData.artists[0].name);
     } catch {
       showToast('Failed to load artist data', 'error');
     } finally {
