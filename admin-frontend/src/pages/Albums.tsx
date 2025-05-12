@@ -18,6 +18,10 @@ const Albums: React.FC = () => {
   const [cursor, setCursor] = useState<Date>();
   const [hasMore, setHasMore] = useState(true);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    show: boolean;
+    albumToDelete: string | null;
+  }>({ show: false, albumToDelete: null });
   const { showToast } = useToast();
 
   const calculatePageSize = useCallback(() => {
@@ -92,14 +96,14 @@ const Albums: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this album?')) {
-      try {
-        await deleteAlbum(id);
-        setAlbums(prev => prev.filter(album => album.id !== id));
-        showToast('Album deleted successfully', 'success');
-      } catch {
-        showToast('Failed to delete album', 'error');
-      }
+    try {
+      await deleteAlbum(id);
+      setAlbums(prev => prev.filter(album => album.id !== id));
+      showToast('Album deleted successfully', 'success');
+    } catch {
+      showToast('Failed to delete album', 'error');
+    } finally {
+      setDeleteConfirmation({ show: false, albumToDelete: null });
     }
   };
 
@@ -109,6 +113,32 @@ const Albums: React.FC = () => {
 
   return (
       <div>
+        {/* Delete Confirmation Modal */}
+        {deleteConfirmation.show && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete this album? This action cannot be undone.
+                </p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                      onClick={() => setDeleteConfirmation({ show: false, albumToDelete: null })}
+                      className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                      onClick={() => deleteConfirmation.albumToDelete && handleDelete(deleteConfirmation.albumToDelete)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Albums</h1>
           <Link
@@ -199,7 +229,7 @@ const Albums: React.FC = () => {
                               <Edit size={18} className="inline" />
                             </Link>
                             <button
-                                onClick={() => handleDelete(album.id)}
+                                onClick={() => setDeleteConfirmation({ show: true, albumToDelete: album.id })}
                                 className="text-red-600 hover:text-red-900"
                             >
                               <Trash size={18} className="inline" />

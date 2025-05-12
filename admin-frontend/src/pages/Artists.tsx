@@ -17,6 +17,10 @@ const Artists: React.FC = () => {
   const [cursor, setCursor] = useState<Date>();
   const [hasMore, setHasMore] = useState(true);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    show: boolean;
+    artistToDelete: string | null;
+  }>({ show: false, artistToDelete: null });
   const { showToast } = useToast();
 
   const calculatePageSize = useCallback(() => {
@@ -90,19 +94,44 @@ const Artists: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this artist?')) {
-      try {
-        await deleteArtist(id);
-        setArtists(prev => prev.filter(artist => artist.id !== id));
-        showToast('Artist deleted successfully', 'success');
-      } catch {
-        showToast('Failed to delete artist', 'error');
-      }
+    try {
+      await deleteArtist(id);
+      setArtists(prev => prev.filter(artist => artist.id !== id));
+      showToast('Artist deleted successfully', 'success');
+    } catch {
+      showToast('Failed to delete artist', 'error');
+    } finally {
+      setDeleteConfirmation({ show: false, artistToDelete: null });
     }
   };
 
   return (
       <div>
+        {deleteConfirmation.show && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete this artist? This action cannot be undone.
+                </p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                      onClick={() => setDeleteConfirmation({ show: false, artistToDelete: null })}
+                      className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                      onClick={() => deleteConfirmation.artistToDelete && handleDelete(deleteConfirmation.artistToDelete)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Artists</h1>
           <Link
@@ -181,7 +210,7 @@ const Artists: React.FC = () => {
                               <Edit size={18} className="inline" />
                             </Link>
                             <button
-                                onClick={() => handleDelete(artist.id)}
+                                onClick={() => setDeleteConfirmation({ show: true, artistToDelete: artist.id })}
                                 className="text-red-600 hover:text-red-900"
                             >
                               <Trash size={18} className="inline" />

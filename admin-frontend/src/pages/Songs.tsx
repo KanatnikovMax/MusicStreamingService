@@ -20,6 +20,10 @@ const Songs: React.FC = () => {
   const [cursor, setCursor] = useState<Date>();
   const [hasMore, setHasMore] = useState(true);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    show: boolean;
+    songToDelete: string | null;
+  }>({ show: false, songToDelete: null });
   const { showToast } = useToast();
   const loaderRef = useRef<HTMLDivElement>(null);
 
@@ -106,14 +110,14 @@ const Songs: React.FC = () => {
   }, [handleScroll]);
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this song?')) {
-      try {
-        await deleteSong(id);
-        setSongs(prev => prev.filter(song => song.id !== id));
-        showToast('Song deleted successfully', 'success');
-      } catch {
-        showToast('Failed to delete song', 'error');
-      }
+    try {
+      await deleteSong(id);
+      setSongs(prev => prev.filter(song => song.id !== id));
+      showToast('Song deleted successfully', 'success');
+    } catch {
+      showToast('Failed to delete song', 'error');
+    } finally {
+      setDeleteConfirmation({ show: false, songToDelete: null });
     }
   };
 
@@ -125,6 +129,32 @@ const Songs: React.FC = () => {
 
   return (
       <div>
+        {/* Delete Confirmation Modal */}
+        {deleteConfirmation.show && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete this song? This action cannot be undone.
+                </p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                      onClick={() => setDeleteConfirmation({ show: false, songToDelete: null })}
+                      className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                      onClick={() => deleteConfirmation.songToDelete && handleDelete(deleteConfirmation.songToDelete)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Songs</h1>
           <Link
@@ -221,7 +251,7 @@ const Songs: React.FC = () => {
                               <Edit size={18} className="inline" />
                             </Link>
                             <button
-                                onClick={() => handleDelete(song.id)}
+                                onClick={() => setDeleteConfirmation({ show: true, songToDelete: song.id })}
                                 className="text-red-600 hover:text-red-900"
                             >
                               <Trash size={18} className="inline" />
