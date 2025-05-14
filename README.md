@@ -37,3 +37,6 @@ ___
 - **PostgreSQL** для хранения данных о&nbsp;пользователях, 
 исполнителях и&nbsp;альбомах, метаданных о&nbsp;песнях
 - **Apache Cassandra** для хранения аудиофайлов
+___
+## Схема базы данных
+![image](https://github.com/user-attachments/assets/15d6b957-71a5-4114-8daf-9b1c7c5dab78)
