@@ -11,7 +11,12 @@ public static class MusicServiceSettingsReader
             ClientId = configuration.GetValue<string>("IdentityServerSettings:ClientId"),
             ClientSecret = configuration.GetValue<string>("IdentityServerSettings:ClientSecret"),
             MasterAdminEmail = configuration.GetValue<string>("IdentityServerSettings:MasterAdminEmail"),
-            MasterAdminPassword = configuration.GetValue<string>("IdentityServerSettings:MasterAdminPassword")
+            MasterAdminPassword = configuration.GetValue<string>("IdentityServerSettings:MasterAdminPassword"),
+            CassandraContactPoints = configuration.GetSection("Cassandra:ContactPoints").Get<string[]>(),
+            CassandraKeyspace = configuration.GetValue<string>("Cassandra:Keyspace"),
+            CassandraPort = int.Parse(configuration.GetValue<string>("Cassandra:Port")),
+            CassandraReplicationFactor = int.Parse(configuration.GetValue<string>("Cassandra:ReplicationFactor")),
+            AdminFrontendUrl = configuration.GetValue<string>("Cors:AdminFrontendUrl"),
         };
     }
 }

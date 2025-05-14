@@ -14,7 +14,6 @@ public static class ExceptionHandlerConfigurator
                 var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
                 if (exception is null)
                     return;
-
                 var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
                 
                 logger.LogError(exception, 

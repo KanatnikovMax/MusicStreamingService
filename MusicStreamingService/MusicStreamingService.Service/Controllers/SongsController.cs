@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MusicStreamingService.BusinessLogic.Services.Songs;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
-using MusicStreamingService.DataAccess.Entities;
+using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.Service.Controllers.Requests.Pagination;
 using MusicStreamingService.Service.Controllers.Requests.Songs;
 using MusicStreamingService.Service.Controllers.Responses.Pagination;
@@ -15,6 +15,8 @@ namespace MusicStreamingService.Service.Controllers;
 [Route("[controller]")]
 public class SongsController : ControllerBase
 {
+    private const long MaxFileSize = 30 * 1024 * 1024;
+    
     private readonly ISongsService _songsService;
     private readonly IMapper _mapper;
     private readonly ILogger<SongsController> _logger;
@@ -29,11 +31,26 @@ public class SongsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPost]
     [Route("create")]
-    public async Task<ActionResult<SongsListResponse>> CreateSong([FromBody] CreateSongRequest model)
+    [RequestSizeLimit(MaxFileSize)]
+    public async Task<ActionResult<SongsListResponse>> UploadSong([FromForm] CreateSongRequest model,
+        [FromForm] IFormFile audioFile)
     {
-        var createSongModel = _mapper.Map<CreateSongModel>(model);
+        if (audioFile.Length == 0)
+            return BadRequest("Audio file is required");
+
+        if (audioFile.ContentType != "audio/mpeg")
+            return BadRequest("Only MP3 files are allowed");
+
+        byte[] data;
+        using (var memoryStream = new MemoryStream())
+        {
+            await audioFile.CopyToAsync(memoryStream);
+            data = memoryStream.ToArray();
+        }
         
-        var song = await _songsService.CreateSongAsync(createSongModel);
+        var createSongModel = _mapper.Map<CreateSongModel>(model);
+        var song = await _songsService.CreateSongAsync(createSongModel, data);
+        
         return Ok(new SongsListResponse([song]));
     }
     
@@ -77,11 +94,19 @@ public class SongsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("update/{id:guid}")]
-    public async Task<ActionResult<SongsListResponse>> UpdateSong(Guid id, [FromBody] UpdateSongRequest request)
+    public async Task<ActionResult<SongsListResponse>> UpdateSong(Guid id, [FromForm] UpdateSongRequest request)
     {
         var updateSongModel = _mapper.Map<UpdateSongModel>(request);
         
         var song = await _songsService.UpdateSongAsync(updateSongModel, id);
         return Ok(new SongsListResponse([song]));
+    }
+
+    [HttpGet]
+    [Route("{id:guid}/audio")]
+    public async Task<IActionResult> GetSongAudio(Guid id)
+    {
+        var audioData = await _songsService.GetSongAudioAsync(id);
+        return File(audioData, "audio/mpeg", enableRangeProcessing: true);
     }
 }

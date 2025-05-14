@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
-using MusicStreamingService.DataAccess.Context;
-using MusicStreamingService.DataAccess.Entities;
+using MusicStreamingService.DataAccess.Postgres.Context;
+using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.Service.Init;
 using MusicStreamingService.Service.Settings;
 
