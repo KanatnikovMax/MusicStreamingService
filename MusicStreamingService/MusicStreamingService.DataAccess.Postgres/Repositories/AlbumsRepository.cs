@@ -29,7 +29,7 @@ public class AlbumsRepository : IAlbumsRepository
             albums = albums.Where(s => s.ReleaseDate <= request.Cursor);
         }
 
-        var items = await albums.OrderBy(s => s.ReleaseDate)
+        var items = await albums.OrderByDescending(s => s.ReleaseDate)
             .Take(request.PageSize + 1)
             .ToListAsync();
         
@@ -106,7 +106,7 @@ public class AlbumsRepository : IAlbumsRepository
             albums = albums.Where(s => s.ReleaseDate <= request.Cursor);
         }
 
-        var items = await albums.OrderBy(s => s.ReleaseDate)
+        var items = await albums.OrderByDescending(s => s.ReleaseDate)
             .Take(request.PageSize + 1)
             .ToListAsync();
         
