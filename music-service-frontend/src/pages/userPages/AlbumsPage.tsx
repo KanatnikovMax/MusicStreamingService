@@ -10,7 +10,8 @@ import type { Album } from '../../types/music.ts';
 const AlbumsPage: React.FC = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [userSavedAlbums, setUserSavedAlbums] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [cursor, setCursor] = useState<Date>();
   const [hasMore, setHasMore] = useState(true);
@@ -19,19 +20,20 @@ const AlbumsPage: React.FC = () => {
   const { showToast } = useToast();
   const observer = useRef<IntersectionObserver | null>(null);
   const lastAlbumRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const calculatePageSize = useCallback(() => {
     const screenWidth = window.innerWidth;
     const cardWidth = 300;
     const margin = 20;
     const columns = Math.max(1, Math.floor((screenWidth - margin) / (cardWidth + margin)));
-    return columns * 3; // 3 rows
+    return columns * 3;
   }, []);
 
   useEffect(() => {
     const handleResize = () => {
       const newSize = calculatePageSize();
-      setPageSize(newSize);
+      setPageSize(prev => prev !== newSize ? newSize : prev);
     };
 
     handleResize();
@@ -43,55 +45,61 @@ const AlbumsPage: React.FC = () => {
     };
   }, [calculatePageSize]);
 
-  const fetchAlbums = useCallback(async (loadMore = false) => {
-    if (isLoading || (!loadMore && !hasMore)) return;
+  const fetchAlbums = useCallback(async (loadMore: boolean) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       setIsLoading(true);
       const response = await getAllAlbums({
         cursor: loadMore ? cursor : undefined,
         pageSize,
-        searchTerm: searchTerm || undefined
+        searchTerm
       });
 
       setAlbums(prev => {
-        const newItems = response.items.filter(newItem =>
-            !prev.some(item => item.id === newItem.id)
-        );
-        return loadMore ? [...prev, ...newItems] : newItems;
+        if (!loadMore) return response.items;
+        const existingIds = new Set(prev.map(item => item.id));
+        const newItems = response.items.filter(item => !existingIds.has(item.id));
+        return [...prev, ...newItems];
       });
 
       setHasMore(!!response.cursor);
       setCursor(response.cursor || undefined);
     } catch {
-      showToast('Failed to load albums', 'error');
       setHasMore(false);
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
     }
-  }, [cursor, pageSize, searchTerm, isLoading, hasMore, showToast]);
+  }, [cursor, pageSize, searchTerm, showToast]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setAlbums([]);
       setCursor(undefined);
       setHasMore(true);
-      fetchAlbums();
-    }, 50);
+      fetchAlbums(false);
+    }, 300);
 
-    return () => clearTimeout(handler);
+    return () => {
+      clearTimeout(handler);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [searchTerm, pageSize]);
 
   useEffect(() => {
-    if (isLoading || !hasMore) {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-      return;
-    }
+    if (isLoading || !hasMore) return;
 
     const callback = (entries: IntersectionObserverEntry[]) => {
-      if (entries[0].isIntersecting && hasMore && !isLoading) {
+      if (entries[0]?.isIntersecting && hasMore && !isLoading) {
         fetchAlbums(true);
       }
     };
@@ -106,16 +114,11 @@ const AlbumsPage: React.FC = () => {
       observer.current.observe(lastAlbumRef.current);
     }
 
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
+    return () => observer.current?.disconnect();
   }, [isLoading, hasMore, albums, fetchAlbums]);
 
   const fetchUserAlbums = useCallback(async () => {
     if (!isAuthenticated || !user) return;
-
     try {
       const response = await getUserAlbums(user.id, { pageSize: 100 });
       setUserSavedAlbums(response.items.map(album => album.id));
@@ -159,15 +162,17 @@ const AlbumsPage: React.FC = () => {
           </div>
 
           <div className="min-h-[400px]">
-            {isLoading && albums.length === 0 ? (
+            {!isInitialized || isLoading ? (
                 <div className="p-8 flex justify-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500" />
                 </div>
             ) : albums.length === 0 ? (
                 <div className="p-8 text-center">
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">No albums found</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    {searchTerm ? 'No albums found' : 'Start exploring albums'}
+                  </h3>
                   <p className="text-gray-500 mb-4">
-                    {searchTerm ? 'No albums match your search criteria' : 'Start by exploring some music'}
+                    {searchTerm ? 'Try different search terms' : 'Search for your favorite albums'}
                   </p>
                 </div>
             ) : (

@@ -7,7 +7,8 @@ import type { Artist } from '../../types/music.ts';
 
 const ArtistsPage: React.FC = () => {
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [cursor, setCursor] = useState<Date>();
   const [hasMore, setHasMore] = useState(true);
@@ -15,26 +16,24 @@ const ArtistsPage: React.FC = () => {
   const { showToast } = useToast();
   const observer = useRef<IntersectionObserver | null>(null);
   const lastArtistRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const calculatePageSize = useCallback(() => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
-
     let columns = 1;
     if (screenWidth >= 1280) columns = 4;
     else if (screenWidth >= 1024) columns = 3;
     else if (screenWidth >= 768) columns = 2;
-
     const cardHeight = 320;
     const rows = Math.floor((screenHeight - 200) / cardHeight);
-
     return Math.min(Math.max(columns * rows, 4), 24);
   }, []);
 
   useEffect(() => {
     const handleResize = () => {
       const newSize = calculatePageSize();
-      setPageSize(newSize);
+      setPageSize(prev => prev !== newSize ? newSize : prev);
     };
 
     handleResize();
@@ -46,56 +45,61 @@ const ArtistsPage: React.FC = () => {
     };
   }, [calculatePageSize]);
 
-  const fetchArtists = useCallback(async (loadMore = false) => {
-    if (isLoading || !hasMore) return;
+  const fetchArtists = useCallback(async (loadMore: boolean) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       setIsLoading(true);
       const response = await getAllArtists({
         cursor: loadMore ? cursor : undefined,
         pageSize,
-        searchTerm: searchTerm || undefined
+        searchTerm
       });
 
       setArtists(prev => {
-        const newItems = response.items.filter(newItem =>
-            !prev.some(item => item.id === newItem.id)
-        );
-        return loadMore ? [...prev, ...newItems] : newItems;
+        if (!loadMore) return response.items;
+        const existingIds = new Set(prev.map(item => item.id));
+        const newItems = response.items.filter(item => !existingIds.has(item.id));
+        return [...prev, ...newItems];
       });
 
-      // Обновляем состояние на основе наличия курсора
       setHasMore(!!response.cursor);
       setCursor(response.cursor || undefined);
     } catch {
-      showToast('Failed to load artists', 'error');
       setHasMore(false);
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
     }
-  }, [cursor, pageSize, searchTerm, showToast, isLoading, hasMore]);
+  }, [cursor, pageSize, searchTerm, showToast]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setArtists([]);
       setCursor(undefined);
       setHasMore(true);
-      fetchArtists();
-    }, 50);
+      fetchArtists(false);
+    }, 300);
 
-    return () => clearTimeout(handler);
+    return () => {
+      clearTimeout(handler);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [searchTerm, pageSize]);
 
   useEffect(() => {
-    if (isLoading || !hasMore) {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-      return;
-    }
+    if (isLoading || !hasMore) return;
 
     const callback = (entries: IntersectionObserverEntry[]) => {
-      if (entries[0].isIntersecting && hasMore && !isLoading) {
+      if (entries[0]?.isIntersecting && hasMore && !isLoading) {
         fetchArtists(true);
       }
     };
@@ -110,11 +114,7 @@ const ArtistsPage: React.FC = () => {
       observer.current.observe(lastArtistRef.current);
     }
 
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
+    return () => observer.current?.disconnect();
   }, [isLoading, hasMore, artists, fetchArtists]);
 
   return (
@@ -140,15 +140,17 @@ const ArtistsPage: React.FC = () => {
           </div>
 
           <div className="min-h-[400px]">
-            {isLoading && artists.length === 0 ? (
+            {!isInitialized || isLoading ? (
                 <div className="p-8 flex justify-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500" />
                 </div>
             ) : artists.length === 0 ? (
                 <div className="p-8 text-center">
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">No artists found</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    {searchTerm ? 'No artists found' : 'Start exploring artists'}
+                  </h3>
                   <p className="text-gray-500 mb-4">
-                    {searchTerm ? 'No artists match your search criteria' : 'Start by exploring some music'}
+                    {searchTerm ? 'Try different search terms' : 'Search for your favorite artists'}
                   </p>
                 </div>
             ) : (

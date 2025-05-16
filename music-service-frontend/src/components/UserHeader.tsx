@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Menu, X, Music, Users, Disc, Home, LogOut, BookMarked, Settings, LayoutDashboard, LogIn } from 'lucide-react';
+import {
+  Menu,
+  X,
+  Music,
+  Users,
+  Disc,
+  LogOut,
+  BookMarked,
+  Settings,
+  LayoutDashboard,
+  LogIn,
+  ListMusic
+} from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -129,8 +141,8 @@ const UserHeader: React.FC = () => {
                             }`
                         }
                     >
-                      <Home className="h-5 w-5 mr-3" />
-                      <span>Home</span>
+                      <ListMusic className="h-5 w-5 mr-3" />
+                      <span>Songs</span>
                     </NavLink>
                   </li>
 

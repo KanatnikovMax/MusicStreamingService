@@ -10,7 +10,8 @@ import type { Song } from '../../types/music.ts';
 const SongsPage: React.FC = () => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [userSavedSongs, setUserSavedSongs] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [cursor, setCursor] = useState<Date>();
   const [hasMore, setHasMore] = useState(true);
@@ -19,18 +20,19 @@ const SongsPage: React.FC = () => {
   const { showToast } = useToast();
   const observer = useRef<IntersectionObserver | null>(null);
   const lastSongRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const calculatePageSize = useCallback(() => {
     const screenHeight = window.innerHeight;
     const rowHeight = 64;
-    const newSize = Math.floor((screenHeight - 200) / rowHeight) * 2;
-    return Math.min(Math.max(newSize, 20), 50);
+    const calculatedSize = Math.floor((screenHeight - 200) / rowHeight) * 2;
+    return Math.min(Math.max(calculatedSize, 20), 50);
   }, []);
 
   useEffect(() => {
     const handleResize = () => {
       const newSize = calculatePageSize();
-      setPageSize(newSize);
+      setPageSize(prev => prev !== newSize ? newSize : prev);
     };
 
     handleResize();
@@ -42,33 +44,41 @@ const SongsPage: React.FC = () => {
     };
   }, [calculatePageSize]);
 
-  const fetchSongs = useCallback(async (loadMore = false) => {
-    if (isLoading || (!loadMore && songs.length > 0)) return;
+  const fetchSongs = useCallback(async (loadMore: boolean) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       setIsLoading(true);
       const response = await getAllSongs({
         cursor: loadMore ? cursor : undefined,
         pageSize,
-        searchTerm: searchTerm || undefined
+        searchTerm
       });
 
       setSongs(prev => {
-        const newItems = response.items.filter(newItem =>
-            !prev.some(item => item.id === newItem.id)
-        );
-        return loadMore ? [...prev, ...newItems] : newItems;
+        if (!loadMore) return response.items;
+
+        const existingIds = new Set(prev.map(item => item.id));
+        const newItems = response.items.filter(item => !existingIds.has(item.id));
+        return [...prev, ...newItems];
       });
 
+      setHasMore(!!response.cursor);
       setCursor(response.cursor ? new Date(response.cursor) : undefined);
-      setHasMore(response.items.length >= pageSize);
     } catch {
-      showToast('Failed to load songs', 'error');
+
       setHasMore(false);
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
     }
-  }, [cursor, pageSize, searchTerm, showToast, isLoading, songs.length]);
+  }, [cursor, pageSize, searchTerm, showToast]);
 
   const fetchUserSongs = useCallback(async () => {
     if (!isAuthenticated || !user) return;
@@ -86,17 +96,22 @@ const SongsPage: React.FC = () => {
       setSongs([]);
       setCursor(undefined);
       setHasMore(true);
-      fetchSongs();
-    }, 50);
+      fetchSongs(false);
+    }, 300);
 
-    return () => clearTimeout(handler);
+    return () => {
+      clearTimeout(handler);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [searchTerm, pageSize]);
 
   useEffect(() => {
     if (isLoading || !hasMore) return;
 
     const callback = (entries: IntersectionObserverEntry[]) => {
-      if (entries[0].isIntersecting) {
+      if (entries[0]?.isIntersecting && hasMore && !isLoading) {
         fetchSongs(true);
       }
     };
@@ -111,12 +126,8 @@ const SongsPage: React.FC = () => {
       observer.current.observe(lastSongRef.current);
     }
 
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
-  }, [isLoading, hasMore, songs]);
+    return () => observer.current?.disconnect();
+  }, [isLoading, hasMore, songs, fetchSongs]);
 
   useEffect(() => {
     fetchUserSongs();
@@ -153,16 +164,20 @@ const SongsPage: React.FC = () => {
           </div>
 
           <div className="min-h-[400px]">
-            {isLoading && songs.length === 0 ? (
+            {!isInitialized || isLoading ? (
                 <div className="p-8 flex justify-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500" />
                 </div>
             ) : songs.length === 0 ? (
                 <div className="p-8 text-center">
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">No songs found</h3>
-                  <p className="text-gray-500 mb-4">
-                    {searchTerm ? 'No songs match your search criteria' : 'Start by exploring some music'}
-                  </p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    {searchTerm ? 'No songs found' : 'Start exploring music'}
+                  </h3>
+                  {!searchTerm && (
+                      <p className="text-gray-500 mb-4">
+                        Try searching for your favorite songs or artists
+                      </p>
+                  )}
                 </div>
             ) : (
                 <div className="divide-y divide-gray-200">
