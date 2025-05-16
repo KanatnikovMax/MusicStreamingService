@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { Plus, Edit, Trash, Search, Disc } from 'lucide-react';
 import { getAllAlbums, deleteAlbum } from '../../services/albumService.ts';
 import { useToast } from '../../contexts/ToastContext.tsx';
-import type {Album} from "../../types/music.ts";
+import type { Album } from "../../types/music.ts";
 
 const Albums: React.FC = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [cursor, setCursor] = useState<Date>();
   const [hasMore, setHasMore] = useState(true);
@@ -19,6 +20,7 @@ const Albums: React.FC = () => {
   const { showToast } = useToast();
   const observer = useRef<IntersectionObserver | null>(null);
   const lastAlbumRef = useRef<HTMLTableRowElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const calculatePageSize = useCallback(() => {
     const screenHeight = window.innerHeight;
@@ -29,58 +31,74 @@ const Albums: React.FC = () => {
   useEffect(() => {
     const handleResize = () => {
       const newSize = calculatePageSize();
-      setPageSize(newSize);
+      setPageSize(prev => prev !== newSize ? newSize : prev);
     };
 
     handleResize();
+    const resizeTimer = setTimeout(handleResize, 200);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimer);
+    };
   }, [calculatePageSize]);
 
-  const fetchAlbums = useCallback(async (loadMore = false) => {
-    if (isLoading || !hasMore || (loadMore && !cursor)) return;
+  const fetchAlbums = useCallback(async (loadMore: boolean) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       setIsLoading(true);
       const response = await getAllAlbums({
         cursor: loadMore ? cursor : undefined,
         pageSize,
-        searchTerm: searchTerm || undefined
+        searchTerm
       });
 
       setAlbums(prev => {
-        const newItems = response.items.filter(newItem =>
-            !prev.some(item => item.id === newItem.id)
-        );
-        return loadMore ? [...prev, ...newItems] : newItems;
+        if (!loadMore) return response.items;
+
+        const existingIds = new Set(prev.map(item => item.id));
+        const newItems = response.items.filter(item => !existingIds.has(item.id));
+        return [...prev, ...newItems];
       });
 
-      setCursor(response.cursor ?? undefined);
-      setHasMore(response.items.length >= pageSize);
+      setHasMore(!!response.cursor);
+      setCursor(response.cursor || undefined);
     } catch {
-      showToast('Failed to load albums', 'error');
       setHasMore(false);
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
     }
-  }, [cursor, pageSize, searchTerm, showToast, isLoading, hasMore]);
+  }, [cursor, pageSize, searchTerm, showToast]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setAlbums([]);
       setCursor(undefined);
       setHasMore(true);
-      fetchAlbums();
-    }, 50);
+      fetchAlbums(false);
+    }, 300);
 
-    return () => clearTimeout(handler);
+    return () => {
+      clearTimeout(handler);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [searchTerm, pageSize]);
 
   useEffect(() => {
     if (isLoading || !hasMore) return;
 
     const callback = (entries: IntersectionObserverEntry[]) => {
-      if (entries[0].isIntersecting && hasMore && !isLoading) {
+      if (entries[0]?.isIntersecting && hasMore && !isLoading) {
         fetchAlbums(true);
       }
     };
@@ -95,12 +113,8 @@ const Albums: React.FC = () => {
       observer.current.observe(lastAlbumRef.current);
     }
 
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
-  }, [isLoading, hasMore, albums]);
+    return () => observer.current?.disconnect();
+  }, [isLoading, hasMore, albums, fetchAlbums]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -172,89 +186,90 @@ const Albums: React.FC = () => {
             </div>
           </div>
 
-          {isLoading && albums.length === 0 ? (
-              <div className="p-8 flex justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-              </div>
-          ) : albums.length === 0 ? (
-              <div className="p-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4">
-                  <Disc size={32} className="text-purple-600" />
+          <div className="min-h-[400px]">
+            {!isInitialized || isLoading ? (
+                <div className="p-8 flex justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No albums found</h3>
-                <p className="text-gray-500 mb-4">
-                  {searchTerm ? 'No albums match your search criteria' : 'Start by adding your first album'}
-                </p>
-                {!searchTerm && (
-                    <Link
-                        to="/dashboard/albums/create"
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
-                    >
-                      <Plus size={16} className="mr-2" />
-                      Add Album
-                    </Link>
-                )}
-              </div>
-          ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Title
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Artists
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Release Date
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                  {albums.map((album, index) => (
-                      <tr
-                          key={album.id}
-                          ref={index === albums.length - 1 ? lastAlbumRef : null}
-                          className="hover:bg-gray-50"
+            ) : albums.length === 0 ? (
+                <div className="p-8 text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4">
+                    <Disc size={32} className="text-purple-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    {searchTerm ? 'No albums found' : 'Start adding albums'}
+                  </h3>
+                  {!searchTerm && (
+                      <Link
+                          to="/dashboard/albums/create"
+                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {album.title}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {album.artists.map(artist => artist.name).join(', ')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(album.releaseDate)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Link
-                              to={`/dashboard/albums/edit/${album.id}`}
-                              className="text-purple-600 hover:text-purple-900 mr-4"
-                          >
-                            <Edit size={18} className="inline" />
-                          </Link>
-                          <button
-                              onClick={() => setDeleteConfirmation({ show: true, albumToDelete: album.id })}
-                              className="text-red-600 hover:text-red-900"
-                          >
-                            <Trash size={18} className="inline" />
-                          </button>
-                        </td>
-                      </tr>
-                  ))}
-                  </tbody>
-                </table>
-                {isLoading && (
-                    <div className="p-4 flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-                    </div>
-                )}
-              </div>
-          )}
+                        <Plus size={16} className="mr-2" />
+                        Add First Album
+                      </Link>
+                  )}
+                </div>
+            ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Title
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Artists
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Release Date
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                    {albums.map((album, index) => (
+                        <tr
+                            key={album.id}
+                            ref={index === albums.length - 1 ? lastAlbumRef : null}
+                            className="hover:bg-gray-50"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {album.title}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {album.artists.map(artist => artist.name).join(', ')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {formatDate(album.releaseDate)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <Link
+                                to={`/dashboard/albums/edit/${album.id}`}
+                                className="text-purple-600 hover:text-purple-900 mr-4"
+                            >
+                              <Edit size={18} className="inline" />
+                            </Link>
+                            <button
+                                onClick={() => setDeleteConfirmation({ show: true, albumToDelete: album.id })}
+                                className="text-red-600 hover:text-red-900"
+                            >
+                              <Trash size={18} className="inline" />
+                            </button>
+                          </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                  </table>
+                  {isLoading && (
+                      <div className="p-4 flex justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+                      </div>
+                  )}
+                </div>
+            )}
+          </div>
         </div>
       </div>
   );

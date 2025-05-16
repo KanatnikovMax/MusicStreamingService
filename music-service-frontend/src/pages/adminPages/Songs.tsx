@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { Plus, Edit, Trash, Search, Music } from 'lucide-react';
 import { getAllSongs, deleteSong } from '../../services/songService.ts';
 import { useToast } from '../../contexts/ToastContext.tsx';
-import type {Song} from "../../types/music.ts";
+import type { Song } from "../../types/music.ts";
 
 const Songs: React.FC = () => {
   const [songs, setSongs] = useState<Song[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [cursor, setCursor] = useState<Date>();
   const [hasMore, setHasMore] = useState(true);
@@ -19,68 +20,88 @@ const Songs: React.FC = () => {
   const { showToast } = useToast();
   const observer = useRef<IntersectionObserver | null>(null);
   const lastSongRef = useRef<HTMLTableRowElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const calculatePageSize = useCallback(() => {
     const screenHeight = window.innerHeight;
     const rowHeight = 64;
-    return Math.min(Math.max(Math.floor(screenHeight / rowHeight), 10, 30));
+    return Math.min(Math.max(Math.floor(screenHeight / rowHeight), 10), 30);
   }, []);
 
   useEffect(() => {
     const handleResize = () => {
-      const newSize = calculatePageSize();
-      setPageSize(newSize);
+      setPageSize(prev => {
+        const newSize = calculatePageSize();
+        return prev !== newSize ? newSize : prev;
+      });
     };
 
     handleResize();
+    const resizeTimer = setTimeout(handleResize, 200);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimer);
+    };
   }, [calculatePageSize]);
 
-  const fetchSongs = useCallback(async (loadMore = false) => {
-    if (isLoading || !hasMore || (loadMore && !cursor)) return;
+  const fetchSongs = useCallback(async (loadMore: boolean) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       setIsLoading(true);
       const response = await getAllSongs({
         cursor: loadMore ? cursor : undefined,
         pageSize,
-        searchTerm: searchTerm || undefined
+        searchTerm
       });
 
       setSongs(prev => {
-        const newItems = response.items.filter(newItem =>
-            !prev.some(item => item.id === newItem.id)
-        );
-        return loadMore ? [...prev, ...newItems] : newItems;
+        if (!loadMore) return response.items;
+
+        const existingIds = new Set(prev.map(item => item.id));
+        const newItems = response.items.filter(item => !existingIds.has(item.id));
+        return [...prev, ...newItems];
       });
 
-      setCursor(response.cursor ?? undefined);
-      setHasMore(response.items.length >= pageSize);
+      setHasMore(!!response.cursor);
+      setCursor(response.cursor || undefined);
     } catch {
-      showToast('Failed to load songs', 'error');
+
       setHasMore(false);
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
     }
-  }, [cursor, pageSize, searchTerm, showToast, isLoading, hasMore]);
+  }, [cursor, pageSize, searchTerm, showToast]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setSongs([]);
       setCursor(undefined);
       setHasMore(true);
-      fetchSongs();
-    }, 50);
+      fetchSongs(false);
+    }, 300);
 
-    return () => clearTimeout(handler);
+    return () => {
+      clearTimeout(handler);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [searchTerm, pageSize]);
 
   useEffect(() => {
     if (isLoading || !hasMore) return;
 
     const callback = (entries: IntersectionObserverEntry[]) => {
-      if (entries[0].isIntersecting && hasMore && !isLoading) {
+      if (entries[0]?.isIntersecting && hasMore && !isLoading) {
         fetchSongs(true);
       }
     };
@@ -95,12 +116,8 @@ const Songs: React.FC = () => {
       observer.current.observe(lastSongRef.current);
     }
 
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
-  }, [isLoading, hasMore, songs]);
+    return () => observer.current?.disconnect();
+  }, [isLoading, hasMore, songs, fetchSongs]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -174,95 +191,96 @@ const Songs: React.FC = () => {
             </div>
           </div>
 
-          {isLoading && songs.length === 0 ? (
-              <div className="p-8 flex justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
-              </div>
-          ) : songs.length === 0 ? (
-              <div className="p-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-pink-100 mb-4">
-                  <Music size={32} className="text-pink-600" />
+          <div className="min-h-[400px]">
+            {!isInitialized || isLoading ? (
+                <div className="p-8 flex justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No songs found</h3>
-                <p className="text-gray-500 mb-4">
-                  {searchTerm ? 'No songs match your search criteria' : 'Start by adding your first song'}
-                </p>
-                {!searchTerm && (
-                    <Link
-                        to="/dashboard/songs/create"
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700"
-                    >
-                      <Plus size={16} className="mr-2" />
-                      Add Song
-                    </Link>
-                )}
-              </div>
-          ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      #
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Title
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Artists
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Duration
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                  {songs.map((song, index) => (
-                      <tr
-                          key={song.id}
-                          ref={index === songs.length - 1 ? lastSongRef : null}
-                          className="hover:bg-gray-50"
+            ) : songs.length === 0 ? (
+                <div className="p-8 text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-pink-100 mb-4">
+                    <Music size={32} className="text-pink-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    {searchTerm ? 'No songs found' : 'Start adding songs'}
+                  </h3>
+                  {!searchTerm && (
+                      <Link
+                          to="/dashboard/songs/create"
+                          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {song.trackNumber}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {song.title}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {song.artists.map(artist => artist.name).join(', ')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDuration(song.duration)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Link
-                              to={`/dashboard/songs/edit/${song.id}`}
-                              className="text-pink-600 hover:text-pink-900 mr-4"
-                          >
-                            <Edit size={18} className="inline" />
-                          </Link>
-                          <button
-                              onClick={() => setDeleteConfirmation({ show: true, songToDelete: song.id })}
-                              className="text-red-600 hover:text-red-900"
-                          >
-                            <Trash size={18} className="inline" />
-                          </button>
-                        </td>
-                      </tr>
-                  ))}
-                  </tbody>
-                </table>
-                {isLoading && (
-                    <div className="p-4 flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-pink-500"></div>
-                    </div>
-                )}
-              </div>
-          )}
+                        <Plus size={16} className="mr-2" />
+                        Add First Song
+                      </Link>
+                  )}
+                </div>
+            ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        #
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Title
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Artists
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Duration
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                    {songs.map((song, index) => (
+                        <tr
+                            key={song.id}
+                            ref={index === songs.length - 1 ? lastSongRef : null}
+                            className="hover:bg-gray-50"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {song.trackNumber}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {song.title}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {song.artists.map(artist => artist.name).join(', ')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {formatDuration(song.duration)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <Link
+                                to={`/dashboard/songs/edit/${song.id}`}
+                                className="text-pink-600 hover:text-pink-900 mr-4"
+                            >
+                              <Edit size={18} className="inline" />
+                            </Link>
+                            <button
+                                onClick={() => setDeleteConfirmation({ show: true, songToDelete: song.id })}
+                                className="text-red-600 hover:text-red-900"
+                            >
+                              <Trash size={18} className="inline" />
+                            </button>
+                          </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                  </table>
+                  {isLoading && (
+                      <div className="p-4 flex justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-pink-500"></div>
+                      </div>
+                  )}
+                </div>
+            )}
+          </div>
         </div>
       </div>
   );
