@@ -12,6 +12,7 @@ ___
 - Apache Cassandra
 - Duende Identity Server
 - React
+- Docker
 ___
 ## Авторизация
 В&nbsp;зависимости от&nbsp;своей роли пользователь может:
