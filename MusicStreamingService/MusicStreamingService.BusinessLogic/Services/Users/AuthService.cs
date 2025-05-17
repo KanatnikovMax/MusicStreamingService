@@ -67,7 +67,14 @@ public class AuthService : IAuthService
             await transaction.CommitAsync();
             
             var client = _httpClientFactory.CreateClient();
-            var discoveryDocument = await client.GetDiscoveryDocumentAsync(_identityServerUri);
+            var discoveryDocument = await client.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
+            {
+                Address = _identityServerUri,
+                Policy = new DiscoveryPolicy
+                {
+                    RequireHttps = false
+                }
+            });
             if (discoveryDocument.IsError)
             {
                 throw new AuthenticationException("Identity server error");
@@ -117,7 +124,14 @@ public class AuthService : IAuthService
         }
         
         var client = _httpClientFactory.CreateClient();
-        var discoveryDocument = await client.GetDiscoveryDocumentAsync(_identityServerUri);
+        var discoveryDocument = await client.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
+        {
+            Address = _identityServerUri,
+            Policy = new DiscoveryPolicy
+            {
+                RequireHttps = false
+            }
+        });
         if (discoveryDocument.IsError)
         {
             throw new AuthenticationException("Identity server error");

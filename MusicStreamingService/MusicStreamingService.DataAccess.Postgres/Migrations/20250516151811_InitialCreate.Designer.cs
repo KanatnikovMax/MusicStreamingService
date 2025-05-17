@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MusicStreamingService.DataAccess.Postgres.Migrations
 {
     [DbContext(typeof(MusicServiceDbContext))]
-    [Migration("20250418215209_AddSongsCascadeDelete")]
-    partial class AddSongsCascadeDelete
+    [Migration("20250516151811_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -40,21 +40,6 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                     b.ToTable("artists_albums", (string)null);
                 });
 
-            modelBuilder.Entity("ArtistSong", b =>
-                {
-                    b.Property<Guid>("ArtistsId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("SongsId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("ArtistsId", "SongsId");
-
-                    b.HasIndex("SongsId");
-
-                    b.ToTable("artists_songs", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")
@@ -73,6 +58,8 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("user_role_claims", (string)null);
                 });
@@ -96,54 +83,47 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("user_claims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderKey")
                         .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("text");
 
-                    b.Property<string>("ProviderKey")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("user_logins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.ToTable("user_role_owners", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
-                {
                     b.Property<string>("LoginProvider")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("Value")
                         .HasColumnType("text");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("user_tokens", (string)null);
                 });
@@ -155,6 +135,11 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("gen_random_uuid()");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("timezone('utc', now())");
+
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -164,6 +149,8 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("Title");
 
@@ -177,6 +164,11 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("gen_random_uuid()");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("timezone('utc', now())");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -184,10 +176,27 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAt");
+
                     b.HasIndex("Name")
                         .IsUnique();
 
                     b.ToTable("artists", (string)null);
+                });
+
+            modelBuilder.Entity("MusicStreamingService.DataAccess.Postgres.Entities.ArtistSong", b =>
+                {
+                    b.Property<Guid>("ArtistId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SongId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ArtistId", "SongId");
+
+                    b.HasIndex("SongId");
+
+                    b.ToTable("artists_songs", (string)null);
                 });
 
             modelBuilder.Entity("MusicStreamingService.DataAccess.Postgres.Entities.Role", b =>
@@ -197,15 +206,22 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedName")
-                        .HasColumnType("text");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("user_roles", (string)null);
                 });
@@ -223,6 +239,11 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                     b.Property<Guid>("CassandraId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("timezone('utc', now())");
+
                     b.Property<int>("Duration")
                         .HasColumnType("integer");
 
@@ -237,6 +258,8 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AlbumId");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("Title");
 
@@ -254,10 +277,12 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
                         .HasColumnType("text");
 
                     b.Property<string>("Email")
-                        .HasColumnType("text");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
@@ -269,10 +294,12 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NormalizedEmail")
-                        .HasColumnType("text");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedUserName")
-                        .HasColumnType("text");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
@@ -290,9 +317,20 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("UserName")
-                        .HasColumnType("text");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
 
                     b.ToTable("users", (string)null);
                 });
@@ -315,6 +353,26 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("users_albums", (string)null);
+                });
+
+            modelBuilder.Entity("MusicStreamingService.DataAccess.Postgres.Entities.UserRole", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UserId1")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId1");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
                 });
 
             modelBuilder.Entity("MusicStreamingService.DataAccess.Postgres.Entities.UserSong", b =>
@@ -352,19 +410,59 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ArtistSong", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.Artist", null)
+                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.Role", null)
                         .WithMany()
-                        .HasForeignKey("ArtistsId")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MusicStreamingService.DataAccess.Postgres.Entities.ArtistSong", b =>
+                {
+                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.Artist", "Artist")
+                        .WithMany()
+                        .HasForeignKey("ArtistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.Song", null)
+                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.Song", "Song")
                         .WithMany()
-                        .HasForeignKey("SongsId")
+                        .HasForeignKey("SongId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Artist");
+
+                    b.Navigation("Song");
                 });
 
             modelBuilder.Entity("MusicStreamingService.DataAccess.Postgres.Entities.Song", b =>
@@ -395,6 +493,25 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                     b.Navigation("Album");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MusicStreamingService.DataAccess.Postgres.Entities.UserRole", b =>
+                {
+                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MusicStreamingService.DataAccess.Postgres.Entities.User", null)
+                        .WithMany("Roles")
+                        .HasForeignKey("UserId1");
                 });
 
             modelBuilder.Entity("MusicStreamingService.DataAccess.Postgres.Entities.UserSong", b =>
@@ -430,6 +547,8 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
 
             modelBuilder.Entity("MusicStreamingService.DataAccess.Postgres.Entities.User", b =>
                 {
+                    b.Navigation("Roles");
+
                     b.Navigation("UsersAlbums");
 
                     b.Navigation("UsersSongs");

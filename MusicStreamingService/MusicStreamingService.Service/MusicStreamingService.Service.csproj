@@ -4,6 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
@@ -37,6 +38,12 @@
       <ProjectReference Include="..\MusicStreamingService.BusinessLogic\MusicStreamingService.BusinessLogic.csproj" />
       <ProjectReference Include="..\MusicStreamingService.DataAccess.Cassandra\MusicStreamingService.DataAccess.Cassandra.csproj" />
       <ProjectReference Include="..\MusicStreamingService.DataAccess.Postgres\MusicStreamingService.DataAccess.Postgres.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 
 </Project>

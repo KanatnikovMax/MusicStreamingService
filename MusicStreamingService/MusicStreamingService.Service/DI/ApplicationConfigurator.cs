@@ -12,7 +12,7 @@ public static class ApplicationConfigurator
         {
             options.AddPolicy("AdminFrontend", policy =>
             {
-                policy.WithOrigins(settings.AdminFrontendUrl)
+                policy.WithOrigins(settings.FrontendUrl)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
