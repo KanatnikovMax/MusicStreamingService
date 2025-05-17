@@ -16,7 +16,7 @@ public static class MusicServiceSettingsReader
             CassandraKeyspace = configuration.GetValue<string>("Cassandra:Keyspace"),
             CassandraPort = int.Parse(configuration.GetValue<string>("Cassandra:Port")),
             CassandraReplicationFactor = int.Parse(configuration.GetValue<string>("Cassandra:ReplicationFactor")),
-            AdminFrontendUrl = configuration.GetValue<string>("Cors:AdminFrontendUrl"),
+            FrontendUrl = configuration.GetValue<string>("Cors:FrontendUrl"),
         };
     }
 }

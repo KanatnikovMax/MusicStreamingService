@@ -17,9 +17,6 @@ ApplicationConfigurator.ConfigureApplication(app);
 
 await PostgresInitializer.InitializeAsync(app, settings);
 await app.Services.GetRequiredService<CassandraCluster>().InitializeAsync();
-
-app.MapGet("/", () => "Hello World!");
-
 app.Run();
 
 public partial class Program;

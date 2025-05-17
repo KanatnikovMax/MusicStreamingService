@@ -17,7 +17,7 @@ public static class AuthorizationConfigurator
     public static void ConfigureServices(IServiceCollection services, MusicServiceSettings settings)
     {
         IdentityModelEventSource.ShowPII = true;
-
+        
         services.AddIdentity<User, Role>(options =>
             {
                 options.Password.RequireDigit = true;
@@ -28,12 +28,16 @@ public static class AuthorizationConfigurator
             .AddDefaultTokenProviders()
             .AddRoles<Role>(); 
 
-        services.AddIdentityServer()
+        services.AddIdentityServer(options =>
+            {
+                
+            })
             .AddInMemoryIdentityResources(IdentityServerConfigSettings.IdentityResources)
             .AddInMemoryApiScopes(IdentityServerConfigSettings.ApiScopes)
             .AddInMemoryApiResources(IdentityServerConfigSettings.ApiResources)
             .AddInMemoryClients(IdentityServerConfigSettings.GetClients(settings))
-            .AddAspNetIdentity<User>();
+            .AddAspNetIdentity<User>()
+            .AddDeveloperSigningCredential();
 
         services.AddAuthentication(options =>
             {
@@ -60,7 +64,6 @@ public static class AuthorizationConfigurator
                     RoleClaimType = ClaimTypes.Role
                 };
             });
-
         services.AddAuthorization();
 
         services.AddTransient<IProfileService, IdentityProfileService>();

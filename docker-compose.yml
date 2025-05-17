@@ -1,0 +1,73 @@
+﻿services:
+  postgres_db:
+    container_name: data-access-postgres
+    image: postgres:17.0-alpine3.20
+    environment:
+      POSTGRES_DB: "MusicStreamingServiceDb"
+      POSTGRES_USER: "MusicStreamingService"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pg-volume"
+    ports:
+      - "4321:5432"
+    volumes:
+      - pg-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U MusicStreamingService -d MusicStreamingServiceDb" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-network
+    
+  cassandra_db:
+    image: cassandra:latest
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    environment:
+      - CASSANDRA_CLUSTER_NAME=MyCluster
+    healthcheck:
+      test: [ "CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'DESCRIBE KEYSPACES'" ]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+    networks:
+      - app-network
+
+  backend:
+    image: music-service-backend
+    build:
+      context: .
+      dockerfile: MusicStreamingService/Dockerfile
+    ports:
+      - "5071:8080"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      cassandra_db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: music-service-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://backend:8080
+      - VITE_FRONTEND_URL=http://localhost:5173
+    networks:
+      - app-network
+
+volumes:
+  pg-volume:
+  cassandra-data:
+
+networks:
+  app-network:
+    driver: bridge
