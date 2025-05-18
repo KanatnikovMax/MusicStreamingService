@@ -20,6 +20,7 @@
       - app-network
     
   cassandra_db:
+    container_name: data-access-cassandra
     image: cassandra:latest
     ports:
       - "9042:9042"
@@ -35,7 +36,23 @@
     networks:
       - app-network
 
+  redis_db:
+    container_name: data-access-redis
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
   backend:
+    container_name: backend-music-streaming-service
     image: music-service-backend
     build:
       context: .
@@ -47,10 +64,13 @@
         condition: service_healthy
       cassandra_db:
         condition: service_healthy
+      redis_db:
+        condition: service_healthy
     networks:
       - app-network
 
   frontend:
+    container_name: frontend-music-streaming-service
     build:
       context: music-service-frontend
       dockerfile: Dockerfile
@@ -67,6 +87,7 @@
 volumes:
   pg-volume:
   cassandra-data:
+  redis-data:
 
 networks:
   app-network:

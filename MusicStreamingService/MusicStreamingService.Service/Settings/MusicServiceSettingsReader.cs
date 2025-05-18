@@ -17,6 +17,8 @@ public static class MusicServiceSettingsReader
             CassandraPort = int.Parse(configuration.GetValue<string>("Cassandra:Port")),
             CassandraReplicationFactor = int.Parse(configuration.GetValue<string>("Cassandra:ReplicationFactor")),
             FrontendUrl = configuration.GetValue<string>("Cors:FrontendUrl"),
+            RedisConnectionString = configuration.GetValue<string>("Redis:ConnectionString"),
+            RedisInstanceName = configuration.GetValue<string>("Redis:InstanceName"),
         };
     }
 }

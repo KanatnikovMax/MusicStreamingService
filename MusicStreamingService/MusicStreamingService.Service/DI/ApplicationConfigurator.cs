@@ -23,6 +23,11 @@ public static class ApplicationConfigurator
         SwaggerConfigurator.ConfigureServices(builder.Services);
         MapperConfigurator.ConfigureServices(builder.Services);
         ServicesConfigurator.ConfigureServices(builder.Services, settings);
+        builder.Services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = settings.RedisConnectionString;
+            options.InstanceName = settings.RedisInstanceName;
+        });
         
         builder.Services.AddControllers();
     }

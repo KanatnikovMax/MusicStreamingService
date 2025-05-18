@@ -13,4 +13,6 @@ public class MusicServiceSettings
     public int CassandraPort { get; set; }
     public int CassandraReplicationFactor { get; set; }
     public string FrontendUrl { get; set; }
+    public string RedisConnectionString { get; set; }
+    public string RedisInstanceName { get; set; }
 }
