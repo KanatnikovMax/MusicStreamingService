@@ -13,6 +13,7 @@ ___
 - Duende Identity Server
 - React
 - Docker
+- Redis
 ___
 ## Авторизация
 В&nbsp;зависимости от&nbsp;своей роли пользователь может:

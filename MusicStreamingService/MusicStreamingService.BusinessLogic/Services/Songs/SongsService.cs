@@ -1,12 +1,14 @@
 ﻿using System.Data;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Cassandra.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.DataAccess.Postgres.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
+using Newtonsoft.Json;
 using Npgsql;
 
 namespace MusicStreamingService.BusinessLogic.Services.Songs;
@@ -16,12 +18,14 @@ public class SongsService : ISongsService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ICassandraSongsRepository _cassandraRepository;
-
-    public SongsService(IUnitOfWork unitOfWork, IMapper mapper, ICassandraSongsRepository cassandraRepository)
+    private readonly IDistributedCache _cache;
+    public SongsService(IUnitOfWork unitOfWork, IMapper mapper, 
+        ICassandraSongsRepository cassandraRepository, IDistributedCache cache)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _cassandraRepository = cassandraRepository;
+        _cache = cache;
     }
 
     public async Task<CursorResponse<DateTime?, SongModel>> GetAllSongsAsync(PaginationParams<DateTime?> request)
@@ -36,8 +40,30 @@ public class SongsService : ISongsService
 
     public async Task<SongModel> GetSongByIdAsync(Guid id)
     {
-        var song = await _unitOfWork.Songs.FindByIdAsync(id)
-            ?? throw new EntityNotFoundException("Song", id);
+        var cacheKey = $"songs_{id}";
+        var cashedSong = await _cache.GetStringAsync(cacheKey);
+        Song? song;
+        if (string.IsNullOrEmpty(cashedSong))
+        {
+            song = await _unitOfWork.Songs.FindByIdAsync(id)
+                   ?? throw new EntityNotFoundException("Song", id);
+            
+            await _cache.SetStringAsync(
+                cacheKey, 
+                JsonConvert.SerializeObject(song, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore
+                }),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+                });
+            
+            return _mapper.Map<SongModel>(song);
+        }
+        
+        song = JsonConvert.DeserializeObject<Song>(cashedSong);
         return _mapper.Map<SongModel>(song);
     }
 
@@ -60,7 +86,12 @@ public class SongsService : ISongsService
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
-            var album = await _unitOfWork.Albums.FindByIdAsync(model.AlbumId);
+            var cacheKey = $"albums_{model.AlbumId}";
+            var cachedAlbum = await _cache.GetStringAsync(cacheKey);
+            var album = string.IsNullOrEmpty(cachedAlbum) 
+                ? await _unitOfWork.Albums.FindByIdAsync(model.AlbumId)
+                : JsonConvert.DeserializeObject<Album>(cachedAlbum);
+            
             if (album is null)
             {
                 await _unitOfWork.RollbackAsync();
@@ -113,7 +144,11 @@ public class SongsService : ISongsService
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
-            var song = await _unitOfWork.Songs.FindByIdAsync(id);
+            var cacheKey = $"songs_{id}";
+            var cashedSong = await _cache.GetStringAsync(cacheKey);
+            var song = string.IsNullOrWhiteSpace(cashedSong) 
+                ? await _unitOfWork.Songs.FindByIdAsync(id) 
+                : JsonConvert.DeserializeObject<Song>(cashedSong);
             if (song is null)
             {
                 await _unitOfWork.RollbackAsync();
@@ -122,6 +157,8 @@ public class SongsService : ISongsService
             
             _unitOfWork.Songs.Delete(song);
             await _unitOfWork.CommitAsync();
+            
+            await _cache.RemoveAsync(cacheKey);
             
             await _cassandraRepository.DeleteAsync(song.CassandraId);
             
@@ -144,7 +181,12 @@ public class SongsService : ISongsService
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
-            var song = await _unitOfWork.Songs.FindByIdAsync(id);
+            var cacheKey = $"songs_{id}";
+            var cashedSong = await _cache.GetStringAsync(cacheKey);
+            var song = string.IsNullOrWhiteSpace(cashedSong) 
+                ? await _unitOfWork.Songs.FindByIdAsync(id) 
+                : JsonConvert.DeserializeObject<Song>(cashedSong);
+            
             if (song is null)
             {
                 await _unitOfWork.RollbackAsync();
@@ -153,8 +195,11 @@ public class SongsService : ISongsService
             
             song.Title = model?.Title ?? song.Title;
             song.TrackNumber = model?.TrackNumber ?? song.TrackNumber;
+            
             song = _unitOfWork.Songs.Update(song);
             await _unitOfWork.CommitAsync();
+            
+            await _cache.RemoveAsync(cacheKey);
             
             return _mapper.Map<SongModel>(song);
         }
@@ -172,8 +217,7 @@ public class SongsService : ISongsService
 
     public async Task<byte[]> GetSongAudioAsync(Guid id)
     {
-        var song = await _unitOfWork.Songs.FindByIdAsync(id)
-                   ?? throw new EntityNotFoundException("Song", id);
+        var song = await GetSongByIdAsync(id);
         
         var audio = await _cassandraRepository.FindAsync(song.CassandraId)
             ?? throw new EntityNotFoundException("Audio", song.CassandraId);

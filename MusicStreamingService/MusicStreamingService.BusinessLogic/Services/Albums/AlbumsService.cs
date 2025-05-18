@@ -1,11 +1,13 @@
 ﻿using System.Data;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
+using Newtonsoft.Json;
 using Npgsql;
 
 namespace MusicStreamingService.BusinessLogic.Services.Albums;
@@ -14,11 +16,13 @@ public class AlbumsService : IAlbumsService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IDistributedCache _cache;
 
-    public AlbumsService(IUnitOfWork unitOfWork, IMapper mapper)
+    public AlbumsService(IUnitOfWork unitOfWork, IMapper mapper, IDistributedCache cache)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _cache = cache;
     }
 
     public async Task<CursorResponse<DateTime?, AlbumModel>> GetAllAlbumsAsync(PaginationParams<DateTime?> request)
@@ -33,8 +37,30 @@ public class AlbumsService : IAlbumsService
 
     public async Task<AlbumModel> GetAlbumByIdAsync(Guid id)
     {
-        var album = await _unitOfWork.Albums.FindByIdAsync(id)
-            ?? throw new EntityNotFoundException("Album", id);
+        var cacheKey = $"albums_{id}";
+        var cachedAlbum = await _cache.GetStringAsync(cacheKey);
+        Album? album;
+        if (string.IsNullOrEmpty(cachedAlbum))
+        {
+            album = await _unitOfWork.Albums.FindByIdAsync(id)
+                    ?? throw new EntityNotFoundException("Album", id);
+            
+            await _cache.SetStringAsync(
+                cacheKey, 
+                JsonConvert.SerializeObject(album, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore
+                }),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+                });
+            
+            return _mapper.Map<AlbumModel>(album);
+        }
+        
+        album = JsonConvert.DeserializeObject<Album>(cachedAlbum);
         return _mapper.Map<AlbumModel>(album);
     }
 
@@ -119,13 +145,20 @@ public class AlbumsService : IAlbumsService
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
-            var album = await _unitOfWork.Albums.FindByIdAsync(id);
+            var cacheKey = $"albums_{id}";
+            var cachedAlbum = await _cache.GetStringAsync(cacheKey);
+            var album = string.IsNullOrEmpty(cachedAlbum) 
+                ? await _unitOfWork.Albums.FindByIdAsync(id)
+                : JsonConvert.DeserializeObject<Album>(cachedAlbum);
+            
             if (album is null)
             {
                 await _unitOfWork.RollbackAsync();
                 throw new EntityNotFoundException("Album", id);
             }
-
+            
+            await _cache.RemoveAsync(cacheKey);
+            
             _unitOfWork.Albums.Delete(album);
             await _unitOfWork.CommitAsync();
             return _mapper.Map<AlbumModel>(album);
@@ -147,7 +180,12 @@ public class AlbumsService : IAlbumsService
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
-            var album = await _unitOfWork.Albums.FindByIdAsync(id);
+            var cacheKey = $"albums_{id}";
+            var cachedAlbum = await _cache.GetStringAsync(cacheKey);
+            var album = string.IsNullOrEmpty(cachedAlbum) 
+                ? await _unitOfWork.Albums.FindByIdAsync(id)
+                : JsonConvert.DeserializeObject<Album>(cachedAlbum);
+            
             if (album is null)
             {
                 await _unitOfWork.RollbackAsync();
@@ -172,6 +210,9 @@ public class AlbumsService : IAlbumsService
                     album.Artists.Add(artist);
                 }
             }
+            
+            await _cache.RemoveAsync(cacheKey);
+            
             _unitOfWork.Albums.Update(album);
             await _unitOfWork.CommitAsync();
 

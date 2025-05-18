@@ -1,12 +1,14 @@
 ﻿using System.Data;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Artists.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
+using Newtonsoft.Json;
 using Npgsql;
 
 namespace MusicStreamingService.BusinessLogic.Services.Artists;
@@ -15,11 +17,13 @@ public class ArtistsService : IArtistsService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IDistributedCache _cache;
 
-    public ArtistsService(IUnitOfWork unitOfWork, IMapper mapper)
+    public ArtistsService(IUnitOfWork unitOfWork, IMapper mapper, IDistributedCache cache)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _cache = cache;
     }
 
     public async Task<CursorResponse<DateTime?, ArtistModel>> GetAllArtistsAsync(PaginationParams<DateTime?> request)
@@ -34,8 +38,29 @@ public class ArtistsService : IArtistsService
 
     public async Task<ArtistModel> GetArtistByIdAsync(Guid id)
     {
-        var artist = await _unitOfWork.Artists.FindByIdAsync(id)
-            ?? throw new EntityNotFoundException("Artist", id);
+        var cacheKey = $"artists_{id}";
+        var cachedArtist = await _cache.GetStringAsync(cacheKey);
+        Artist? artist;
+        if (string.IsNullOrEmpty(cachedArtist))
+        {
+            artist = await _unitOfWork.Artists.FindByIdAsync(id)
+                     ?? throw new EntityNotFoundException("Artist", id);
+            await _cache.SetStringAsync(
+                cacheKey, 
+                JsonConvert.SerializeObject(artist, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore
+                }),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+                });
+            
+            return _mapper.Map<ArtistModel>(artist);
+        }
+
+        artist = JsonConvert.DeserializeObject<Artist>(cachedArtist);
         return _mapper.Map<ArtistModel>(artist);
     }
 
@@ -121,7 +146,12 @@ public class ArtistsService : IArtistsService
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable);
         try
         {
-            var artist = await _unitOfWork.Artists.FindByIdAsync(id);
+            var cachedKey = $"artists_{id}";
+            var cachedArtist = await _cache.GetStringAsync(cachedKey);
+            var artist = string.IsNullOrEmpty(cachedArtist) 
+                ? await _unitOfWork.Artists.FindByIdAsync(id) 
+                : JsonConvert.DeserializeObject<Artist>(cachedArtist);
+            
             if (artist is null)
             {
                 await _unitOfWork.RollbackAsync();
@@ -135,7 +165,9 @@ public class ArtistsService : IArtistsService
             {
                 _unitOfWork.Albums.Delete(album);
             }
-
+            
+            await _cache.RemoveAsync(cachedKey);
+            
             _unitOfWork.Artists.Delete(artist);
         
             await _unitOfWork.CommitAsync();
@@ -165,12 +197,19 @@ public class ArtistsService : IArtistsService
                 throw new EntityAlreadyExistsException("Artist");
             }
             
-            var artist = await _unitOfWork.Artists.FindByIdAsync(id);
+            var cachedKey = $"artists_{id}";
+            var cachedArtist = await _cache.GetStringAsync(cachedKey);
+            var artist = string.IsNullOrEmpty(cachedArtist) 
+                ? await _unitOfWork.Artists.FindByIdAsync(id) 
+                : JsonConvert.DeserializeObject<Artist>(cachedArtist);
+            
             if (artist is null)
             {
                 await _unitOfWork.RollbackAsync();
                 throw new EntityNotFoundException("Artist", id);
             }
+            
+            await _cache.RemoveAsync(cachedKey);
             
             artist.Name = model.Name ?? artist.Name;
             artist = _unitOfWork.Artists.Update(artist);
