@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, X } from 'lucide-react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
+import { getAlbumById } from '../services/albumService.ts';
 
 const MusicPlayer: React.FC = () => {
   const {
@@ -16,9 +17,41 @@ const MusicPlayer: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
+  const [albumCover, setAlbumCover] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const albumCoverCache = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    const fetchAlbumCover = async () => {
+      if (!currentSong) return;
+
+      const albumId = currentSong.albumId;
+
+      // Проверка кэша
+      if (albumCoverCache.current.has(albumId)) {
+        setAlbumCover(albumCoverCache.current.get(albumId) || null);
+        return;
+      }
+
+      try {
+        const response = await getAlbumById(albumId);
+        if (response.albums?.[0]?.photoBase64) {
+          const coverUrl = `data:image/jpeg;base64,${response.albums[0].photoBase64}`;
+          albumCoverCache.current.set(albumId, coverUrl);
+          setAlbumCover(coverUrl);
+        } else {
+          setAlbumCover(null);
+        }
+      } catch (error) {
+        console.error('Error loading album cover:', error);
+        setAlbumCover(null);
+      }
+    };
+
+    fetchAlbumCover();
+  }, [currentSong?.albumId]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -90,7 +123,15 @@ const MusicPlayer: React.FC = () => {
         <div className="flex flex-col md:flex-row items-center gap-4">
           {/* Song Info */}
           <div className="flex items-center flex-1 min-w-0">
-            <div className="w-12 h-12 bg-gray-800 rounded-md mr-3 flex-shrink-0" />
+            {albumCover ? (
+                <img
+                    src={albumCover}
+                    alt="Album cover"
+                    className="w-12 h-12 rounded-md mr-3 flex-shrink-0 object-cover"
+                />
+            ) : (
+                <div className="w-12 h-12 bg-gray-800 rounded-md mr-3 flex-shrink-0" />
+            )}
             <div className="truncate">
               <div className="font-medium truncate">{currentSong.title}</div>
               <div className="text-xs text-gray-300 truncate">
