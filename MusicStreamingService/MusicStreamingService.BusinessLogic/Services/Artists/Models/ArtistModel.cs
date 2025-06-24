@@ -3,8 +3,11 @@ using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 
 namespace MusicStreamingService.BusinessLogic.Services.Artists.Models;
 
-public record ArtistModel(
-    Guid Id,
-    string Name,
-    List<SongSimpleModel> Songs,
-    List<AlbumSimpleModel> Albums);
+public class ArtistModel
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public string? PhotoBase64 { get; set; }
+    public List<SongSimpleModel> Songs { get; set; }
+    public List<AlbumSimpleModel> Albums { get; set; }
+}

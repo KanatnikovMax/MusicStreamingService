@@ -212,6 +212,7 @@ public class ArtistsService : IArtistsService
             await _cache.RemoveAsync(cachedKey);
             
             artist.Name = model.Name ?? artist.Name;
+            artist.Photo = model.Photo ?? artist.Photo;
             artist = _unitOfWork.Artists.Update(artist);
             await _unitOfWork.CommitAsync();
             return _mapper.Map<ArtistModel>(artist);
