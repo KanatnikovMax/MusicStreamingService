@@ -26,13 +26,20 @@ public class AlbumsController : ControllerBase
         _mapper = mapper;
         _logger = logger;
     }
+    
     [Authorize(Roles = "admin")]
     [HttpPost]
     [Route("create")]
-    public async Task<ActionResult<AlbumsListResponse>> CreateAlbum([FromBody] CreateAlbumRequest request)
+    public async Task<ActionResult<AlbumsListResponse>> CreateAlbum([FromForm] CreateAlbumRequest request,
+        [FromForm] IFormFile? photo)
     {
         var createAlbumModel = _mapper.Map<CreateAlbumModel>(request);
-        
+        if (photo != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await photo.CopyToAsync(memoryStream);
+            createAlbumModel.Photo = memoryStream.ToArray();
+        }
         var album = await _albumsService.CreateAlbumAsync(createAlbumModel);
         return Ok(new AlbumsListResponse([album]));
     }
@@ -87,10 +94,16 @@ public class AlbumsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("update/{id:guid}")]
-    public async Task<ActionResult<AlbumsListResponse>> UpdateAlbum(Guid id, [FromBody] UpdateAlbumRequest request)
+    public async Task<ActionResult<AlbumsListResponse>> UpdateAlbum(Guid id, [FromForm] UpdateAlbumRequest request,
+        [FromForm] IFormFile? photo)
     {
         var updateAlbumModel = _mapper.Map<UpdateAlbumModel>(request);
-        
+        if (photo != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await photo.CopyToAsync(memoryStream);
+            updateAlbumModel.Photo = memoryStream.ToArray();
+        }
         var album = await _albumsService.UpdateAlbumAsync(updateAlbumModel, id);
         return Ok(new AlbumsListResponse([album]));
     }

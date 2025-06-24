@@ -196,6 +196,7 @@ public class AlbumsService : IAlbumsService
             {
                 album.Title = model.Title;
             }
+            album.Photo = model.Photo ?? album.Photo;
             if (model.ReleaseDate.HasValue)
             {
                 album.ReleaseDate = model.ReleaseDate.Value;

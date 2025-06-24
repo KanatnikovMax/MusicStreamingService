@@ -2,6 +2,6 @@
 
 public class UpdateArtistModel
 {
-    public string Name { get; set; }
+    public string? Name { get; set; }
     public byte[]? Photo { get; set; }
 }

@@ -2,8 +2,11 @@
 
 namespace MusicStreamingService.BusinessLogic.Services.Albums.Models;
 
-public record AlbumSimpleModel(
-    Guid Id,
-    string Title,
-    DateTime ReleaseDate,
-    List<ArtistSimpleModel> Artists);
+public class AlbumSimpleModel
+{
+    public Guid Id { get; init; } 
+    public string Title { get; init; } 
+    public string? PhotoBase64 { get; set; }
+    public DateTime ReleaseDate { get; init; } 
+    public List<ArtistSimpleModel> Artists { get; init; } 
+}
