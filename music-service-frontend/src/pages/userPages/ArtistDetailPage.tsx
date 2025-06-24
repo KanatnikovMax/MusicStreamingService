@@ -192,8 +192,16 @@ const ArtistDetailPage: React.FC = () => {
         <div className="bg-white shadow rounded-lg overflow-hidden mb-8">
           <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-8">
             <div className="flex items-center">
-              <div className="h-24 w-24 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-                <span className="text-3xl font-bold">{artist.name.charAt(0)}</span>
+              <div className="h-24 w-24 rounded-full overflow-hidden bg-white bg-opacity-20 flex items-center justify-center">
+                {artist.photoBase64 ? (
+                    <img
+                        src={`data:image/jpeg;base64,${artist.photoBase64}`}
+                        alt={artist.name}
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <span className="text-3xl font-bold">{artist.name.charAt(0)}</span>
+                )}
               </div>
 
               <div className="ml-6">

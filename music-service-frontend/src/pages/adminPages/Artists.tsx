@@ -211,6 +211,9 @@ const Artists: React.FC = () => {
                     <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Photo
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Name
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -225,6 +228,19 @@ const Artists: React.FC = () => {
                             ref={index === artists.length - 1 ? lastArtistRef : null}
                             className="hover:bg-gray-50"
                         >
+                          <td className="px-6 py-4">
+                            {artist.photoBase64 ? (
+                                <img
+                                    src={`data:image/jpeg;base64,${artist.photoBase64}`}
+                                    alt={artist.name}
+                                    className="w-12 h-12 rounded-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                  <Users size={20} className="text-gray-500" />
+                                </div>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {artist.name}
                           </td>

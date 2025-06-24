@@ -1,6 +1,7 @@
 export interface Artist {
   id: string;
   name: string;
+  photoBase64?: string;
   albums?: AlbumSimple[];
   songs?: SongSimple[];
   createdAt: string

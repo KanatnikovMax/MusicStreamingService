@@ -13,10 +13,18 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
           to={`/artists/${artist.id}`}
           className="block bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1"
       >
-        <div className="aspect-square bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
-          <div className="h-24 w-24 rounded-full bg-purple-600 flex items-center justify-center">
-            <Music size={48} className="text-white" />
-          </div>
+        <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
+          {artist.photoBase64 ? (
+              <img
+                  src={`data:image/jpeg;base64,${artist.photoBase64}`}
+                  alt={artist.name}
+                  className="w-full h-full object-cover"
+              />
+          ) : (
+              <div className="h-24 w-24 rounded-full bg-purple-600 flex items-center justify-center">
+                <Music size={48} className="text-white" />
+              </div>
+          )}
         </div>
 
         <div className="p-4">

@@ -17,13 +17,14 @@ interface ArtistSearchParams {
 
 export interface CreateArtistRequest {
   name: string;
+  photo?: File;
 }
 
 export interface UpdateArtistRequest {
   name?: string;
+  photo?: File;
 }
 
-// Основные методы с пагинацией
 export const getAllArtists = async (
     request: PaginationRequest<Date> & { searchTerm?: string } = { pageSize: 10 }
 ) => {
@@ -107,19 +108,36 @@ export const getArtistSongsByTitle = async (
   };
 };
 
-// Базовые CRUD операции
 export const getArtistById = async (id: string): Promise<ArtistResponse> => {
   const response = await axios.get(`${API_URL}/${id}`);
   return response.data;
 };
 
 export const createArtist = async (data: CreateArtistRequest) => {
-  const response = await ApiClient.post(`${API_URL}/create`, data);
+  const formData = new FormData();
+  formData.append('name', data.name);
+  if (data.photo) {
+    formData.append('photo', data.photo);
+  }
+
+  const response = await ApiClient.post(`${API_URL}/create`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
   return response.data;
 };
 
 export const updateArtist = async (id: string, data: UpdateArtistRequest) => {
-  const response = await ApiClient.put(`${API_URL}/update/${id}`, data);
+  const formData = new FormData();
+  if (data.name) formData.append('name', data.name);
+  if (data.photo) formData.append('photo', data.photo);
+
+  const response = await ApiClient.put(`${API_URL}/update/${id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
   return response.data;
 };
 
