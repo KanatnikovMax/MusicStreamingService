@@ -41,4 +41,5 @@ ___
 - **Apache Cassandra** для хранения аудиофайлов
 ___
 ## Схема базы данных
-![image](https://github.com/user-attachments/assets/15d6b957-71a5-4114-8daf-9b1c7c5dab78)
+<img width="797" height="341" alt="image" src="https://github.com/user-attachments/assets/dd5155ca-513b-4373-a689-b1fd9fb321e8" />
+
