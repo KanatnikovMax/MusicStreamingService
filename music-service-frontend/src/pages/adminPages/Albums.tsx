@@ -215,6 +215,9 @@ const Albums: React.FC = () => {
                     <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Cover
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Title
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -235,6 +238,19 @@ const Albums: React.FC = () => {
                             ref={index === albums.length - 1 ? lastAlbumRef : null}
                             className="hover:bg-gray-50"
                         >
+                          <td className="px-6 py-4">
+                            {album.photoBase64 ? (
+                                <img
+                                    src={`data:image/jpeg;base64,${album.photoBase64}`}
+                                    alt={album.title}
+                                    className="w-12 h-12 rounded object-cover"
+                                />
+                            ) : (
+                                <div className="w-12 h-12 rounded bg-gray-200 border-2 border-dashed flex items-center justify-center">
+                                  <Disc size={20} className="text-gray-500" />
+                                </div>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {album.title}
                           </td>

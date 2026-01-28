@@ -8,7 +8,10 @@ public class AlbumsServiceProfile : Profile
 {
     public AlbumsServiceProfile()
     {
-        CreateMap<CreateAlbumRequest, CreateAlbumModel>();
-        CreateMap<UpdateAlbumRequest, UpdateAlbumModel>();
+        CreateMap<CreateAlbumRequest, CreateAlbumModel>()
+            .ForMember(dest => dest.Photo, opt => opt.Ignore());
+        
+        CreateMap<UpdateAlbumRequest, UpdateAlbumModel>()
+            .ForMember(dest => dest.Photo, opt => opt.Ignore());
     }
 }

@@ -31,14 +31,20 @@ public class ArtistsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPost]
     [Route("create")]
-    public async Task<ActionResult<ArtistsListResponse>> CreateArtist([FromBody] CreateArtistRequest request)
+    public async Task<ActionResult<ArtistsListResponse>> CreateArtist([FromForm] CreateArtistRequest request,
+        [FromForm] IFormFile? photo)
     {
         var createArtistModel = _mapper.Map<CreateArtistModel>(request);
-        
+        if (photo != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await photo.CopyToAsync(memoryStream);
+            createArtistModel.Photo = memoryStream.ToArray();
+        }
         var artist = await _artistsService.CreateArtistAsync(createArtistModel);
         return Ok(new ArtistsListResponse([artist]));
     }
-
+    
     [HttpGet]
     [Route("")]
     public async Task<ActionResult<PaginatedResponse<DateTime?, ArtistModel>>> GetAllArtists(
@@ -109,10 +115,16 @@ public class ArtistsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("update/{id:guid}")]
-    public async Task<ActionResult<ArtistsListResponse>> UpdateArtist(Guid id, [FromBody] UpdateArtistRequest request)
+    public async Task<ActionResult<ArtistsListResponse>> UpdateArtist(Guid id, [FromForm] UpdateArtistRequest request,
+        [FromForm] IFormFile? photo)
     {
         var updateArtistModel = _mapper.Map<UpdateArtistModel>(request);
-        
+        if (photo != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await photo.CopyToAsync(memoryStream);
+            updateArtistModel.Photo = memoryStream.ToArray();
+        }
         var artist = await _artistsService.UpdateArtistAsync(updateArtistModel, id);
         return Ok(new ArtistsListResponse([artist]));
     }

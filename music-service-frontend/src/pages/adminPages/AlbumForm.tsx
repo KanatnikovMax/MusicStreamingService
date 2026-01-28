@@ -1,6 +1,6 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, X } from 'lucide-react';
+import { ArrowLeft, Save, X, Image, Trash } from 'lucide-react';
 import { createAlbum, getAlbumById, updateAlbum } from '../../services/albumService.ts';
 import { getAllArtists } from '../../services/artistService.ts';
 import { useToast } from '../../contexts/ToastContext.tsx';
@@ -37,6 +37,10 @@ const AlbumForm: React.FC = () => {
   const [cursor, setCursor] = useState<Date>();
   const [pageSize] = useState(20);
 
+  const [photo, setPhoto] = useState<File | undefined>(undefined);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const isEditMode = !!id;
 
   useEffect(() => {
@@ -47,8 +51,14 @@ const AlbumForm: React.FC = () => {
         try {
           setIsLoading(true);
           const albumData = await getAlbumById(id!);
-          setTitle(albumData.albums[0].title);
-          setSelectedArtists(albumData.albums[0].artists.map((artist: Artist) => artist.name));
+          const album = albumData.albums[0];
+          setTitle(album.title);
+          setReleaseDate(album.releaseDate);
+          setSelectedArtists(album.artists.map((artist: Artist) => artist.name));
+
+          if (album.photoBase64) {
+            setPreviewUrl(`data:image/jpeg;base64,${album.photoBase64}`);
+          }
         } catch {
           if (!abortController.signal.aborted) {
             showToast('Failed to load album data', 'error');
@@ -110,6 +120,33 @@ const AlbumForm: React.FC = () => {
     );
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+
+      if (!file.type.match('image.*')) {
+        showToast('Please select an image file', 'error');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('File size exceeds 5MB limit', 'error');
+        return;
+      }
+
+      setPhoto(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhoto(undefined);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -124,7 +161,8 @@ const AlbumForm: React.FC = () => {
       const albumData = {
         title,
         releaseDate: new Date(releaseDate).toISOString(),
-        artists: selectedArtists
+        artists: selectedArtists,
+        photo
       };
 
       if (isEditMode) {
@@ -211,6 +249,55 @@ const AlbumForm: React.FC = () => {
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
                   required
               />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Album Cover
+              </label>
+
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  {previewUrl ? (
+                      <div className="relative group">
+                        <img
+                            src={previewUrl}
+                            alt="Preview"
+                            className="h-24 w-24 rounded object-cover border-2 border-gray-300"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleRemovePhoto}
+                            className="absolute top-0 right-0 bg-red-600 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash size={16} className="text-white" />
+                        </button>
+                      </div>
+                  ) : (
+                      <div className="h-24 w-24 rounded bg-gray-200 border-2 border-dashed border-gray-400 flex items-center justify-center">
+                        <Image size={32} className="text-gray-500" />
+                      </div>
+                  )}
+                </div>
+
+                <div className="flex-1">
+                  <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-md file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-purple-50 file:text-purple-700
+                      hover:file:bg-purple-100"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    PNG, JPG, JPEG up to 5MB
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="mb-6">

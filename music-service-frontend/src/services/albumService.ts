@@ -19,12 +19,14 @@ export interface CreateAlbumRequest {
   title: string;
   releaseDate: string;
   artists: string[];
+  photo?: File;
 }
 
 export interface UpdateAlbumRequest {
   title?: string;
   releaseDate?: string;
   artists?: string[];
+  photo?: File;
 }
 
 export const getAllAlbums = async (
@@ -71,12 +73,36 @@ export const getAlbumSongs = async (
 
 // Admin functions
 export const createAlbum = async (data: CreateAlbumRequest) => {
-  const response = await ApiClient.post(`${API_URL}/create`, data);
+  const formData = new FormData();
+  formData.append('title', data.title);
+  formData.append('releaseDate', data.releaseDate);
+  data.artists.forEach(artist => formData.append('artists', artist));
+  if (data.photo) {
+    formData.append('photo', data.photo);
+  }
+
+  const response = await ApiClient.post(`${API_URL}/create`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
   return response.data;
 };
 
 export const updateAlbum = async (id: string, data: UpdateAlbumRequest) => {
-  const response = await ApiClient.put(`${API_URL}/update/${id}`, data);
+  const formData = new FormData();
+  if (data.title) formData.append('title', data.title);
+  if (data.releaseDate) formData.append('releaseDate', data.releaseDate);
+  if (data.artists) {
+    data.artists.forEach(artist => formData.append('artists', artist));
+  }
+  if (data.photo) formData.append('photo', data.photo);
+
+  const response = await ApiClient.put(`${API_URL}/update/${id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
   return response.data;
 };
 

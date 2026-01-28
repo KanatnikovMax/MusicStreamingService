@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MusicStreamingService.DataAccess.Postgres.Migrations
 {
     [DbContext(typeof(MusicServiceDbContext))]
-    [Migration("20250516151811_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250623232645_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -173,6 +173,9 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<byte[]>("Photo")
+                        .HasColumnType("bytea");
 
                     b.HasKey("Id");
 

@@ -1,3 +1,7 @@
 ﻿namespace MusicStreamingService.BusinessLogic.Services.Artists.Models;
 
-public record UpdateArtistModel(string? Name);
+public class UpdateArtistModel
+{
+    public string? Name { get; set; }
+    public byte[]? Photo { get; set; }
+}

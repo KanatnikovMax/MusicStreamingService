@@ -69,7 +69,18 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
   return (
       <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1">
         <Link to={`/albums/${album.id}`}>
-          <div className="aspect-square bg-gradient-to-br from-indigo-100 to-indigo-200 relative group">
+          <div className="aspect-square relative group">
+            {album.photoBase64 ? (
+                <img
+                    src={`data:image/jpeg;base64,${album.photoBase64}`}
+                    alt={album.title}
+                    className="w-full h-full object-cover"
+                />
+            ) : (
+                <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center">
+                  <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
+                </div>
+            )}
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center">
               <button
                   onClick={handlePlayAlbum}
