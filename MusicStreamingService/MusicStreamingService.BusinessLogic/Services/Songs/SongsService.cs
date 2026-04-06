@@ -6,7 +6,6 @@ using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Cassandra.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.Postgres.Entities;
-using MusicStreamingService.DataAccess.Postgres.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
 using Newtonsoft.Json;
 using Npgsql;
@@ -26,16 +25,6 @@ public class SongsService : ISongsService
         _mapper = mapper;
         _cassandraRepository = cassandraRepository;
         _cache = cache;
-    }
-
-    public async Task<CursorResponse<DateTime?, SongModel>> GetAllSongsAsync(PaginationParams<DateTime?> request)
-    {
-        var songs = await _unitOfWork.Songs.FindAllAsync(request);
-        return new CursorResponse<DateTime?, SongModel>
-        {
-            Cursor = songs.Cursor,
-            Items = _mapper.Map<List<SongModel>>(songs.Items),
-        };
     }
 
     public async Task<SongModel> GetSongByIdAsync(Guid id)
@@ -67,10 +56,12 @@ public class SongsService : ISongsService
         return _mapper.Map<SongModel>(song);
     }
 
-    public async Task<CursorResponse<DateTime?, SongModel>> GetSongByTitleAsync(string titlePart, 
+    public async Task<CursorResponse<DateTime?, SongModel>> GetSongByTitleAsync(string? titlePart, 
         PaginationParams<DateTime?> request)
     {
-        var songs = await _unitOfWork.Songs.FindByTitlePartAsync(titlePart, request);
+        var songs = titlePart == null 
+            ? await _unitOfWork.Songs.FindAllAsync(request) 
+            : await _unitOfWork.Songs.FindByTitlePartAsync(titlePart, request);
         return new CursorResponse<DateTime?, SongModel>
         {
             Cursor = songs.Cursor,

@@ -132,44 +132,26 @@ public class UsersActionsService : IUsersActionsService
             throw;
         }
     }
-
-    public async Task<CursorResponse<DateTime?, SongModel>> GetAllUserSongsAsync(Guid userId, 
+    
+    public async Task<CursorResponse<DateTime?, SongModel>> GetUserSongsByNameAsync(Guid userId, string? namePart, 
         PaginationParams<DateTime?> paginationParams)
     {
-        var songs = await _unitOfWork.Users.FindAllSongsAsync(userId, paginationParams);
+        var songs = namePart == null 
+            ? await _unitOfWork.Users.FindAllSongsAsync(userId, paginationParams) 
+            : await _unitOfWork.Users.FindAllSongsByNameAsync(userId, namePart, paginationParams);
         return new CursorResponse<DateTime?, SongModel>
         {
             Cursor = songs.Cursor,
             Items = _mapper.Map<List<SongModel>>(songs.Items)
         };
     }
-    
-    public async Task<CursorResponse<DateTime?, SongModel>> GetUserSongsByNameAsync(Guid userId, string namePart, 
-        PaginationParams<DateTime?> paginationParams)
-    {
-        var songs = await _unitOfWork.Users.FindAllSongsByNameAsync(userId, namePart, paginationParams);
-        return new CursorResponse<DateTime?, SongModel>
-        {
-            Cursor = songs.Cursor,
-            Items = _mapper.Map<List<SongModel>>(songs.Items)
-        };
-    }
-    
-    public async Task<CursorResponse<DateTime?, AlbumModel>> GetAllUserAlbumsAsync(Guid userId, 
-        PaginationParams<DateTime?> paginationParams)
-    {
-        var albums = await _unitOfWork.Users.FindAllAlbumsAsync(userId, paginationParams);
-        return new CursorResponse<DateTime?, AlbumModel>
-        {
-            Cursor = albums.Cursor,
-            Items = _mapper.Map<List<AlbumModel>>(albums.Items)
-        };
-    }
 
-    public async Task<CursorResponse<DateTime?, AlbumModel>> GetUserAlbumsByTitleAsync(Guid userId, string titlePart,
+    public async Task<CursorResponse<DateTime?, AlbumModel>> GetUserAlbumsByTitleAsync(Guid userId, string? titlePart,
         PaginationParams<DateTime?> paginationParams)
     {
-        var albums = await _unitOfWork.Users.FindAllAlbumsByTitleAsync(userId, titlePart, paginationParams);
+        var albums = titlePart == null 
+            ? await _unitOfWork.Users.FindAllAlbumsAsync(userId, paginationParams) 
+            : await _unitOfWork.Users.FindAllAlbumsByTitleAsync(userId, titlePart, paginationParams);
         return new CursorResponse<DateTime?, AlbumModel>
         {
             Cursor = albums.Cursor,

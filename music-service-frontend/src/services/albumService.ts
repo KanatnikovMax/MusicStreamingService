@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { ApiClient } from '../contexts/ApiClient';
-import type { PaginationRequest, PaginatedResponse } from '../types/pagination';
-import type { Album, Song } from '../types/music';
+import {ApiClient} from '../contexts/ApiClient';
+import type {PaginatedResponse, PaginationRequest} from '../types/pagination';
+import type {Album, Song} from '../types/music';
 
 const API_URL = 'http://localhost:5071/albums';
 
@@ -37,12 +37,12 @@ export const getAllAlbums = async (
     pageSize: request.pageSize
   };
 
-  if (request.searchTerm) {
+  if (request.searchTerm?.trim()) {
     params.titlePart = request.searchTerm;
   }
 
-  const endpoint = request.searchTerm ? `${API_URL}/by_name` : API_URL;
-  const response = await axios.get<PaginatedResponse<string, Album>>(endpoint, { params });
+  const response =
+      await axios.get<PaginatedResponse<string, Album>>(API_URL, { params });
 
   return {
     items: response.data.items,
@@ -81,7 +81,7 @@ export const createAlbum = async (data: CreateAlbumRequest) => {
     formData.append('photo', data.photo);
   }
 
-  const response = await ApiClient.post(`${API_URL}/create`, formData, {
+  const response = await ApiClient.post(`${API_URL}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -98,7 +98,7 @@ export const updateAlbum = async (id: string, data: UpdateAlbumRequest) => {
   }
   if (data.photo) formData.append('photo', data.photo);
 
-  const response = await ApiClient.put(`${API_URL}/update/${id}`, formData, {
+  const response = await ApiClient.put(`${API_URL}/${id}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -107,6 +107,6 @@ export const updateAlbum = async (id: string, data: UpdateAlbumRequest) => {
 };
 
 export const deleteAlbum = async (id: string) => {
-  await ApiClient.delete(`${API_URL}/delete/${id}`);
+  await ApiClient.delete(`${API_URL}/${id}`);
   return true;
 };

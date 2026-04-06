@@ -18,6 +18,7 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     Title = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Photo = table.Column<byte[]>(type: "bytea", nullable: true),
                     ReleaseDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "timezone('utc', now())")
                 },

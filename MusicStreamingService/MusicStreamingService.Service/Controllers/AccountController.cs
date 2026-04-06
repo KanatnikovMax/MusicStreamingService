@@ -8,7 +8,7 @@ using MusicStreamingService.Service.Controllers.Requests.Users;
 namespace MusicStreamingService.Service.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("[controller]/{userName}")]
 public class AccountController : ControllerBase
 {
     private readonly IMapper _mapper;
@@ -21,50 +21,50 @@ public class AccountController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost]
-    [Route("{userName}/change_password")]
+    [HttpPut]
+    [Route("password")]
     public async Task<IActionResult> ChangePassword(string userName, ChangePasswordRequest request)
     {
         var model = _mapper.Map<ChangePasswordModel>(request);
-        
+
         var result = await _accountService.ChangePasswordAsync(userName, model);
         if (!result.Succeeded)
         {
             return BadRequest(result.Errors.Select(e => e.Description));
         }
-        
+
         return Ok("Password changed successfully");
     }
 
     [Authorize]
-    [HttpPost]
-    [Route("{userName}/change_email")]
+    [HttpPut]
+    [Route("email")]
     public async Task<IActionResult> ChangeEmail(string userName, ChangeEmailRequest request)
     {
         var model = _mapper.Map<ChangeEmailModel>(request);
-        
+
         var result = await _accountService.ChangeEmailAsync(userName, model);
         if (!result.Succeeded)
         {
             return BadRequest(result.Errors.Select(e => e.Description));
         }
-        
+
         return Ok("Email changed successfully");
     }
 
     [Authorize]
-    [HttpPost]
-    [Route("{userName}/change_username")]
+    [HttpPut]
+    [Route("username")]
     public async Task<IActionResult> ChangeUserName(string userName, ChangeUserNameRequest request)
     {
         var model = _mapper.Map<ChangeUserNameModel>(request);
-        
+
         var result = await _accountService.ChangeUserNameAsync(userName, model);
         if (!result.Succeeded)
         {
             return BadRequest(result.Errors.Select(e => e.Description));
         }
-        
+
         return Ok("Username changed successfully");
     }
 }

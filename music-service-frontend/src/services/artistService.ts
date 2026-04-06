@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { ApiClient } from '../contexts/ApiClient';
-import type { PaginationRequest, PaginatedResponse } from '../types/pagination';
-import type { Artist, Album, Song } from '../types/music';
+import {ApiClient} from '../contexts/ApiClient';
+import type {PaginatedResponse, PaginationRequest} from '../types/pagination';
+import type {Album, Artist, Song} from '../types/music';
 
 const API_URL = 'http://localhost:5071/artists';
 
@@ -33,12 +33,12 @@ export const getAllArtists = async (
     pageSize: request.pageSize
   };
 
-  if (request.searchTerm) {
+  if (request.searchTerm?.trim()) {
     params.namePart = request.searchTerm;
   }
 
-  const endpoint = request.searchTerm ? `${API_URL}/by_name` : API_URL;
-  const response = await axios.get<PaginatedResponse<string, Artist>>(endpoint, { params });
+  const response =
+      await axios.get<PaginatedResponse<string, Artist>>(API_URL, { params });
 
   return {
     items: response.data.items,
@@ -98,7 +98,7 @@ export const getArtistSongsByTitle = async (
   };
 
   const response = await axios.get<PaginatedResponse<string, Song>>(
-      `${API_URL}/${artistId}/songs/by_title`,
+      `${API_URL}/${artistId}/songs`,
       { params }
   );
 
@@ -120,7 +120,7 @@ export const createArtist = async (data: CreateArtistRequest) => {
     formData.append('photo', data.photo);
   }
 
-  const response = await ApiClient.post(`${API_URL}/create`, formData, {
+  const response = await ApiClient.post(`${API_URL}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -133,7 +133,7 @@ export const updateArtist = async (id: string, data: UpdateArtistRequest) => {
   if (data.name) formData.append('name', data.name);
   if (data.photo) formData.append('photo', data.photo);
 
-  const response = await ApiClient.put(`${API_URL}/update/${id}`, formData, {
+  const response = await ApiClient.put(`${API_URL}/${id}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -142,6 +142,6 @@ export const updateArtist = async (id: string, data: UpdateArtistRequest) => {
 };
 
 export const deleteArtist = async (id: string) => {
-  await ApiClient.delete(`${API_URL}/delete/${id}`);
+  await ApiClient.delete(`${API_URL}/${id}`);
   return true;
 };

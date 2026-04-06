@@ -27,10 +27,9 @@ public class ArtistsController : ControllerBase
         _mapper = mapper;
         _logger = logger;
     }
-    
+
     [Authorize(Roles = "admin")]
     [HttpPost]
-    [Route("create")]
     public async Task<ActionResult<ArtistsListResponse>> CreateArtist([FromForm] CreateArtistRequest request,
         [FromForm] IFormFile? photo)
     {
@@ -44,14 +43,13 @@ public class ArtistsController : ControllerBase
         var artist = await _artistsService.CreateArtistAsync(createArtistModel);
         return Ok(new ArtistsListResponse([artist]));
     }
-    
+
     [HttpGet]
-    [Route("")]
-    public async Task<ActionResult<PaginatedResponse<DateTime?, ArtistModel>>> GetAllArtists(
-        [FromQuery] PaginationRequest<DateTime?> request)
+    public async Task<ActionResult<PaginatedResponse<DateTime?, ArtistModel>>> GetArtistsByName(
+        [FromQuery] string? namePart, [FromQuery] PaginationRequest<DateTime?> request)
     {
-        var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request);
-        var artists = await _artistsService.GetAllArtistsAsync(paginationParams);
+        var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request); 
+        var artists = await _artistsService.GetArtistByNameAsync(namePart, paginationParams);
         return Ok(_mapper.Map<PaginatedResponse<DateTime?, ArtistModel>>(artists));
     }
     
@@ -64,16 +62,6 @@ public class ArtistsController : ControllerBase
     }
 
     [HttpGet]
-    [Route("by_name")]
-    public async Task<ActionResult<PaginatedResponse<DateTime?, ArtistModel>>> GetArtistsByName(
-        [FromQuery] string namePart, [FromQuery] PaginationRequest<DateTime?> request)
-    {
-        var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request); 
-        var artists = await _artistsService.GetArtistByNameAsync(namePart, paginationParams);
-        return Ok(_mapper.Map<PaginatedResponse<DateTime?, ArtistModel>>(artists));
-    }
-
-    [HttpGet]
     [Route("{id:guid}/albums")]
     public async Task<ActionResult<PaginatedResponse<DateTime?, AlbumModel>>> GetAllArtistAlbums(Guid id,
         [FromQuery] PaginationRequest<DateTime?> request)
@@ -82,39 +70,20 @@ public class ArtistsController : ControllerBase
         var albums = await _artistsService.GetAllAlbumsAsync(id, paginationParams);
         return Ok(_mapper.Map<PaginatedResponse<DateTime?, AlbumModel>>(albums));
     }
-    
+
     [HttpGet]
     [Route("{id:guid}/songs")]
-    public async Task<ActionResult<PaginatedResponse<DateTime?, SongModel>>> GetAllArtistSongs(Guid id,
-        [FromQuery] PaginationRequest<DateTime?> request)
-    {
-        var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request);
-        var songs = await _artistsService.GetAllSongsAsync(id, paginationParams);
-        return Ok(_mapper.Map<PaginatedResponse<DateTime?, SongModel>>(songs));
-    }
-    
-    [HttpGet]
-    [Route("{id:guid}/songs/by_title")]
-    public async Task<ActionResult<PaginatedResponse<DateTime?, SongModel>>> GetArtistSongsByTitle(Guid id, 
-        [FromQuery] string titlePart, [FromQuery] PaginationRequest<DateTime?> request)
+    public async Task<ActionResult<PaginatedResponse<DateTime?, SongModel>>> GetArtistSongsByTitle(Guid id,
+        [FromQuery] string? titlePart, [FromQuery] PaginationRequest<DateTime?> request)
     {
         var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request);
         var songs = await _artistsService.GetSongsByTitleAsync(id, titlePart, paginationParams);
         return Ok(_mapper.Map<PaginatedResponse<DateTime?, SongModel>>(songs));
     }
-    
-    [Authorize(Roles = "admin")]
-    [HttpDelete]
-    [Route("delete/{id:guid}")]
-    public async Task<ActionResult<ArtistsListResponse>> DeleteArtist(Guid id)
-    {
-        var artist = await _artistsService.DeleteArtistAsync(id);
-        return Ok(new ArtistsListResponse([artist]));
-    }
-    
+
     [Authorize(Roles = "admin")]
     [HttpPut]
-    [Route("update/{id:guid}")]
+    [Route("{id:guid}")]
     public async Task<ActionResult<ArtistsListResponse>> UpdateArtist(Guid id, [FromForm] UpdateArtistRequest request,
         [FromForm] IFormFile? photo)
     {
@@ -126,6 +95,15 @@ public class ArtistsController : ControllerBase
             updateArtistModel.Photo = memoryStream.ToArray();
         }
         var artist = await _artistsService.UpdateArtistAsync(updateArtistModel, id);
+        return Ok(new ArtistsListResponse([artist]));
+    }
+
+    [Authorize(Roles = "admin")]
+    [HttpDelete]
+    [Route("{id:guid}")]
+    public async Task<ActionResult<ArtistsListResponse>> DeleteArtist(Guid id)
+    {
+        var artist = await _artistsService.DeleteArtistAsync(id);
         return Ok(new ArtistsListResponse([artist]));
     }
 }

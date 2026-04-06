@@ -25,16 +25,6 @@ public class AlbumsService : IAlbumsService
         _cache = cache;
     }
 
-    public async Task<CursorResponse<DateTime?, AlbumModel>> GetAllAlbumsAsync(PaginationParams<DateTime?> request)
-    {
-        var albums = await _unitOfWork.Albums.FindAllAsync(request);
-        return new CursorResponse<DateTime?, AlbumModel>
-        {
-            Cursor = albums.Cursor,
-            Items = _mapper.Map<List<AlbumModel>>(albums.Items)
-        };
-    }
-
     public async Task<AlbumModel> GetAlbumByIdAsync(Guid id)
     {
         var cacheKey = $"albums_{id}";
@@ -64,10 +54,12 @@ public class AlbumsService : IAlbumsService
         return _mapper.Map<AlbumModel>(album);
     }
 
-    public async Task<CursorResponse<DateTime?, AlbumModel>> GetAlbumByTitleAsync(string titlePart, 
+    public async Task<CursorResponse<DateTime?, AlbumModel>> GetAlbumByTitleAsync(string? titlePart, 
         PaginationParams<DateTime?> request)
     {
-        var albums = await _unitOfWork.Albums.FindByTitlePartAsync(titlePart, request);
+        var albums = titlePart == null 
+            ? await _unitOfWork.Albums.FindAllAsync(request) 
+            : await _unitOfWork.Albums.FindByTitlePartAsync(titlePart, request);
         return new CursorResponse<DateTime?, AlbumModel>
         {
             Cursor = albums.Cursor,

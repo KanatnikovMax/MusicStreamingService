@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MusicStreamingService.DataAccess.Postgres.Migrations
 {
     [DbContext(typeof(MusicServiceDbContext))]
-    [Migration("20250623232645_Initial")]
+    [Migration("20260405205411_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -139,6 +139,9 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("timezone('utc', now())");
+
+                    b.Property<byte[]>("Photo")
+                        .HasColumnType("bytea");
 
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("timestamp with time zone");

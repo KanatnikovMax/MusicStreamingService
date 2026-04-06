@@ -16,30 +16,22 @@ export interface UserSongsResponse {
 
 // User actions
 export const addSongToAccount = async (userId: string, songId: string) => {
-  const response = await ApiClient.post(`${API_URL}/${userId}/add_song`, null, {
-    params: { songId }
-  });
+  const response = await ApiClient.post(`${API_URL}/${userId}/songs/${songId}`);
   return response.data;
 };
 
 export const addAlbumToAccount = async (userId: string, albumId: string) => {
-  const response = await ApiClient.post(`${API_URL}/${userId}/add_album`, null, {
-    params: { albumId }
-  });
+  const response = await ApiClient.post(`${API_URL}/${userId}/albums/${albumId}`);
   return response.data;
 };
 
 export const deleteSongFromAccount = async (userId: string, songId: string) => {
-  const response = await ApiClient.delete(`${API_URL}/${userId}/delete_song`, {
-    params: { songId }
-  });
+  const response = await ApiClient.delete(`${API_URL}/${userId}/songs/${songId}`);
   return response.data;
 };
 
 export const deleteAlbumFromAccount = async (userId: string, albumId: string) => {
-  const response = await ApiClient.delete(`${API_URL}/${userId}/delete_album`, {
-    params: { albumId }
-  });
+  const response = await ApiClient.delete(`${API_URL}/${userId}/albums/${albumId}`);
   return response.data;
 };
 
@@ -84,9 +76,9 @@ export const getUserSongs = async (
 };
 
 export const getUserAlbumsByTitle = async (
-  userId: string,
-  titlePart: string,
-  request: PaginationRequest<Date> = { pageSize: 10 }
+    userId: string,
+    titlePart: string,
+    request: PaginationRequest<Date> = { pageSize: 10 }
 ) => {
   const params = {
     cursor: request.cursor?.toISOString(),
@@ -95,16 +87,16 @@ export const getUserAlbumsByTitle = async (
   };
 
   const response = await ApiClient.get<PaginatedResponse<Date, Album>>(
-    `${API_URL}/${userId}/albums/by_title`,
-    { params }
+      `${API_URL}/${userId}/albums`,
+      { params }
   );
   return response.data;
 };
 
 export const getUserSongsByName = async (
-  userId: string,
-  namePart: string,
-  request: PaginationRequest<Date> = { pageSize: 10 }
+    userId: string,
+    namePart: string,
+    request: PaginationRequest<Date> = { pageSize: 10 }
 ) => {
   const params = {
     cursor: request.cursor?.toISOString(),
@@ -113,8 +105,8 @@ export const getUserSongsByName = async (
   };
 
   const response = await ApiClient.get<PaginatedResponse<Date, Song>>(
-    `${API_URL}/${userId}/songs/by_name`,
-    { params }
+      `${API_URL}/${userId}/songs`,
+      { params }
   );
   return response.data;
 };
@@ -136,16 +128,16 @@ interface ChangeUsernameRequest {
 }
 
 export const changeEmail = async (username: string, data: ChangeEmailRequest) => {
-  const response = await ApiClient.post(`/account/${username}/change_email`, data);
+  const response = await ApiClient.put(`/account/${username}/email`, data);
   return response.data;
 };
 
 export const changePassword = async (username: string, data: ChangePasswordRequest) => {
-  const response = await ApiClient.post(`/account/${username}/change_password`, data);
+  const response = await ApiClient.put(`/account/${username}/password`, data);
   return response.data;
 };
 
 export const changeUsername = async (username: string, data: ChangeUsernameRequest) => {
-  const response = await ApiClient.post(`/account/${username}/change_username`, data);
+  const response = await ApiClient.put(`/account/${username}/username`, data);
   return response.data;
 };

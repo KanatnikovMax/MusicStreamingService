@@ -11,12 +11,8 @@ public interface IUsersActionsService
     Task<UserSongModel> DeleteSongFromAccountAsync(Guid userId, Guid songId);
     Task<UserAlbumModel> AddAlbumToAccountAsync(Guid userId, Guid albumId);
     Task<UserAlbumModel> DeleteAlbumFromAccountAsync(Guid userId, Guid albumId);
-    Task<CursorResponse<DateTime?, SongModel>> GetAllUserSongsAsync(Guid userId, 
+    Task<CursorResponse<DateTime?, AlbumModel>> GetUserAlbumsByTitleAsync(Guid userId, string? titlePart,
         PaginationParams<DateTime?> paginationParams);
-    Task<CursorResponse<DateTime?, AlbumModel>> GetAllUserAlbumsAsync(Guid userId, 
-        PaginationParams<DateTime?> paginationParams);
-    Task<CursorResponse<DateTime?, AlbumModel>> GetUserAlbumsByTitleAsync(Guid userId, string titlePart,
-        PaginationParams<DateTime?> paginationParams);
-    Task<CursorResponse<DateTime?, SongModel>> GetUserSongsByNameAsync(Guid userId, string namePart,
+    Task<CursorResponse<DateTime?, SongModel>> GetUserSongsByNameAsync(Guid userId, string? namePart,
         PaginationParams<DateTime?> paginationParams);
 }

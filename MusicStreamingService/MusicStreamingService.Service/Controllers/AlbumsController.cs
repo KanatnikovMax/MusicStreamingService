@@ -26,10 +26,9 @@ public class AlbumsController : ControllerBase
         _mapper = mapper;
         _logger = logger;
     }
-    
+
     [Authorize(Roles = "admin")]
     [HttpPost]
-    [Route("create")]
     public async Task<ActionResult<AlbumsListResponse>> CreateAlbum([FromForm] CreateAlbumRequest request,
         [FromForm] IFormFile? photo)
     {
@@ -45,26 +44,16 @@ public class AlbumsController : ControllerBase
     }
 
     [HttpGet]
-    [Route("")]
-    public async Task<ActionResult<PaginatedResponse<DateTime?, AlbumModel>>> GetAllAlbums(
-        [FromQuery] PaginationRequest<DateTime?> request)
-    {
-        var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request);
-        var albums = await _albumsService.GetAllAlbumsAsync(paginationParams);
-        return Ok(_mapper.Map<PaginatedResponse<DateTime?, AlbumModel>>(albums));
-    }
-
-    [HttpGet]
     [Route("{id:guid}")]
     public async Task<ActionResult<AlbumsListResponse>> GetAlbumById(Guid id)
     {
         var album = await _albumsService.GetAlbumByIdAsync(id);
         return Ok(new AlbumsListResponse([album]));
     }
-    
+
     [HttpGet]
-    [Route("by_name")]
-    public async Task<ActionResult<PaginatedResponse<DateTime?, AlbumModel>>> GetAlbumsByName([FromQuery] string titlePart,
+    public async Task<ActionResult<PaginatedResponse<DateTime?, AlbumModel>>> GetAlbumsByName(
+        [FromQuery] string? titlePart,
         [FromQuery] PaginationRequest<DateTime?> request)
     {
         var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request);
@@ -74,26 +63,17 @@ public class AlbumsController : ControllerBase
 
     [HttpGet]
     [Route("{id:guid}/songs")]
-    public async Task<ActionResult<PaginatedResponse<int?, SongModel>>> GetAlbumsBySongs(Guid id,
+    public async Task<ActionResult<PaginatedResponse<int?, SongModel>>> GetAlbumSongs(Guid id,
         [FromQuery] PaginationRequest<int?> request)
     {
         var paginationParams = _mapper.Map <PaginationParams<int?>>(request);
         var songs = await _albumsService.GetAllAlbumSongsAsync(id, paginationParams);
         return Ok(_mapper.Map<PaginatedResponse<int?, SongModel>>(songs));
     }
-    
-    [Authorize(Roles = "admin")]
-    [HttpDelete]
-    [Route("delete/{id:guid}")]
-    public async Task<ActionResult<AlbumsListResponse>> DeleteAlbum(Guid id)
-    {
-        var album = await _albumsService.DeleteAlbumAsync(id);
-        return Ok(new AlbumsListResponse([album]));
-    }
-    
+
     [Authorize(Roles = "admin")]
     [HttpPut]
-    [Route("update/{id:guid}")]
+    [Route("{id:guid}")]
     public async Task<ActionResult<AlbumsListResponse>> UpdateAlbum(Guid id, [FromForm] UpdateAlbumRequest request,
         [FromForm] IFormFile? photo)
     {
@@ -105,6 +85,15 @@ public class AlbumsController : ControllerBase
             updateAlbumModel.Photo = memoryStream.ToArray();
         }
         var album = await _albumsService.UpdateAlbumAsync(updateAlbumModel, id);
+        return Ok(new AlbumsListResponse([album]));
+    }
+
+    [Authorize(Roles = "admin")]
+    [HttpDelete]
+    [Route("{id:guid}")]
+    public async Task<ActionResult<AlbumsListResponse>> DeleteAlbum(Guid id)
+    {
+        var album = await _albumsService.DeleteAlbumAsync(id);
         return Ok(new AlbumsListResponse([album]));
     }
 }

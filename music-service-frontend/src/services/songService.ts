@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { ApiClient } from '../contexts/ApiClient';
-import type { PaginationRequest, PaginatedResponse } from '../types/pagination';
-import type { Song } from '../types/music';
+import {ApiClient} from '../contexts/ApiClient';
+import type {PaginatedResponse, PaginationRequest} from '../types/pagination';
+import type {Song} from '../types/music';
 
 const API_URL = 'http://localhost:5071/songs';
 
@@ -23,12 +23,12 @@ export const getAllSongs = async (
     pageSize: request.pageSize
   };
 
-  if (request.searchTerm) {
+  if (request.searchTerm?.trim()) {
     params.titlePart = request.searchTerm;
   }
 
-  const endpoint = request.searchTerm ? `${API_URL}/by_title` : API_URL;
-  const response = await axios.get<PaginatedResponse<string, Song>>(endpoint, { params });
+  const response =
+      await axios.get<PaginatedResponse<string, Song>>(API_URL, { params });
 
   return {
     items: response.data.items,
@@ -50,7 +50,7 @@ export const getSongAudio = async (id: string): Promise<Blob> => {
 
 // Admin functions
 export const createSong = async (formData: FormData) => {
-  const response = await ApiClient.post(`${API_URL}/create`, formData, {
+  const response = await ApiClient.post(`${API_URL}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -59,7 +59,7 @@ export const createSong = async (formData: FormData) => {
 };
 
 export const updateSong = async (id: string, formData: FormData) => {
-  const response = await ApiClient.put(`${API_URL}/update/${id}`, formData, {
+  const response = await ApiClient.put(`${API_URL}/${id}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -68,6 +68,6 @@ export const updateSong = async (id: string, formData: FormData) => {
 };
 
 export const deleteSong = async (id: string) => {
-  await ApiClient.delete(`${API_URL}/delete/${id}`);
+  await ApiClient.delete(`${API_URL}/${id}`);
   return true;
 };

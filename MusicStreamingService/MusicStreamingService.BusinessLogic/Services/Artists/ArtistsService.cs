@@ -26,16 +26,6 @@ public class ArtistsService : IArtistsService
         _cache = cache;
     }
 
-    public async Task<CursorResponse<DateTime?, ArtistModel>> GetAllArtistsAsync(PaginationParams<DateTime?> request)
-    {
-        var artists = await _unitOfWork.Artists.FindAllAsync(request);
-        return new CursorResponse<DateTime?, ArtistModel>
-        {
-            Cursor = artists.Cursor,
-            Items = _mapper.Map<List<ArtistModel>>(artists.Items)
-        };
-    }
-
     public async Task<ArtistModel> GetArtistByIdAsync(Guid id)
     {
         var cacheKey = $"artists_{id}";
@@ -64,10 +54,12 @@ public class ArtistsService : IArtistsService
         return _mapper.Map<ArtistModel>(artist);
     }
 
-    public async Task<CursorResponse<DateTime?, ArtistModel>> GetArtistByNameAsync(string namePart, 
+    public async Task<CursorResponse<DateTime?, ArtistModel>> GetArtistByNameAsync(string? namePart, 
         PaginationParams<DateTime?> request)
     {
-        var artists = await _unitOfWork.Artists.FindByNamePartAsync(namePart, request);
+        var artists = namePart == null 
+            ? await _unitOfWork.Artists.FindAllAsync(request) 
+            : await _unitOfWork.Artists.FindByNamePartAsync(namePart, request);
         return new CursorResponse<DateTime?, ArtistModel>
         {
             Cursor = artists.Cursor,
@@ -86,21 +78,12 @@ public class ArtistsService : IArtistsService
         };
     }
     
-    public async Task<CursorResponse<DateTime?, SongModel>> GetAllSongsAsync(Guid artistId, 
+    public async Task<CursorResponse<DateTime?, SongModel>> GetSongsByTitleAsync(Guid artistId, string? titlePart,
         PaginationParams<DateTime?> request)
     {
-        var songs = await _unitOfWork.Artists.FindAllSongsAsync(artistId, request);
-        return new CursorResponse<DateTime?, SongModel>
-        {
-            Cursor = songs.Cursor,
-            Items = _mapper.Map<List<SongModel>>(songs.Items)
-        };
-    }
-    
-    public async Task<CursorResponse<DateTime?, SongModel>> GetSongsByTitleAsync(Guid artistId, string titlePart,
-        PaginationParams<DateTime?> request)
-    {
-        var songs = await _unitOfWork.Artists.FindAllSongsByTitleAsync(artistId, titlePart, request);
+        var songs = titlePart == null 
+            ? await _unitOfWork.Artists.FindAllSongsAsync(artistId, request) 
+            : await _unitOfWork.Artists.FindAllSongsByTitleAsync(artistId, titlePart, request);
         return new CursorResponse<DateTime?, SongModel>
         {
             Cursor = songs.Cursor,
