@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using MusicStreamingService.BusinessLogic.Services.Albums;
 using MusicStreamingService.BusinessLogic.Services.Artists;
+using MusicStreamingService.BusinessLogic.Services.Playlists;
 using MusicStreamingService.BusinessLogic.Services.Songs;
 using MusicStreamingService.BusinessLogic.Services.Users;
 using MusicStreamingService.DataAccess.Cassandra.Repositories;
@@ -25,6 +26,7 @@ public static class ServicesConfigurator
         services.AddScoped<IArtistsService, ArtistsService>();
         services.AddScoped<IAlbumsService, AlbumsService>();
         services.AddScoped<ISongsService, SongsService>();
+        services.AddScoped<IPlaylistsService, PlaylistsService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IUsersActionsService, UsersActionsService>();
         services.AddScoped<IAuthService>(x =>

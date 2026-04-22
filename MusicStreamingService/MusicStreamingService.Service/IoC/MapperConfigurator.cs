@@ -21,6 +21,9 @@ public static class MapperConfigurator
             // users
             config.AddProfile<UsersBLProfile>();
             config.AddProfile<UsersServiceProfile>();
+            // playlists
+            config.AddProfile<PlaylistsBLProfile>();
+            config.AddProfile<PlaylistsServiceProfile>();
             // pagination
             config.AddProfile<PaginationServiceProfile>();
         });

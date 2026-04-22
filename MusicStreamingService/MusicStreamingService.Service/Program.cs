@@ -2,13 +2,9 @@ using MusicStreamingService.Service.DI;
 using MusicStreamingService.Service.Init;
 using MusicStreamingService.Service.Settings;
 
-var configuration = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json", optional: false)
-    .Build();
-
-var settings = MusicServiceSettingsReader.ReadSettings(configuration);
-
 var builder = WebApplication.CreateBuilder(args);
+
+var settings = MusicServiceSettingsReader.ReadSettings(builder.Configuration);
 ApplicationConfigurator.ConfigureServices(builder, settings);
 
 
