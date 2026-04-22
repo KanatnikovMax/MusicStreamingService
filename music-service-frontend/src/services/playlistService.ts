@@ -18,6 +18,7 @@ interface PlaylistSongsParams {
 
 export interface PlaylistRequest {
   name: string;
+  photo?: File;
 }
 
 export const getUserPlaylists = async (
@@ -61,14 +62,39 @@ export const getUserPlaylistById = async (userId: string, playlistId: string) =>
 };
 
 export const createPlaylist = async (userId: string, data: PlaylistRequest) => {
-  const response = await ApiClient.post<Playlist>(`${API_URL}/${userId}/playlists`, data);
+  const formData = new FormData();
+  formData.append('name', data.name);
+  if (data.photo) {
+    formData.append('photo', data.photo);
+  }
+
+  const response = await ApiClient.post<Playlist>(
+      `${API_URL}/${userId}/playlists`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+  );
   return response.data;
 };
 
 export const updatePlaylist = async (userId: string, playlistId: string, data: PlaylistRequest) => {
+  const formData = new FormData();
+  formData.append('name', data.name);
+  if (data.photo) {
+    formData.append('photo', data.photo);
+  }
+
   const response = await ApiClient.patch<Playlist>(
       `${API_URL}/${userId}/playlists/${playlistId}`,
-      data
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
   );
   return response.data;
 };

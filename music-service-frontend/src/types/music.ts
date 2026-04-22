@@ -28,7 +28,10 @@ export interface Song {
 export interface Playlist {
   id: string;
   name: string;
+  photoBase64?: string;
   userId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ArtistSimple {

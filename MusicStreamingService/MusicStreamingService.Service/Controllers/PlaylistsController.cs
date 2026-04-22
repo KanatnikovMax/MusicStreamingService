@@ -28,20 +28,33 @@ public class PlaylistsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<PlaylistModel>> Create(Guid userId, [FromBody] CreatePlaylistRequest request)
+    public async Task<ActionResult<PlaylistModel>> Create(Guid userId, [FromForm] CreatePlaylistRequest request,
+        [FromForm] IFormFile? photo)
     {
         EnsureCurrentUser(userId);
         var model = _mapper.Map<CreatePlaylistModel>(request);
+        if (photo != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await photo.CopyToAsync(memoryStream);
+            model.Photo = memoryStream.ToArray();
+        }
         return await _playlistsService.CreateAsync(userId, model);
     }
 
     [HttpPatch]
     [Route("{playlistId:guid}")]
     public async Task<ActionResult<PlaylistModel>> Update(Guid userId, Guid playlistId,
-        [FromBody] UpdatePlaylistRequest request)
+        [FromForm] UpdatePlaylistRequest request, [FromForm] IFormFile? photo)
     {
         EnsureCurrentUser(userId);
         var model = _mapper.Map<UpdatePlaylistModel>(request);
+        if (photo != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await photo.CopyToAsync(memoryStream);
+            model.Photo = memoryStream.ToArray();
+        }
         return await _playlistsService.UpdateAsync(userId, playlistId, model);
     }
 

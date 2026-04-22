@@ -8,7 +8,9 @@ public class PlaylistsServiceProfile : Profile
 {
     public PlaylistsServiceProfile()
     {
-        CreateMap<CreatePlaylistRequest, CreatePlaylistModel>();
-        CreateMap<UpdatePlaylistRequest, UpdatePlaylistModel>();
+        CreateMap<CreatePlaylistRequest, CreatePlaylistModel>()
+            .ForMember(dest => dest.Photo, opt => opt.Ignore());
+        CreateMap<UpdatePlaylistRequest, UpdatePlaylistModel>()
+            .ForMember(dest => dest.Photo, opt => opt.Ignore());
     }
 }

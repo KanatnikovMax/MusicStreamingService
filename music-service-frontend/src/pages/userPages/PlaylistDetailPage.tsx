@@ -137,8 +137,18 @@ const PlaylistDetailPage: React.FC = () => {
         <div className="mb-8 overflow-hidden rounded-lg bg-white shadow">
           <div className="md:flex">
             <div className="p-6 md:w-1/3">
-              <div className="mb-4 flex aspect-square items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 via-indigo-600 to-fuchsia-600">
-                <ListMusic size={96} className="text-white/90" />
+              <div className="mb-4 aspect-square overflow-hidden rounded-md">
+                {playlist.photoBase64 ? (
+                    <img
+                        src={`data:image/jpeg;base64,${playlist.photoBase64}`}
+                        alt={playlist.name}
+                        className="h-full w-full object-cover"
+                    />
+                ) : (
+                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-500 via-indigo-600 to-fuchsia-600">
+                      <ListMusic size={96} className="text-white/90" />
+                    </div>
+                )}
               </div>
 
               <h1 className="mb-2 text-2xl font-bold text-gray-900">{playlist.name}</h1>

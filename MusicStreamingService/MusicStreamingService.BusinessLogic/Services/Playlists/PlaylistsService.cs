@@ -56,7 +56,8 @@ public class PlaylistsService : IPlaylistsService
         try
         {
             var playlist = await GetOwnedPlaylistAsync(userId, playlistId);
-            playlist.Name = model.Name;
+            playlist.Name = model.Name ?? playlist.Name;
+            playlist.Photo = model.Photo ?? playlist.Photo;
             playlist.UpdatedAt = DateTime.UtcNow;
 
             var updatedPlaylist = _unitOfWork.Playlists.Update(playlist);

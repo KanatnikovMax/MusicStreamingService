@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Image, Plus, Search, Trash } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import PlaylistCard from '../../components/PlaylistCard';
@@ -10,6 +10,8 @@ const PlaylistsPage: React.FC = () => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [playlistName, setPlaylistName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [photo, setPhoto] = useState<File | undefined>(undefined);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -19,6 +21,7 @@ const PlaylistsPage: React.FC = () => {
   const observer = useRef<IntersectionObserver | null>(null);
   const lastPlaylistRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<Date>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchPlaylists = useCallback(async (loadMore: boolean) => {
     if (!isAuthenticated || !user) {
@@ -104,9 +107,14 @@ const PlaylistsPage: React.FC = () => {
 
     try {
       setIsCreating(true);
-      const playlist = await createPlaylist(user.id, { name: trimmedName });
+      const playlist = await createPlaylist(user.id, { name: trimmedName, photo });
       setPlaylists(prev => [playlist, ...prev.filter(item => item.id !== playlist.id)]);
       setPlaylistName('');
+      setPhoto(undefined);
+      setPreviewUrl(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       showToast('Playlist created', 'success');
     } catch {
       showToast('Failed to create playlist', 'error');
@@ -117,6 +125,35 @@ const PlaylistsPage: React.FC = () => {
 
   const handlePlaylistDeleted = (playlistId: string) => {
     setPlaylists(prev => prev.filter(item => item.id !== playlistId));
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.[0]) {
+      return;
+    }
+
+    const file = event.target.files[0];
+
+    if (!file.type.match('image.*')) {
+      showToast('Please select an image file', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File size exceeds 5MB limit', 'error');
+      return;
+    }
+
+    setPhoto(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleRemovePhoto = () => {
+    setPhoto(undefined);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   if (!isAuthenticated) {
@@ -139,18 +176,57 @@ const PlaylistsPage: React.FC = () => {
             <h2 className="text-lg font-semibold text-gray-900">Create Playlist</h2>
             <p className="mt-1 text-sm text-gray-500">Add a personal playlist and start collecting songs.</p>
             <form onSubmit={handleCreatePlaylist} className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <input
-                  type="text"
-                  value={playlistName}
-                  onChange={event => setPlaylistName(event.target.value)}
-                  maxLength={200}
-                  placeholder="Playlist name"
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
-              />
+              <div className="flex-1 space-y-4">
+                <input
+                    type="text"
+                    value={playlistName}
+                    onChange={event => setPlaylistName(event.target.value)}
+                    maxLength={200}
+                    placeholder="Playlist name"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+                />
+
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    {previewUrl ? (
+                        <div className="group relative">
+                          <img
+                              src={previewUrl}
+                              alt="Playlist preview"
+                              className="h-24 w-24 rounded object-cover border-2 border-gray-300"
+                          />
+                          <button
+                              type="button"
+                              onClick={handleRemovePhoto}
+                              className="absolute right-0 top-0 rounded-full bg-red-600 p-1 opacity-0 transition-opacity group-hover:opacity-100"
+                          >
+                            <Trash size={16} className="text-white" />
+                          </button>
+                        </div>
+                    ) : (
+                        <div className="flex h-24 w-24 items-center justify-center rounded border-2 border-dashed border-gray-400 bg-gray-200">
+                          <Image size={32} className="text-gray-500" />
+                        </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">PNG, JPG, JPEG up to 5MB</p>
+                  </div>
+                </div>
+              </div>
+
               <button
                   type="submit"
                   disabled={isCreating}
-                  className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center justify-center self-start rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <Plus size={16} className="mr-2" />
                 {isCreating ? 'Creating...' : 'Create Playlist'}

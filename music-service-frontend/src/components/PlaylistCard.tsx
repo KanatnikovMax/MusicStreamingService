@@ -58,10 +58,18 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onPlaylistDeleted
   return (
       <div className="overflow-hidden rounded-lg bg-white shadow-md transition-transform hover:-translate-y-1 hover:shadow-lg">
         <Link to={`/playlists/${playlist.id}`}>
-          <div className="group relative aspect-square bg-gradient-to-br from-indigo-500 via-indigo-600 to-fuchsia-600">
-            <div className="flex h-full items-center justify-center">
-              <ListMusic size={72} className="text-white/90" />
-            </div>
+          <div className="group relative aspect-square">
+            {playlist.photoBase64 ? (
+                <img
+                    src={`data:image/jpeg;base64,${playlist.photoBase64}`}
+                    alt={playlist.name}
+                    className="h-full w-full object-cover"
+                />
+            ) : (
+                <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-500 via-indigo-600 to-fuchsia-600">
+                  <ListMusic size={72} className="text-white/90" />
+                </div>
+            )}
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 transition-opacity group-hover:bg-opacity-30">
               <button
                   onClick={handlePlayPlaylist}
