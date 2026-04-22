@@ -10,7 +10,8 @@ import {
   Settings,
   LayoutDashboard,
   LogIn,
-  ListMusic
+  ListMusic,
+  Library
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -179,6 +180,25 @@ const UserHeader: React.FC = () => {
                       <span>Albums</span>
                     </NavLink>
                   </li>
+
+                  {isAuthenticated && !isAdmin && (
+                      <li>
+                        <NavLink
+                            to="/playlists"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={({ isActive }) =>
+                                `flex items-center py-3 px-4 rounded-lg transition-colors ${
+                                    isActive
+                                        ? 'bg-indigo-700 text-white'
+                                        : 'text-indigo-100 hover:bg-indigo-700'
+                                }`
+                            }
+                        >
+                          <Library className="h-5 w-5 mr-3" />
+                          <span>My Playlists</span>
+                        </NavLink>
+                      </li>
+                  )}
 
                   {isAuthenticated && !isAdmin && (
                       <li>

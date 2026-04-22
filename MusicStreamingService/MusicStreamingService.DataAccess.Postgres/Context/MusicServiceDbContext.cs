@@ -23,6 +23,8 @@ public class MusicServiceDbContext : IdentityDbContext<
     public DbSet<User> Users { get; set; }
     public DbSet<UserSong> UsersSongs { get; set; }
     public DbSet<UserAlbum> UsersAlbums { get; set; }
+    public DbSet<Playlist> Playlists { get; set; }
+    public DbSet<PlaylistSong> PlaylistSongs { get; set; }
     
     public MusicServiceDbContext(DbContextOptions options) : base(options) { }
 
@@ -34,5 +36,6 @@ public class MusicServiceDbContext : IdentityDbContext<
         modelBuilder.ConfigureArtists();
         modelBuilder.ConfigureSongs();
         modelBuilder.ConfigureUsers();
+        modelBuilder.ConfigurePlaylists();
     }
 }

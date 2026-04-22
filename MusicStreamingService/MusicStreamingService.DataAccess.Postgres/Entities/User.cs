@@ -6,6 +6,7 @@ public class User : IdentityUser<Guid>
 {
     public ICollection<Album>? Albums { get; set; }
     public ICollection<Song>? Songs { get; set; }
+    public ICollection<Playlist>? Playlists { get; set; }
     
     public ICollection<UserAlbum>? UsersAlbums { get; set; }
     

@@ -1,6 +1,6 @@
 ﻿namespace MusicStreamingService.DataAccess.Postgres.Entities;
 
-public class Song() : BaseEntity
+public class Song : BaseEntity
 {
     public string Title { get; set; } 
     // Duration in seconds
@@ -15,4 +15,5 @@ public class Song() : BaseEntity
     public ICollection<Artist> Artists { get; set; }
     
     public ICollection<UserSong>? UsersSongs { get; set; }
+    public ICollection<PlaylistSong>? PlaylistSongs { get; set; }
 }

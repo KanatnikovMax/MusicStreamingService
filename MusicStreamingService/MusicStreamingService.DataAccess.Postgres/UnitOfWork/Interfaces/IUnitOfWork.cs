@@ -10,6 +10,7 @@ public interface IUnitOfWork
     IAlbumsRepository Albums { get; }
     ISongsRepository Songs { get; }
     IUsersRepository Users { get; }
+    IPlaylistsRepository Playlists { get; }
     Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted);
     Task CommitAsync();
     Task RollbackAsync();

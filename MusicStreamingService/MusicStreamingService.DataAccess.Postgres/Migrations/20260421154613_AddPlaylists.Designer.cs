@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MusicStreamingService.DataAccess.Postgres.Context;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MusicStreamingService.DataAccess.Postgres.Migrations
 {
     [DbContext(typeof(MusicServiceDbContext))]
-    partial class MusicServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260421154613_AddPlaylists")]
+    partial class AddPlaylists
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -218,9 +221,6 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<byte[]>("Photo")
-                        .HasColumnType("bytea");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()

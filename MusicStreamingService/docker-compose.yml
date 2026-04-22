@@ -1,0 +1,40 @@
+services:
+  cassandra_db:
+    container_name: cassandra-local
+    image: cassandra:latest
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    environment:
+      - CASSANDRA_CLUSTER_NAME=MyCluster
+    healthcheck:
+      test: [ "CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'DESCRIBE KEYSPACES'" ]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+    networks:
+      - app-network
+
+  redis_db:
+    container_name: redis-local
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
+volumes:
+  cassandra-data:
+  redis-data:
+
+networks:
+  app-network:
+    driver: bridge

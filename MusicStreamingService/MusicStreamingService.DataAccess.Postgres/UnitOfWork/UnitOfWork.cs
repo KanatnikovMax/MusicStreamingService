@@ -16,6 +16,7 @@ public class UnitOfWork : IUnitOfWork
     public IAlbumsRepository Albums { get; }
     public ISongsRepository Songs { get; }
     public IUsersRepository Users { get; }
+    public IPlaylistsRepository Playlists { get; }
 
     public UnitOfWork(MusicServiceDbContext context)
     {
@@ -25,6 +26,7 @@ public class UnitOfWork : IUnitOfWork
         Albums = new AlbumsRepository(context);
         Songs = new SongsRepository(context);
         Users = new UsersRepository(context);
+        Playlists = new PlaylistsRepository(context);
     }
     
     public async Task<IDbContextTransaction> BeginTransactionAsync(

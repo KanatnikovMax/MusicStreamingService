@@ -25,6 +25,15 @@ export interface Song {
   artists: ArtistSimple[];
 }
 
+export interface Playlist {
+  id: string;
+  name: string;
+  photoBase64?: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ArtistSimple {
   id: string;
   name: string;
