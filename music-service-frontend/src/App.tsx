@@ -14,6 +14,8 @@ import AlbumDetailPage from './pages/userPages/AlbumDetailPage.tsx';
 import ArtistDetailPage from './pages/userPages/ArtistDetailPage.tsx';
 import LibraryPage from './pages/userPages/LibraryPage.tsx';
 import UserSettings from './pages/userPages/UserSettings.tsx';
+import PlaylistsPage from './pages/userPages/PlaylistsPage.tsx';
+import PlaylistDetailPage from './pages/userPages/PlaylistDetailPage.tsx';
 
 const AppRoutes = () => {
     return (
@@ -24,6 +26,22 @@ const AppRoutes = () => {
                 <Route path="albums/:id" element={<AlbumDetailPage />} />
                 <Route path="artists" element={<ArtistsPage />} />
                 <Route path="artists/:id" element={<ArtistDetailPage />} />
+                <Route
+                    path="playlists"
+                    element={
+                        <ProtectedRoute>
+                            <PlaylistsPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="playlists/:id"
+                    element={
+                        <ProtectedRoute>
+                            <PlaylistDetailPage />
+                        </ProtectedRoute>
+                    }
+                />
                 <Route
                     path="library"
                     element={

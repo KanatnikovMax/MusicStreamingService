@@ -25,6 +25,12 @@ export interface Song {
   artists: ArtistSimple[];
 }
 
+export interface Playlist {
+  id: string;
+  name: string;
+  userId: string;
+}
+
 export interface ArtistSimple {
   id: string;
   name: string;

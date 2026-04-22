@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import {Music, Users, Disc, BookMarked, ListMusic} from 'lucide-react';
+import { Music, Users, Disc, BookMarked, ListMusic, Library } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const UserSidebar: React.FC = () => {
@@ -63,6 +63,24 @@ const UserSidebar: React.FC = () => {
                             <span>Albums</span>
                         </NavLink>
                     </li>
+
+                    {isAuthenticated && (
+                        <li>
+                            <NavLink
+                                to="/playlists"
+                                className={({ isActive }) =>
+                                    `flex items-center py-2 px-4 rounded-lg transition-colors ${
+                                        isActive
+                                            ? 'bg-indigo-700 text-white'
+                                            : 'text-indigo-100 hover:bg-indigo-700'
+                                    }`
+                                }
+                            >
+                                <Library className="h-5 w-5 mr-3" />
+                                <span>My Playlists</span>
+                            </NavLink>
+                        </li>
+                    )}
 
                     {isAuthenticated && (
                         <li>
