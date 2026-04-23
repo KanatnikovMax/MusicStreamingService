@@ -36,4 +36,12 @@ public class AuthorizationController : ControllerBase
         var tokens = await _authService.LoginUserAsync(authorizeModel);
         return Ok(tokens);
     }
+
+    [HttpPost]
+    [Route("refresh")]
+    public async Task<ActionResult<TokenResponce>> RefreshToken([FromForm] RefreshTokenRequest request)
+    {
+        var tokens = await _authService.RefreshTokenAsync(request.RefreshToken);
+        return Ok(tokens);
+    }
 }

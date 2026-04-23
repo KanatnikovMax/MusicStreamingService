@@ -1,5 +1,13 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { login as apiLogin } from '../services/authService';
+import {
+  addAuthStateListener,
+  clearAuthStorage,
+  getAccessToken,
+  getStoredUser,
+  setStoredUser,
+  setTokens
+} from '../services/authStorage';
 
 interface User {
   id: string;
@@ -19,6 +27,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const decodeJwtPayload = (token: string) => JSON.parse(atob(token.split('.')[1]));
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -35,45 +45,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const syncAuthState = () => {
+      const storedToken = getAccessToken();
+      const storedUser = getStoredUser();
 
-    if (storedToken && storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setToken(storedToken);
-      setUser(parsedUser);
-      setIsAuthenticated(true);
-      setIsAdmin(parsedUser.role === 'admin');
-    }
+      if (storedToken && storedUser) {
+        const parsedUser = JSON.parse(storedUser) as User;
+        setToken(storedToken);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+        setIsAdmin(parsedUser.role === 'admin');
+      } else {
+        setToken(null);
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsAdmin(false);
+      }
 
-    setLoading(false);
+      setLoading(false);
+    };
+
+    syncAuthState();
+    return addAuthStateListener(syncAuthState);
   }, []);
 
   const handleLogin = async (username: string, password: string) => {
     setLoading(true);
     try {
-      const response = await apiLogin(username, password);
-      const { accessToken } = response;
+      const { accessToken, refreshToken } = await apiLogin(username, password);
 
-      if (accessToken) {
-        // Parse JWT to get user info
-        const payload = JSON.parse(atob(accessToken.split('.')[1]));
-
-        const role = payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || "user";
+      if (accessToken && refreshToken) {
+        const payload = decodeJwtPayload(accessToken);
+        const role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 'user';
         const userId = payload.sub;
 
-        const user = {
+        const nextUser = {
           id: userId,
           username,
           role
         };
 
-        localStorage.setItem('token', accessToken);
-        localStorage.setItem('user', JSON.stringify(user));
-        setToken(accessToken);
-        setUser(user);
-        setIsAuthenticated(true);
-        setIsAdmin(role === 'admin');
+        setTokens({ accessToken, refreshToken });
+        setStoredUser(JSON.stringify(nextUser));
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -84,12 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsAdmin(false);
+    clearAuthStorage();
   };
 
   const value = {

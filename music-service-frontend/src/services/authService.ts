@@ -52,3 +52,27 @@ export const register = async (formData: FormData): Promise<TokenResponse> => {
     throw new Error('Unknown error occurred');
   }
 };
+
+export const refreshTokens = async (refreshToken: string): Promise<TokenResponse> => {
+  try {
+    const params = new URLSearchParams();
+    params.append('refreshToken', refreshToken);
+
+    const response = await axios.post<TokenResponse>(
+      `${API_URL}/refresh`,
+      params,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.title || 'Token refresh failed');
+    }
+    throw new Error('Unknown error occurred');
+  }
+};
