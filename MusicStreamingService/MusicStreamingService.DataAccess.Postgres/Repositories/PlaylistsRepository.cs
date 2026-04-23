@@ -53,7 +53,7 @@ public class PlaylistsRepository : IPlaylistsRepository
 
         if (!string.IsNullOrWhiteSpace(namePart))
         {
-            playlists = playlists.Where(p => EF.Functions.ILike(p.Name, $"%{namePart}%"));
+            playlists = playlists.Where(p => EF.Functions.TrigramsAreSimilar(p.Name, namePart));
         }
 
         if (request.Cursor is not null)
@@ -87,8 +87,8 @@ public class PlaylistsRepository : IPlaylistsRepository
         if (!string.IsNullOrWhiteSpace(namePart))
         {
             playlistSongs = playlistSongs.Where(ps =>
-                EF.Functions.ILike(ps.Song.Title, $"%{namePart}%") ||
-                ps.Song.Artists.Any(a => EF.Functions.ILike(a.Name, $"%{namePart}%")));
+                EF.Functions.TrigramsAreSimilar(ps.Song.Title, namePart) ||
+                ps.Song.Artists.Any(a => EF.Functions.TrigramsAreSimilar(a.Name, namePart)));
         }
 
         if (request.Cursor is not null)

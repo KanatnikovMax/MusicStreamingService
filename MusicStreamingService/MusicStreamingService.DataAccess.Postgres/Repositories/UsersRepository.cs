@@ -113,7 +113,7 @@ public class UsersRepository : IUsersRepository
             .Where(ua => ua.UserId == userId)
             .Include(ua => ua.Album)
             .ThenInclude(a => a.Artists)
-            .Where(ua => EF.Functions.ILike(ua.Album.Title, $"%{titlePart}%"))
+            .Where(ua => EF.Functions.TrigramsAreSimilar(ua.Album.Title, titlePart))
             .AsNoTracking();
 
         if (!userAlbums.Any())
@@ -190,8 +190,8 @@ public class UsersRepository : IUsersRepository
             .Where(ua => ua.UserId == userId)
             .Include(ua => ua.Song)
             .ThenInclude(s => s.Artists)
-            .Where(us => EF.Functions.ILike(us.Song.Title, $"%{namePart}%") 
-                         || us.Song.Artists.Any(a => EF.Functions.ILike(a.Name, $"%{namePart}%")))
+            .Where(us => EF.Functions.TrigramsAreSimilar(us.Song.Title, namePart) 
+                         || us.Song.Artists.Any(a => EF.Functions.TrigramsAreSimilar(a.Name, namePart)))
             .AsNoTracking();
 
         if (!userSongs.Any())
@@ -243,7 +243,7 @@ public class UsersRepository : IUsersRepository
         return userAlbum;
     }
 
-    public async Task<UserSong> AddSongAsync(Guid userId, Guid songId)
+    public async Task<UserSong?> AddSongAsync(Guid userId, Guid songId)
     {
         var userSong = _context.Set<UserSong>()
             .FirstOrDefault(s => s.UserId == userId && s.SongId == songId);

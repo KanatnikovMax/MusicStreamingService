@@ -14,7 +14,7 @@ public interface IUsersRepository : IPgRepository<User>
         PaginationParams<DateTime?> request);
     Task<UserAlbum?> AddAlbumAsync(Guid userId, Guid albumId);
     
-    Task<UserSong> AddSongAsync(Guid userId, Guid songId);
+    Task<UserSong?> AddSongAsync(Guid userId, Guid songId);
     Task<UserAlbum?> FindAlbumByIdAsync(Guid userId, Guid albumId);
     Task<UserSong?> FindSongByIdAsync(Guid userId, Guid songId);
     void DeleteAlbum(UserAlbum album);

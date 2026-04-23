@@ -101,14 +101,15 @@ public class ArtistsRepository : IArtistsRepository
             .ThenInclude(a => a.Artists) 
             .Include(a => a.Songs)!
             .ThenInclude(s => s.Artists)
-            .Where(a => EF.Functions.ILike(a.Name, $"%{namePart}%"));
+            .Where(a => EF.Functions.TrigramsAreSimilar(a.Name, namePart));
         
         if (request.Cursor is not null)
         {
             artists = artists.Where(s => s.CreatedAt >= request.Cursor);
         }
 
-        var items = await artists.OrderBy(s => s.CreatedAt)
+        var items = await artists
+            .OrderBy(a => a.CreatedAt)
             .Take(request.PageSize + 1)
             .ToListAsync();
         
@@ -225,39 +226,29 @@ public class ArtistsRepository : IArtistsRepository
     public async Task<CursorResponse<DateTime?, Song>> FindAllSongsByTitleAsync(Guid artistId, string titlePart, 
         PaginationParams<DateTime?> request)
     {
-        var artist = await _context.Set<Artist>()
-            .Include(a => a.Songs)!
+        var songs = _context.Set<ArtistSong>()
+            .Where(a => a.ArtistId == artistId)
+            .Include(a => a.Song)
             .ThenInclude(s => s.Artists)
-            .FirstOrDefaultAsync(a => a.Id == artistId);
+            .Where(a => EF.Functions.TrigramsAreSimilar(a.Song.Title, titlePart))
+            .AsNoTracking();
 
-        if (artist is null)
-        {
-            return new CursorResponse<DateTime?, Song>
-            {
-                Cursor = null,
-                Items = []
-            };
-        }
-
-        var songs = artist.Songs?.Where(s => s.Title.IndexOf(titlePart, StringComparison.OrdinalIgnoreCase) >= 0) 
-                    ?? [];
-        
         if (request.Cursor is not null)
         {
-            songs = songs.Where(s => s.CreatedAt >= request.Cursor).ToList();
+            songs = songs.Where(a => a.Song.CreatedAt >= request.Cursor);
         }
 
-        var items = songs
-            .OrderBy(s => s.CreatedAt)
+        var items = await songs
+            .OrderBy(a => a.Song.CreatedAt)
             .Take(request.PageSize + 1)
-            .ToList();
-        
-        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.CreatedAt : null;
-        
+            .ToListAsync();
+
+        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.Song.CreatedAt : null;
+
         return new CursorResponse<DateTime?, Song>
         {
             Cursor = cursor,
-            Items = items.Take(request.PageSize).ToList(),
+            Items = items.Take(request.PageSize).Select(a => a.Song).ToList(),
         };
     }
     

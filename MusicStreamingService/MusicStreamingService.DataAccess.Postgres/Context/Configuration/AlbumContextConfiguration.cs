@@ -15,7 +15,11 @@ public static class AlbumContextConfiguration
         modelBuilder.Entity<Album>().HasIndex(a => a.CreatedAt);
         modelBuilder.Entity<Album>().Property(x => x.Title).IsRequired();
         modelBuilder.Entity<Album>().Property(x => x.ReleaseDate).IsRequired();
-        modelBuilder.Entity<Album>().HasIndex(x => x.Title);
+        modelBuilder.Entity<Album>()
+            .HasIndex(x => x.Title)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops")
+            .HasDatabaseName("ix_albums_title_trgm");
         modelBuilder.Entity<Album>().Property(x => x.Title).HasMaxLength(50);
     }
 }

@@ -98,7 +98,7 @@ public class AlbumsRepository : IAlbumsRepository
             .Include(a => a.Artists)
             .Include(a => a.Songs)!
             .ThenInclude(s => s.Artists)
-            .Where(a => EF.Functions.ILike(a.Title, $"%{titlePart}%"))
+            .Where(a => EF.Functions.TrigramsAreSimilar(a.Title, titlePart))
             .AsNoTracking();
         
         if (request.Cursor is not null)
@@ -106,7 +106,8 @@ public class AlbumsRepository : IAlbumsRepository
             albums = albums.Where(s => s.ReleaseDate <= request.Cursor);
         }
 
-        var items = await albums.OrderByDescending(s => s.ReleaseDate)
+        var items = await albums
+            .OrderByDescending(a => a.ReleaseDate)
             .Take(request.PageSize + 1)
             .ToListAsync();
         
@@ -115,7 +116,7 @@ public class AlbumsRepository : IAlbumsRepository
         return new CursorResponse<DateTime?, Album>
         {
             Cursor = cursor,
-            Items = items
+            Items = items.Take(request.PageSize).ToList()
         };
     }
 
