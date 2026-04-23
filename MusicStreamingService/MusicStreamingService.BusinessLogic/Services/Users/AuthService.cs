@@ -65,42 +65,8 @@ public class AuthService : IAuthService
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
-            
-            var client = _httpClientFactory.CreateClient();
-            var discoveryDocument = await client.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
-            {
-                Address = _identityServerUri,
-                Policy = new DiscoveryPolicy
-                {
-                    RequireHttps = false
-                }
-            });
-            if (discoveryDocument.IsError)
-            {
-                throw new AuthenticationException("Identity server error");
-            }
 
-            var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest
-            {
-                Address = discoveryDocument.TokenEndpoint,
-                GrantType = GrantType.ResourceOwnerPassword,
-                ClientId = _clientId,
-                ClientSecret = _clientSecret,
-                UserName = user.UserName,
-                Password = model.Password,
-                Scope = "api offline_access"
-            });
-            
-            if (tokenResponse.IsError)
-            {
-                throw new AuthenticationException("Identity server error");
-            }
-        
-            return new TokenResponce
-            {
-                AccessToken = tokenResponse.AccessToken,
-                RefreshToken = tokenResponse.RefreshToken
-            };
+            return await RequestPasswordTokensAsync(user.UserName!, model.Password);
         }
         catch
         {
@@ -122,8 +88,68 @@ public class AuthService : IAuthService
         {
             throw new AuthenticationException("Email or password is incorrect");
         }
-        
+
+        return await RequestPasswordTokensAsync(user.UserName!, model.Password);
+    }
+
+    public async Task<TokenResponce> RefreshTokenAsync(string refreshToken)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            throw new AuthenticationException("Refresh token is required");
+        }
+
         var client = _httpClientFactory.CreateClient();
+        var discoveryDocument = await GetDiscoveryDocumentAsync(client);
+        var tokenResponse = await client.RequestRefreshTokenAsync(new RefreshTokenRequest
+        {
+            Address = discoveryDocument.TokenEndpoint,
+            ClientId = _clientId,
+            ClientSecret = _clientSecret,
+            RefreshToken = refreshToken
+        });
+
+        if (tokenResponse.IsError)
+        {
+            throw new AuthenticationException("Identity server error");
+        }
+
+        return new TokenResponce
+        {
+            AccessToken = tokenResponse.AccessToken,
+            RefreshToken = tokenResponse.RefreshToken ?? refreshToken
+        };
+    }
+
+    private async Task<TokenResponce> RequestPasswordTokensAsync(string userName, string password)
+    {
+        var client = _httpClientFactory.CreateClient();
+        var discoveryDocument = await GetDiscoveryDocumentAsync(client);
+        var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest
+        {
+            Address = discoveryDocument.TokenEndpoint,
+            GrantType = GrantType.ResourceOwnerPassword,
+            ClientId = _clientId,
+            ClientSecret = _clientSecret,
+            UserName = userName,
+            Password = password,
+            Scope = "api offline_access"
+        });
+
+        if (tokenResponse.IsError)
+        {
+            throw new AuthenticationException("Identity server error");
+        }
+
+        return new TokenResponce
+        {
+            AccessToken = tokenResponse.AccessToken,
+            RefreshToken = tokenResponse.RefreshToken
+        };
+    }
+
+    private async Task<DiscoveryDocumentResponse> GetDiscoveryDocumentAsync(HttpClient client)
+    {
         var discoveryDocument = await client.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
         {
             Address = _identityServerUri,
@@ -132,31 +158,12 @@ public class AuthService : IAuthService
                 RequireHttps = false
             }
         });
+
         if (discoveryDocument.IsError)
         {
             throw new AuthenticationException("Identity server error");
         }
 
-        var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest
-        {
-            Address = discoveryDocument.TokenEndpoint,
-            GrantType = GrantType.ResourceOwnerPassword,
-            ClientId = _clientId,
-            ClientSecret = _clientSecret,
-            UserName = user.UserName,
-            Password = model.Password,
-            Scope = "api offline_access"
-        });
-
-        if (tokenResponse.IsError)
-        {
-            throw new AuthenticationException("Identity server error");
-        }
-        
-        return new TokenResponce
-        {
-            AccessToken = tokenResponse.AccessToken,
-            RefreshToken = tokenResponse.RefreshToken
-        };
+        return discoveryDocument;
     }
 }
