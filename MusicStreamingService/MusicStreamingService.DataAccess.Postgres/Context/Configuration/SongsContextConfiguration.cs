@@ -16,10 +16,14 @@ public static class SongsContextConfiguration
         modelBuilder.Entity<Song>().Property(x => x.CassandraId).IsRequired();
         modelBuilder.Entity<Song>().Property(x => x.Duration).IsRequired();
         modelBuilder.Entity<Song>().Property(x => x.TrackNumber).IsRequired();
-        modelBuilder.Entity<Song>().HasIndex(x => x.Title);
+        modelBuilder.Entity<Song>()
+            .HasIndex(x => x.Title)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops")
+            .HasDatabaseName("ix_songs_title_trgm");
         modelBuilder.Entity<Song>().Property(x => x.Title).HasMaxLength(50);
         modelBuilder.Entity<Song>().HasIndex(x => x.AlbumId);
-
+        
         modelBuilder.Entity<Song>().HasOne(x => x.Album).WithMany(x => x.Songs)
             .HasForeignKey(x => x.AlbumId)
             .OnDelete(DeleteBehavior.Cascade);

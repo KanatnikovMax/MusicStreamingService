@@ -92,14 +92,15 @@ public class SongsRepository : ISongsRepository
         var songs = _context.Set<Song>()
             .Include(s => s.Artists)
             .AsNoTracking()
-            .Where(a => EF.Functions.ILike(a.Title, $"%{titlePart}%"));
+            .Where(s => EF.Functions.TrigramsAreSimilar(s.Title, titlePart));
         
         if (request.Cursor is not null)
         {
             songs = songs.Where(s => s.CreatedAt >= request.Cursor);
         }
 
-        var items = await songs.OrderBy(s => s.CreatedAt)
+        var items = await songs
+            .OrderBy(s => s.CreatedAt)
             .Take(request.PageSize + 1)
             .ToListAsync();
         
@@ -108,7 +109,7 @@ public class SongsRepository : ISongsRepository
         return new CursorResponse<DateTime?, Song>
         {
             Cursor = cursor,
-            Items = items
+            Items = items.Take(request.PageSize).ToList()
         };
     }
 }

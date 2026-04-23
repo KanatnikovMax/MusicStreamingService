@@ -15,7 +15,11 @@ public static class ArtistsContextConfigurator
         modelBuilder.Entity<Artist>().HasIndex(a => a.CreatedAt);
         modelBuilder.Entity<Artist>().Property(x => x.Name).IsRequired();
         modelBuilder.Entity<Artist>().Property(x => x.Name).HasMaxLength(50);
-        modelBuilder.Entity<Artist>().HasIndex(x => x.Name).IsUnique();
+        modelBuilder.Entity<Artist>()
+            .HasIndex(x => x.Name)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops")
+            .HasDatabaseName("ix_artists_name_trgm");
         
         modelBuilder.Entity<Artist>().HasMany(x => x.Albums).WithMany(x => x.Artists)
             .UsingEntity(t => t.ToTable("artists_albums"));

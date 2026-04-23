@@ -21,6 +21,12 @@ public static class PlaylistsContextConfigurator
             .HasIndex(p => new { p.UserId, p.Name });
 
         modelBuilder.Entity<Playlist>()
+            .HasIndex(x => x.Name)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops")
+            .HasDatabaseName("ix_playlists_name_trgm");
+        
+        modelBuilder.Entity<Playlist>()
             .HasOne(p => p.User)
             .WithMany(u => u.Playlists)
             .HasForeignKey(p => p.UserId)
