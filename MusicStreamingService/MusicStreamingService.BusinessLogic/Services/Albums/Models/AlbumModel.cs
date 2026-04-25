@@ -7,7 +7,7 @@ public class AlbumModel
 {
     public Guid Id { get; set; } 
     public string Title { get; set; } 
-    public string? PhotoBase64 { get; set; }
+    public string? PhotoUrl { get; set; }
     public DateTime ReleaseDate { get; set; } 
     public List<SongSimpleModel> Songs { get; set; }
     public List<ArtistSimpleModel> Artists { get; set; } 

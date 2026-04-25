@@ -10,6 +10,7 @@ using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.Service.Controllers.Requests.Pagination;
 using MusicStreamingService.Service.Controllers.Requests.Playlists;
 using MusicStreamingService.Service.Controllers.Responses.Pagination;
+using MusicStreamingService.Service.Utils;
 
 namespace MusicStreamingService.Service.Controllers;
 
@@ -35,9 +36,7 @@ public class PlaylistsController : ControllerBase
         var model = _mapper.Map<CreatePlaylistModel>(request);
         if (photo != null)
         {
-            using var memoryStream = new MemoryStream();
-            await photo.CopyToAsync(memoryStream);
-            model.Photo = memoryStream.ToArray();
+            model.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
         }
         return await _playlistsService.CreateAsync(userId, model);
     }
@@ -51,9 +50,7 @@ public class PlaylistsController : ControllerBase
         var model = _mapper.Map<UpdatePlaylistModel>(request);
         if (photo != null)
         {
-            using var memoryStream = new MemoryStream();
-            await photo.CopyToAsync(memoryStream);
-            model.Photo = memoryStream.ToArray();
+            model.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
         }
         return await _playlistsService.UpdateAsync(userId, playlistId, model);
     }

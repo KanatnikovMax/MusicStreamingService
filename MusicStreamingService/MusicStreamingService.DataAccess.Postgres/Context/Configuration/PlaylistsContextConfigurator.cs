@@ -13,6 +13,8 @@ public static class PlaylistsContextConfigurator
         modelBuilder.Entity<Playlist>().Property(p => p.Name)
             .HasMaxLength(200)
             .IsRequired();
+        modelBuilder.Entity<Playlist>().Property(p => p.PhotoObjectKey)
+            .HasMaxLength(512);
         modelBuilder.Entity<Playlist>().Property(p => p.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
         modelBuilder.Entity<Playlist>().Property(p => p.UpdatedAt)

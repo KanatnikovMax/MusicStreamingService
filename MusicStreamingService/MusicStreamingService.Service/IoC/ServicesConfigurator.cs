@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Minio;
 using Microsoft.AspNetCore.Identity;
 using MusicStreamingService.BusinessLogic.Services.Albums;
 using MusicStreamingService.BusinessLogic.Services.Artists;
@@ -11,6 +12,7 @@ using MusicStreamingService.DataAccess.Postgres.Context;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
+using MusicStreamingService.MediaLibrary;
 using MusicStreamingService.Service.Init;
 using MusicStreamingService.Service.Settings;
 
@@ -20,9 +22,24 @@ public static class ServicesConfigurator
 {
     public static void ConfigureServices(IServiceCollection services, MusicServiceSettings settings)
     {
-        // Unit Of Work
+        services.AddSingleton(settings.MinioSettings);
+        services.AddSingleton(settings);
+        services.AddSingleton<IMinioClient>(_ =>
+        {
+            var clientBuilder = new MinioClient()
+                .WithEndpoint(settings.MinioSettings.Endpoint)
+                .WithCredentials(settings.MinioSettings.AccessKey, settings.MinioSettings.SecretKey);
+
+            if (settings.MinioSettings.UseSsl)
+            {
+                clientBuilder = clientBuilder.WithSSL();
+            }
+
+            return clientBuilder.Build();
+        });
+        services.AddSingleton<IMediaStorageService, MinioMediaStorageService>();
+
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        // services
         services.AddScoped<IArtistsService, ArtistsService>();
         services.AddScoped<IAlbumsService, AlbumsService>();
         services.AddScoped<ISongsService, SongsService>();
@@ -36,6 +53,7 @@ public static class ServicesConfigurator
                 x.GetRequiredService<UserManager<User>>(),
                 x.GetRequiredService<IHttpClientFactory>(),
                 x.GetRequiredService<IMapper>(),
+                x.GetRequiredService<ILogger<AuthService>>(),
                 settings.IdentityServerUri,
                 settings.ClientId,
                 settings.ClientSecret));
@@ -46,7 +64,6 @@ public static class ServicesConfigurator
                 settings.CassandraKeyspace,
                 settings.CassandraPort,
                 settings.CassandraReplicationFactor));
-        // cassandra
         services.AddScoped<ICassandraSongsRepository>(x =>
             new CassandraSongsRepository(x.GetRequiredService<CassandraCluster>().Session));
     }

@@ -127,9 +127,9 @@ const AlbumDetailPage: React.FC = () => {
           <div className="md:flex">
             <div className="md:w-1/3 p-6">
               <div className="aspect-square rounded-md mb-4 overflow-hidden">
-                {album.photoBase64 ? (
+                {album.photoUrl ? (
                     <img
-                        src={`data:image/jpeg;base64,${album.photoBase64}`}
+                        src={album.photoUrl}
                         alt={album.title}
                         className="w-full h-full object-cover"
                     />

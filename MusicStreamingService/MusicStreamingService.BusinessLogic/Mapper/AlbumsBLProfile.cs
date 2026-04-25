@@ -8,18 +8,13 @@ public class AlbumsBLProfile : Profile
 {
     public AlbumsBLProfile()
     {
-        CreateMap<Album, AlbumSimpleModel>()
-            .ForMember(
-                dest => dest.PhotoBase64,
-                opt => opt.MapFrom(src => src.Photo == null ? null : Convert.ToBase64String(src.Photo)));
+        CreateMap<Album, AlbumSimpleModel>();
         CreateMap<Album, AlbumModel>()
             .ForMember(
                 dest => dest.Songs, 
-                opt => opt.MapFrom(src => (src.Songs ?? Enumerable.Empty<Song>()).OrderBy(s => s.TrackNumber)))
-            .ForMember(
-                dest => dest.PhotoBase64,
-                opt => opt.MapFrom(src => src.Photo == null ? null : Convert.ToBase64String(src.Photo)));
+                opt => opt.MapFrom(src => (src.Songs ?? Enumerable.Empty<Song>()).OrderBy(s => s.TrackNumber)));
         CreateMap<CreateAlbumModel, Album>()
+            .ForMember(dest => dest.PhotoObjectKey, opt => opt.Ignore())
             .ForMember(dest => dest.Artists, opt => opt.Ignore());
     }
 }

@@ -59,9 +59,9 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist, onPlaylistDeleted
       <div className="overflow-hidden rounded-lg bg-white shadow-md transition-transform hover:-translate-y-1 hover:shadow-lg">
         <Link to={`/playlists/${playlist.id}`}>
           <div className="group relative aspect-square">
-            {playlist.photoBase64 ? (
+            {playlist.photoUrl ? (
                 <img
-                    src={`data:image/jpeg;base64,${playlist.photoBase64}`}
+                    src={playlist.photoUrl}
                     alt={playlist.name}
                     className="h-full w-full object-cover"
                 />

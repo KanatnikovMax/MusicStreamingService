@@ -12,11 +12,10 @@ public class ArtistsBLProfile : Profile
         CreateMap<Artist, ArtistModel>()
             .ForMember(
                 dest => dest.Albums,
-                opt => opt.MapFrom(src => (src.Albums ?? Enumerable.Empty<Album>()).OrderByDescending(a => a.ReleaseDate)))
-            .ForMember(
-                dest => dest.PhotoBase64,
-                opt => opt.MapFrom(src => src.Photo == null ? null : Convert.ToBase64String(src.Photo)));
+                opt => opt.MapFrom(src =>
+                    (src.Albums ?? Enumerable.Empty<Album>()).OrderByDescending(a => a.ReleaseDate)));
         CreateMap<CreateArtistModel, Artist>()
+            .ForMember(dest => dest.PhotoObjectKey, opt => opt.Ignore())
             .ForMember(dest => dest.Albums, opt => opt.Ignore())
             .ForMember(dest => dest.Songs, opt => opt.Ignore());
     }

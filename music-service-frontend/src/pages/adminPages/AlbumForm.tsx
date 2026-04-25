@@ -56,8 +56,8 @@ const AlbumForm: React.FC = () => {
           setReleaseDate(album.releaseDate);
           setSelectedArtists(album.artists.map((artist: Artist) => artist.name));
 
-          if (album.photoBase64) {
-            setPreviewUrl(`data:image/jpeg;base64,${album.photoBase64}`);
+          if (album.photoUrl) {
+            setPreviewUrl(album.photoUrl);
           }
         } catch {
           if (!abortController.signal.aborted) {

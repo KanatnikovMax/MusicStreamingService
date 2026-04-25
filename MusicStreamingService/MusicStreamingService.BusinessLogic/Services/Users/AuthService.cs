@@ -3,6 +3,7 @@ using AutoMapper;
 using Duende.IdentityModel.Client;
 using Duende.IdentityServer.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Users.Models;
 using MusicStreamingService.DataAccess.Postgres.Context;
@@ -17,13 +18,15 @@ public class AuthService : IAuthService
     private readonly UserManager<User> _userManager;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMapper _mapper;
+    private readonly ILogger<AuthService> _logger;
     private readonly string _identityServerUri;
     private readonly string _clientId;
     private readonly string _clientSecret;
 
     public AuthService(MusicServiceDbContext context, SignInManager<User> signInManager, UserManager<User> userManager, 
-        IHttpClientFactory httpClientFactory, IMapper mapper, 
-        string identityServerUri, string clientId, string clientSecret)
+        IHttpClientFactory httpClientFactory, IMapper mapper, ILogger<AuthService> logger,
+
+    string identityServerUri, string clientId, string clientSecret)
     {
         _context = context;
         _signInManager = signInManager;
@@ -111,6 +114,8 @@ public class AuthService : IAuthService
 
         if (tokenResponse.IsError)
         {
+            _logger.LogError("Refresh token error: {error}, Description: {Description}", 
+                tokenResponse.Error, tokenResponse.ErrorDescription);
             throw new AuthenticationException("Identity server error");
         }
 

@@ -239,9 +239,9 @@ const Albums: React.FC = () => {
                             className="hover:bg-gray-50"
                         >
                           <td className="px-6 py-4">
-                            {album.photoBase64 ? (
+                            {album.photoUrl ? (
                                 <img
-                                    src={`data:image/jpeg;base64,${album.photoBase64}`}
+                                    src={album.photoUrl}
                                     alt={album.title}
                                     className="w-12 h-12 rounded object-cover"
                                 />

@@ -3,7 +3,7 @@
 public class Album : BaseEntity
 {
     public string Title { get; set; }
-    public byte[]? Photo { get; set; }
+    public string? PhotoObjectKey { get; set; }
     public DateTime ReleaseDate { get; set; }
     
     public ICollection<User>? Users { get; set; }

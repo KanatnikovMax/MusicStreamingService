@@ -8,6 +8,7 @@ using MusicStreamingService.BusinessLogic.Services.Artists.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
+using MusicStreamingService.MediaLibrary;
 using Newtonsoft.Json;
 using Npgsql;
 
@@ -18,12 +19,18 @@ public class ArtistsService : IArtistsService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IDistributedCache _cache;
+    private readonly IMediaStorageService _mediaStorageService;
 
-    public ArtistsService(IUnitOfWork unitOfWork, IMapper mapper, IDistributedCache cache)
+    public ArtistsService(
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        IDistributedCache cache,
+        IMediaStorageService mediaStorageService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _cache = cache;
+        _mediaStorageService = mediaStorageService;
     }
 
     public async Task<ArtistModel> GetArtistByIdAsync(Guid id)
@@ -46,12 +53,11 @@ public class ArtistsService : IArtistsService
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
                 });
-            
-            return _mapper.Map<ArtistModel>(artist);
+            return await MapArtistAsync(artist);
         }
 
         artist = JsonConvert.DeserializeObject<Artist>(cachedArtist);
-        return _mapper.Map<ArtistModel>(artist);
+        return await MapArtistAsync(artist);
     }
 
     public async Task<CursorResponse<DateTime?, ArtistModel>> GetArtistByNameAsync(string? namePart, 
@@ -63,7 +69,7 @@ public class ArtistsService : IArtistsService
         return new CursorResponse<DateTime?, ArtistModel>
         {
             Cursor = artists.Cursor,
-            Items = _mapper.Map<List<ArtistModel>>(artists.Items)
+            Items = await MapArtistsAsync(artists.Items)
         };
     }
 
@@ -74,7 +80,7 @@ public class ArtistsService : IArtistsService
         return new CursorResponse<DateTime?, AlbumModel>
         {
             Cursor = albums.Cursor,
-            Items = _mapper.Map<List<AlbumModel>>(albums.Items)
+            Items = await MapAlbumsAsync(albums.Items)
         };
     }
     
@@ -94,6 +100,8 @@ public class ArtistsService : IArtistsService
     public async Task<ArtistModel> CreateArtistAsync(CreateArtistModel model)
     {
         var artist = _mapper.Map<Artist>(model);
+        var uploadedPhotoKey = await _mediaStorageService.UploadAsync(model.Photo, "artists", Guid.NewGuid());
+        artist.PhotoObjectKey = uploadedPhotoKey;
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable);
         try
         {
@@ -101,15 +109,17 @@ public class ArtistsService : IArtistsService
             if (artist is null)
             {
                 await _unitOfWork.RollbackAsync();
+                await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
                 throw new EntityAlreadyExistsException("Artist");
             }
             
             await _unitOfWork.CommitAsync();
-            return _mapper.Map<ArtistModel>(artist);
+            return await MapArtistAsync(artist);
         }
         catch (DbUpdateException e)
         {
             await _unitOfWork.RollbackAsync();
+            await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
             if (e.InnerException is PostgresException { SqlState: "23505" })
             {
                 throw new EntityAlreadyExistsException("Artist");
@@ -120,13 +130,14 @@ public class ArtistsService : IArtistsService
         catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
+            await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
             throw;
         }
     }
 
     public async Task<ArtistModel> DeleteArtistAsync(Guid id)
     {
-        await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable);
+        await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
             var cachedKey = $"artists_{id}";
@@ -154,8 +165,9 @@ public class ArtistsService : IArtistsService
             _unitOfWork.Artists.Delete(artist);
         
             await _unitOfWork.CommitAsync();
+            await _mediaStorageService.DeleteAsync(artist.PhotoObjectKey);
 
-            return _mapper.Map<ArtistModel>(artist);
+            return await MapArtistAsync(artist);
         }
         catch (DbUpdateException)
         {
@@ -171,6 +183,7 @@ public class ArtistsService : IArtistsService
 
     public async Task<ArtistModel> UpdateArtistAsync(UpdateArtistModel model, Guid id)
     {
+        string? uploadedPhotoKey = null;
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
@@ -195,14 +208,27 @@ public class ArtistsService : IArtistsService
             await _cache.RemoveAsync(cachedKey);
             
             artist.Name = model.Name ?? artist.Name;
-            artist.Photo = model.Photo ?? artist.Photo;
+            var previousPhotoKey = artist.PhotoObjectKey;
+            if (model.Photo is not null)
+            {
+                uploadedPhotoKey = await _mediaStorageService.UploadAsync(model.Photo, "artists", id);
+                artist.PhotoObjectKey = uploadedPhotoKey;
+            }
+
             artist = _unitOfWork.Artists.Update(artist);
             await _unitOfWork.CommitAsync();
-            return _mapper.Map<ArtistModel>(artist);
+
+            if (!string.IsNullOrWhiteSpace(uploadedPhotoKey) && uploadedPhotoKey != previousPhotoKey)
+            {
+                await _mediaStorageService.DeleteAsync(previousPhotoKey);
+            }
+
+            return await MapArtistAsync(artist);
         }
         catch (DbUpdateException e)
         {
             await _unitOfWork.RollbackAsync();
+            await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
             if (e.InnerException is PostgresException { SqlState: "23505" })
             {
                 throw new EntityAlreadyExistsException("Artist");
@@ -213,7 +239,46 @@ public class ArtistsService : IArtistsService
         catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
+            await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
             throw;
         }
+    }
+
+    private async Task<List<ArtistModel>> MapArtistsAsync(IEnumerable<Artist> artists)
+    {
+        var tasks = artists.Select(MapArtistAsync);
+        return (await Task.WhenAll(tasks)).ToList();
+    }
+
+    private async Task<ArtistModel> MapArtistAsync(Artist artist)
+    {
+        var model = _mapper.Map<ArtistModel>(artist);
+        model.PhotoUrl = await _mediaStorageService.GetReadUrlAsync(artist.PhotoObjectKey);
+
+        if (artist.Albums is not null && model.Albums.Count != 0)
+        {
+            var albumPhotoKeys = artist.Albums.ToDictionary(album => album.Id, album => album.PhotoObjectKey);
+            var urlTasks = model.Albums.Select(async album =>
+            {
+                album.PhotoUrl = albumPhotoKeys.TryGetValue(album.Id, out var photoObjectKey)
+                    ? await _mediaStorageService.GetReadUrlAsync(photoObjectKey)
+                    : null;
+            });
+            await Task.WhenAll(urlTasks);
+        }
+
+        return model;
+    }
+
+    private async Task<List<AlbumModel>> MapAlbumsAsync(IEnumerable<Album> albums)
+    {
+        var tasks = albums.Select(async album =>
+        {
+            var model = _mapper.Map<AlbumModel>(album);
+            model.PhotoUrl = await _mediaStorageService.GetReadUrlAsync(album.PhotoObjectKey);
+            return model;
+        });
+
+        return (await Task.WhenAll(tasks)).ToList();
     }
 }
