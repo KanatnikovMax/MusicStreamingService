@@ -1,5 +1,4 @@
 ﻿using MusicStreamingService.BusinessLogic.Services.Artists.Models;
-using MusicStreamingService.DataAccess.Postgres.Entities;
 
 namespace MusicStreamingService.BusinessLogic.Services.Songs.Models;
 
@@ -8,6 +7,6 @@ public record SongModel(
     string Title, 
     int Duration,
     int TrackNumber,
-    Guid CassandraId,
+    string AudioObjectKey,
     Guid AlbumId,
     List<ArtistSimpleModel> Artists);

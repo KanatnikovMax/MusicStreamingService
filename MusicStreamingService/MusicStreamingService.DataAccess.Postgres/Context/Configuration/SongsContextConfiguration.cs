@@ -13,7 +13,7 @@ public static class SongsContextConfiguration
         modelBuilder.Entity<Song>().Property(s => s.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
         modelBuilder.Entity<Song>().HasIndex(s => s.CreatedAt);
         modelBuilder.Entity<Song>().Property(x => x.Title).IsRequired();
-        modelBuilder.Entity<Song>().Property(x => x.CassandraId).IsRequired();
+        modelBuilder.Entity<Song>().Property(x => x.AudioObjectKey).IsRequired();
         modelBuilder.Entity<Song>().Property(x => x.Duration).IsRequired();
         modelBuilder.Entity<Song>().Property(x => x.TrackNumber).IsRequired();
         modelBuilder.Entity<Song>()

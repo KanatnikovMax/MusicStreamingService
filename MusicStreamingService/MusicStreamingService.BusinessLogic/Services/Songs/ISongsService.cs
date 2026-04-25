@@ -12,5 +12,5 @@ public interface ISongsService
     Task<SongModel> DeleteSongAsync(Guid id);
 
     Task<SongModel> UpdateSongAsync(UpdateSongModel model, Guid id);
-    Task<byte[]> GetSongAudioAsync(Guid id);
+    Task<string?> GetSongAudioUrlAsync(Guid id);
 }
