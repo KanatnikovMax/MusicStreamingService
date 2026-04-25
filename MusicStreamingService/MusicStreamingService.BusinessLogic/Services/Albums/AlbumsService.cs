@@ -4,9 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
+using MusicStreamingService.BusinessLogic.Services.Media;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
+using MusicStreamingService.MediaLibrary;
 using Newtonsoft.Json;
 using Npgsql;
 
@@ -17,12 +19,18 @@ public class AlbumsService : IAlbumsService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IDistributedCache _cache;
+    private readonly IMediaStorageService _mediaStorageService;
 
-    public AlbumsService(IUnitOfWork unitOfWork, IMapper mapper, IDistributedCache cache)
+    public AlbumsService(
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        IDistributedCache cache,
+        IMediaStorageService mediaStorageService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _cache = cache;
+        _mediaStorageService = mediaStorageService;
     }
 
     public async Task<AlbumModel> GetAlbumByIdAsync(Guid id)
@@ -46,12 +54,11 @@ public class AlbumsService : IAlbumsService
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
                 });
-            
-            return _mapper.Map<AlbumModel>(album);
+            return await MapAlbumAsync(album);
         }
         
         album = JsonConvert.DeserializeObject<Album>(cachedAlbum);
-        return _mapper.Map<AlbumModel>(album);
+        return await MapAlbumAsync(album);
     }
 
     public async Task<CursorResponse<DateTime?, AlbumModel>> GetAlbumByTitleAsync(string? titlePart, 
@@ -63,7 +70,7 @@ public class AlbumsService : IAlbumsService
         return new CursorResponse<DateTime?, AlbumModel>
         {
             Cursor = albums.Cursor,
-            Items = _mapper.Map<List<AlbumModel>>(albums.Items)
+            Items = await MapAlbumsAsync(albums.Items)
         };
     }
 
@@ -82,6 +89,7 @@ public class AlbumsService : IAlbumsService
     public async Task<AlbumModel> CreateAlbumAsync(CreateAlbumModel model)
     {
         var entity = _mapper.Map<Album>(model);
+        string? uploadedPhotoKey = null;
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
@@ -110,24 +118,34 @@ public class AlbumsService : IAlbumsService
         
             var artists = await _unitOfWork.Artists.GetOrCreateArtistsAsync(model.Artists);
             entity.Artists = artists;
+            uploadedPhotoKey = await _mediaStorageService.UploadAsync(model.Photo, "albums", Guid.NewGuid());
+            entity.PhotoObjectKey = uploadedPhotoKey;
             entity = await _unitOfWork.Albums.SaveAsync(entity);
             if (entity is null)
             {
                 await _unitOfWork.RollbackAsync();
+                await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
                 throw new EntityAlreadyExistsException("Album");
             }
             await _unitOfWork.CommitAsync();
         
-            return _mapper.Map<AlbumModel>(entity);
+            return await MapAlbumAsync(entity);
+        }
+        catch (EntityAlreadyExistsException)
+        {
+            await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
+            throw;
         }
         catch (DbUpdateException)
         {
             await _unitOfWork.RollbackAsync();
+            await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
             throw;
         }
         catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
+            await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
             throw;
         }
     }
@@ -153,7 +171,8 @@ public class AlbumsService : IAlbumsService
             
             _unitOfWork.Albums.Delete(album);
             await _unitOfWork.CommitAsync();
-            return _mapper.Map<AlbumModel>(album);
+            await _mediaStorageService.DeleteAsync(album.PhotoObjectKey);
+            return await MapAlbumAsync(album);
         }
         catch (DbUpdateException)
         {
@@ -169,6 +188,7 @@ public class AlbumsService : IAlbumsService
 
     public async Task<AlbumModel> UpdateAlbumAsync(UpdateAlbumModel model, Guid id)
     {
+        string? uploadedPhotoKey = null;
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
         {
@@ -188,20 +208,23 @@ public class AlbumsService : IAlbumsService
             {
                 album.Title = model.Title;
             }
-            album.Photo = model.Photo ?? album.Photo;
+            var previousPhotoKey = album.PhotoObjectKey;
+            if (model.Photo is not null)
+            {
+                uploadedPhotoKey = await _mediaStorageService.UploadAsync(model.Photo, "albums", id);
+                album.PhotoObjectKey = uploadedPhotoKey;
+            }
             if (model.ReleaseDate.HasValue)
             {
                 album.ReleaseDate = model.ReleaseDate.Value;
             }
-            if (model.Artists != null)
+            
+            var artists = await _unitOfWork.Artists.GetOrCreateArtistsAsync(model.Artists);
+            
+            album.Artists.Clear();
+            foreach (var artist in artists)
             {
-                var artists = await _unitOfWork.Artists.GetOrCreateArtistsAsync(model.Artists);
-                
-                album.Artists.Clear();
-                foreach (var artist in artists)
-                {
-                    album.Artists.Add(artist);
-                }
+                album.Artists.Add(artist);
             }
             
             await _cache.RemoveAsync(cacheKey);
@@ -209,17 +232,37 @@ public class AlbumsService : IAlbumsService
             _unitOfWork.Albums.Update(album);
             await _unitOfWork.CommitAsync();
 
-            return _mapper.Map<AlbumModel>(album);
+            if (!string.IsNullOrWhiteSpace(uploadedPhotoKey) && uploadedPhotoKey != previousPhotoKey)
+            {
+                await _mediaStorageService.DeleteAsync(previousPhotoKey);
+            }
+
+            return await MapAlbumAsync(album);
         }
         catch (DbUpdateException)
         {
             await _unitOfWork.RollbackAsync();
+            await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
             throw;
         }
         catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
+            await _mediaStorageService.DeleteAsync(uploadedPhotoKey);
             throw;
         }
+    }
+
+    private async Task<List<AlbumModel>> MapAlbumsAsync(IEnumerable<Album> albums)
+    {
+        var tasks = albums.Select(MapAlbumAsync);
+        return (await Task.WhenAll(tasks)).ToList();
+    }
+
+    private async Task<AlbumModel> MapAlbumAsync(Album album)
+    {
+        var model = _mapper.Map<AlbumModel>(album);
+        model.PhotoUrl = await _mediaStorageService.GetReadUrlAsync(album.PhotoObjectKey);
+        return model;
     }
 }

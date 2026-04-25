@@ -21,5 +21,6 @@ public static class AlbumContextConfiguration
             .HasOperators("gin_trgm_ops")
             .HasDatabaseName("ix_albums_title_trgm");
         modelBuilder.Entity<Album>().Property(x => x.Title).HasMaxLength(50);
+        modelBuilder.Entity<Album>().Property(x => x.PhotoObjectKey).HasMaxLength(512);
     }
 }

@@ -9,6 +9,7 @@ using MusicStreamingService.Service.Controllers.Requests.Albums;
 using MusicStreamingService.Service.Controllers.Requests.Pagination;
 using MusicStreamingService.Service.Controllers.Responses.Albums;
 using MusicStreamingService.Service.Controllers.Responses.Pagination;
+using MusicStreamingService.Service.Utils;
 
 namespace MusicStreamingService.Service.Controllers;
 
@@ -35,9 +36,7 @@ public class AlbumsController : ControllerBase
         var createAlbumModel = _mapper.Map<CreateAlbumModel>(request);
         if (photo != null)
         {
-            using var memoryStream = new MemoryStream();
-            await photo.CopyToAsync(memoryStream);
-            createAlbumModel.Photo = memoryStream.ToArray();
+            createAlbumModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
         }
         var album = await _albumsService.CreateAlbumAsync(createAlbumModel);
         return Ok(new AlbumsListResponse([album]));
@@ -80,9 +79,7 @@ public class AlbumsController : ControllerBase
         var updateAlbumModel = _mapper.Map<UpdateAlbumModel>(request);
         if (photo != null)
         {
-            using var memoryStream = new MemoryStream();
-            await photo.CopyToAsync(memoryStream);
-            updateAlbumModel.Photo = memoryStream.ToArray();
+            updateAlbumModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
         }
         var album = await _albumsService.UpdateAlbumAsync(updateAlbumModel, id);
         return Ok(new AlbumsListResponse([album]));

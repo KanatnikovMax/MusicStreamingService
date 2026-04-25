@@ -138,9 +138,9 @@ const PlaylistDetailPage: React.FC = () => {
           <div className="md:flex">
             <div className="p-6 md:w-1/3">
               <div className="mb-4 aspect-square overflow-hidden rounded-md">
-                {playlist.photoBase64 ? (
+                {playlist.photoUrl ? (
                     <img
-                        src={`data:image/jpeg;base64,${playlist.photoBase64}`}
+                        src={playlist.photoUrl}
                         alt={playlist.name}
                         className="h-full w-full object-cover"
                     />

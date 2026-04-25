@@ -229,9 +229,9 @@ const Artists: React.FC = () => {
                             className="hover:bg-gray-50"
                         >
                           <td className="px-6 py-4">
-                            {artist.photoBase64 ? (
+                            {artist.photoUrl ? (
                                 <img
-                                    src={`data:image/jpeg;base64,${artist.photoBase64}`}
+                                    src={artist.photoUrl}
                                     alt={artist.name}
                                     className="w-12 h-12 rounded-full object-cover"
                                 />

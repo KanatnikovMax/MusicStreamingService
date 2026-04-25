@@ -1,7 +1,7 @@
 export interface Artist {
   id: string;
   name: string;
-  photoBase64?: string;
+  photoUrl?: string;
   albums?: AlbumSimple[];
   songs?: SongSimple[];
   createdAt: string;
@@ -11,7 +11,7 @@ export interface Album {
   id: string;
   title: string;
   releaseDate: string;
-  photoBase64?: string;
+  photoUrl?: string;
   artists: ArtistSimple[];
   songs?: SongSimple[];
 }
@@ -28,7 +28,7 @@ export interface Song {
 export interface Playlist {
   id: string;
   name: string;
-  photoBase64?: string;
+  photoUrl?: string;
   userId: string;
   createdAt: string;
   updatedAt: string;
@@ -43,7 +43,7 @@ export interface AlbumSimple {
   id: string;
   title: string;
   releaseDate: string;
-  photoBase64?: string;
+  photoUrl?: string;
   artists: ArtistSimple[];
 }
 

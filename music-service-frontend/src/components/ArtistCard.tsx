@@ -14,9 +14,9 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
           className="block bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1"
       >
         <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
-          {artist.photoBase64 ? (
+          {artist.photoUrl ? (
               <img
-                  src={`data:image/jpeg;base64,${artist.photoBase64}`}
+                  src={artist.photoUrl}
                   alt={artist.name}
                   className="w-full h-full object-cover"
               />

@@ -29,7 +29,6 @@ const MusicPlayer: React.FC = () => {
 
       const albumId = currentSong.albumId;
 
-      // Проверка кэша
       if (albumCoverCache.current.has(albumId)) {
         setAlbumCover(albumCoverCache.current.get(albumId) || null);
         return;
@@ -37,8 +36,8 @@ const MusicPlayer: React.FC = () => {
 
       try {
         const response = await getAlbumById(albumId);
-        if (response.albums?.[0]?.photoBase64) {
-          const coverUrl = `data:image/jpeg;base64,${response.albums[0].photoBase64}`;
+        if (response.albums?.[0]?.photoUrl) {
+          const coverUrl = response.albums[0].photoUrl;
           albumCoverCache.current.set(albumId, coverUrl);
           setAlbumCover(coverUrl);
         } else {

@@ -70,9 +70,9 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
       <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1">
         <Link to={`/albums/${album.id}`}>
           <div className="aspect-square relative group">
-            {album.photoBase64 ? (
+            {album.photoUrl ? (
                 <img
-                    src={`data:image/jpeg;base64,${album.photoBase64}`}
+                    src={album.photoUrl}
                     alt={album.title}
                     className="w-full h-full object-cover"
                 />

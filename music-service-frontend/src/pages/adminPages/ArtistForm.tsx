@@ -30,8 +30,8 @@ const ArtistForm: React.FC = () => {
       const artist = artistData.artists[0];
       setName(artist.name);
 
-      if (artist.photoBase64) {
-        setPreviewUrl(`data:image/jpeg;base64,${artist.photoBase64}`);
+      if (artist.photoUrl) {
+        setPreviewUrl(artist.photoUrl);
       }
     } catch {
       showToast('Failed to load artist data', 'error');

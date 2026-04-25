@@ -8,12 +8,11 @@ public class PlaylistsBLProfile : Profile
 {
     public PlaylistsBLProfile()
     {
-        CreateMap<Playlist, PlaylistModel>()
-            .ForMember(
-                dest => dest.PhotoBase64,
-                opt => opt.MapFrom(src => src.Photo == null ? null : Convert.ToBase64String(src.Photo)));
-        CreateMap<CreatePlaylistModel, Playlist>();
-        CreateMap<UpdatePlaylistModel, Playlist>();
+        CreateMap<Playlist, PlaylistModel>();
+        CreateMap<CreatePlaylistModel, Playlist>()
+            .ForMember(dest => dest.PhotoObjectKey, opt => opt.Ignore());
+        CreateMap<UpdatePlaylistModel, Playlist>()
+            .ForMember(dest => dest.PhotoObjectKey, opt => opt.Ignore());
         CreateMap<PlaylistSong, PlaylistSongModel>();
     }
 }

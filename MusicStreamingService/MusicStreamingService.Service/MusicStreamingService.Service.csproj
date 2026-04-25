@@ -27,7 +27,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.5" />
+      <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.7" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.3" />
       <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
       <PackageReference Include="Serilog.Enrichers.CorrelationId" Version="3.0.1" />
@@ -39,6 +39,7 @@
       <ProjectReference Include="..\MusicStreamingService.BusinessLogic\MusicStreamingService.BusinessLogic.csproj" />
       <ProjectReference Include="..\MusicStreamingService.DataAccess.Cassandra\MusicStreamingService.DataAccess.Cassandra.csproj" />
       <ProjectReference Include="..\MusicStreamingService.DataAccess.Postgres\MusicStreamingService.DataAccess.Postgres.csproj" />
+      <ProjectReference Include="..\MusicStreamingService.MediaLibrary\MusicStreamingService.MediaLibrary.csproj" />
     </ItemGroup>
 
     <ItemGroup>
