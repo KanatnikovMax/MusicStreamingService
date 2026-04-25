@@ -41,11 +41,9 @@ export const getSongById = async (id: string): Promise<SongResponse> => {
   return response.data;
 };
 
-export const getSongAudio = async (id: string): Promise<Blob> => {
-  const response = await axios.get(`${API_URL}/${id}/audio`, {
-    responseType: 'blob'
-  });
-  return response.data;
+export const getSongAudioUrl = async (id: string): Promise<string> => {
+  const response = await axios.get<{ audioUrl: string }>(`${API_URL}/${id}/url`);
+  return response.data.audioUrl;
 };
 
 // Admin functions

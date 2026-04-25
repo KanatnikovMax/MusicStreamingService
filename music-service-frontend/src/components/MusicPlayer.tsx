@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, X } from 'lucide-react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { getAlbumById } from '../services/albumService.ts';
+import { getSongAudioUrl } from '../services/songService.ts';
 
 const MusicPlayer: React.FC = () => {
   const {
@@ -18,10 +19,12 @@ const MusicPlayer: React.FC = () => {
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [albumCover, setAlbumCover] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const albumCoverCache = useRef<Map<string, string>>(new Map());
+  const audioUrlCache = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     const fetchAlbumCover = async () => {
@@ -51,6 +54,30 @@ const MusicPlayer: React.FC = () => {
 
     fetchAlbumCover();
   }, [currentSong?.albumId]);
+
+  useEffect(() => {
+    const fetchAudioUrl = async () => {
+      if (!currentSong) return;
+
+      const songId = currentSong.id;
+
+      if (audioUrlCache.current.has(songId)) {
+        setAudioUrl(audioUrlCache.current.get(songId) || null);
+        return;
+      }
+
+      try {
+        const url = await getSongAudioUrl(songId);
+        audioUrlCache.current.set(songId, url);
+        setAudioUrl(url);
+      } catch (error) {
+        console.error('Error loading audio URL:', error);
+        setAudioUrl(null);
+      }
+    };
+
+    fetchAudioUrl();
+  }, [currentSong?.id]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -114,7 +141,7 @@ const MusicPlayer: React.FC = () => {
 
         <audio
             ref={audioRef}
-            src={`http://localhost:5071/songs/${currentSong.id}/audio`}
+            src={audioUrl || undefined}
             onTimeUpdate={handleTimeUpdate}
             onEnded={nextSong}
         />

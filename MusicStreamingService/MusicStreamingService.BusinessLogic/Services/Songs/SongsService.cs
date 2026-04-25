@@ -3,10 +3,12 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using MusicStreamingService.BusinessLogic.Exceptions;
+using MusicStreamingService.BusinessLogic.Services.Media.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Cassandra.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
+using MusicStreamingService.MediaLibrary;
 using Newtonsoft.Json;
 using Npgsql;
 
@@ -18,13 +20,17 @@ public class SongsService : ISongsService
     private readonly IMapper _mapper;
     private readonly ICassandraSongsRepository _cassandraRepository;
     private readonly IDistributedCache _cache;
-    public SongsService(IUnitOfWork unitOfWork, IMapper mapper, 
-        ICassandraSongsRepository cassandraRepository, IDistributedCache cache)
+    private readonly IMediaStorageService  _mediaStorageService;
+
+    public SongsService(IUnitOfWork unitOfWork, IMapper mapper,
+        ICassandraSongsRepository cassandraRepository, IDistributedCache cache,
+        IMediaStorageService mediaStorageService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _cassandraRepository = cassandraRepository;
         _cache = cache;
+        _mediaStorageService = mediaStorageService;
     }
 
     public async Task<SongModel> GetSongByIdAsync(Guid id)
@@ -72,7 +78,7 @@ public class SongsService : ISongsService
     public async Task<SongModel> CreateSongAsync(CreateSongModel model, byte[] audioData)
     {
         var song = _mapper.Map<Song>(model);
-        song.CassandraId = Guid.NewGuid();
+        song.Id = Guid.NewGuid();
         
         await _unitOfWork.BeginTransactionAsync(IsolationLevel.RepeatableRead);
         try
@@ -105,26 +111,52 @@ public class SongsService : ISongsService
                 throw new EntityAlreadyExistsException("song");
             }
             
-            await _cassandraRepository.SaveAsync(song.CassandraId, audioData);
+            using var audioStream = new MemoryStream(audioData);
+            var audioObjectKey = await _mediaStorageService.UploadAsync(
+                new FileUploadModel
+                {
+                    Content = audioStream,
+                    FileName = $"{song.Id}.mp3",
+                    ContentType = "audio/mpeg"
+                },
+                "songs",
+                song.Id);
             
+            if (string.IsNullOrEmpty(audioObjectKey))
+            {
+                await _unitOfWork.RollbackAsync();
+                throw new Exception("Failed to upload audio file to MinIO");
+            }
+            
+            song.AudioObjectKey = audioObjectKey;
             await _unitOfWork.CommitAsync();
+            
             return _mapper.Map<SongModel>(song);
         }
         catch (DbUpdateException)
         {
             await _unitOfWork.RollbackAsync();
-            if (song is not null)
+            if (song?.AudioObjectKey is not null)
             {
-                await _cassandraRepository.DeleteAsync(song.CassandraId);
+                await _mediaStorageService.DeleteAsync(song.AudioObjectKey);
             }
             throw;
         }
         catch (NpgsqlException)
         {
             await _unitOfWork.RollbackAsync();
-            if (song is not null)
+            if (song?.AudioObjectKey is not null)
             {
-                await _cassandraRepository.DeleteAsync(song.CassandraId);
+                await _mediaStorageService.DeleteAsync(song.AudioObjectKey);
+            }
+            throw;
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            if (song?.AudioObjectKey is not null)
+            {
+                await _mediaStorageService.DeleteAsync(song.AudioObjectKey);
             }
             throw;
         }
@@ -146,12 +178,17 @@ public class SongsService : ISongsService
                 throw new EntityNotFoundException("Song", id);
             }
             
+            var audioObjectKey = song.AudioObjectKey;
+            
             _unitOfWork.Songs.Delete(song);
             await _unitOfWork.CommitAsync();
             
             await _cache.RemoveAsync(cacheKey);
             
-            await _cassandraRepository.DeleteAsync(song.CassandraId);
+            if (!string.IsNullOrEmpty(audioObjectKey))
+            {
+                await _mediaStorageService.DeleteAsync(audioObjectKey);
+            }
             
             return _mapper.Map<SongModel>(song);
         }
@@ -206,13 +243,16 @@ public class SongsService : ISongsService
         }
     }
 
-    public async Task<byte[]> GetSongAudioAsync(Guid id)
+    public async Task<string?> GetSongAudioUrlAsync(Guid id)
     {
         var song = await GetSongByIdAsync(id);
         
-        var audio = await _cassandraRepository.FindAsync(song.CassandraId)
-            ?? throw new EntityNotFoundException("Audio", song.CassandraId);
+        if (string.IsNullOrEmpty(song.AudioObjectKey))
+        {
+            throw new EntityNotFoundException("Audio", id);
+        }
 
-        return audio;
+        var url = await _mediaStorageService.GetReadUrlAsync(song.AudioObjectKey);
+        return url;
     }
 }

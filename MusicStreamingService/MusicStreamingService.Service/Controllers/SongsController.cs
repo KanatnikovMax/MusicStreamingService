@@ -35,11 +35,13 @@ public class SongsController : ControllerBase
         [FromForm] IFormFile audioFile)
     {
         if (audioFile.Length == 0)
+        {
             return BadRequest("Audio file is required");
-
+        }
         if (audioFile.ContentType != "audio/mpeg")
+        {
             return BadRequest("Only MP3 files are allowed");
-
+        }
         byte[] data;
         using (var memoryStream = new MemoryStream())
         {
@@ -72,11 +74,16 @@ public class SongsController : ControllerBase
     }
 
     [HttpGet]
-    [Route("{id:guid}/audio")]
-    public async Task<IActionResult> GetSongAudio(Guid id)
+    [Route("{id:guid}/url")]
+    public async Task<IActionResult> GetSongAudioUrl(Guid id)
     {
-        var audioData = await _songsService.GetSongAudioAsync(id);
-        return File(audioData, "audio/mpeg", enableRangeProcessing: true);
+        var url = await _songsService.GetSongAudioUrlAsync(id);
+        if (string.IsNullOrEmpty(url))
+        {
+            return NotFound("Audio URL not found");
+        }
+
+        return Ok(new { audioUrl = url });
     }
 
     [Authorize(Roles = "admin")]
