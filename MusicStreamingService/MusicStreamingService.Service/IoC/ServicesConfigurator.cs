@@ -3,6 +3,7 @@ using Minio;
 using Microsoft.AspNetCore.Identity;
 using MusicStreamingService.BusinessLogic.Services.Albums;
 using MusicStreamingService.BusinessLogic.Services.Artists;
+using MusicStreamingService.BusinessLogic.Grpc.ListeningHistory;
 using MusicStreamingService.BusinessLogic.Services.Playlists;
 using MusicStreamingService.BusinessLogic.Services.Songs;
 using MusicStreamingService.BusinessLogic.Services.Users;
@@ -26,6 +27,10 @@ public static class ServicesConfigurator
         services.AddSingleton(settings.MinioSettings);
         services.AddSingleton(settings.KafkaSettings);
         services.AddSingleton(settings);
+        services.AddGrpcClient<ListeningHistoryApi.ListeningHistoryApiClient>(options =>
+        {
+            options.Address = new Uri(settings.ListeningHistoryGrpcUri);
+        });
         services.AddSingleton<IMinioClient>(_ =>
         {
             var clientBuilder = new MinioClient()

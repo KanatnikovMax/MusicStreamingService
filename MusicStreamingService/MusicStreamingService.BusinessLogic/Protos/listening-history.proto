@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option csharp_namespace = "MusicStreamingService.BusinessLogic.Grpc.ListeningHistory";
+
+import "google/protobuf/timestamp.proto";
+
+package listening_history;
+
+service ListeningHistoryApi {
+  rpc GetUserListeningHistory (GetUserListeningHistoryRequest) returns (GetUserListeningHistoryResponse);
+}
+
+message GetUserListeningHistoryRequest {
+  string user_id = 1;
+}
+
+message ListeningHistoryItem {
+  string event_id = 1;
+  string user_id = 2;
+  string song_id = 3;
+  google.protobuf.Timestamp listened_at_utc = 4;
+}
+
+message GetUserListeningHistoryResponse {
+  repeated ListeningHistoryItem items = 1;
+}

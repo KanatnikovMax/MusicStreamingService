@@ -74,4 +74,14 @@ public class UsersController : ControllerBase
         var songs = await _usersActionsService.GetUserSongsByNameAsync(userId, namePart, paginationParams);
         return _mapper.Map<PaginatedResponse<DateTime?, SongModel>>(songs);
     }
+
+    [HttpGet]
+    [Route("listening-history")]
+    public async Task<ActionResult<List<SongModel>>> GetListeningHistory(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var historyItems = await _usersActionsService.GetListeningHistoryAsync(userId, cancellationToken);
+        return Ok(historyItems);
+    }
 }

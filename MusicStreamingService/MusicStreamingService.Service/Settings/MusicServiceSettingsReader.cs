@@ -22,6 +22,7 @@ public static class MusicServiceSettingsReader
             FrontendUrl = configuration.GetValue<string>("Cors:FrontendUrl"),
             RedisConnectionString = configuration.GetValue<string>("Redis:ConnectionString"),
             RedisInstanceName = configuration.GetValue<string>("Redis:InstanceName"),
+            ListeningHistoryGrpcUri = configuration.GetValue<string>("ListeningHistoryGrpc:Uri"),
             MinioSettings = ReadMinioSettings(configuration),
             KafkaSettings = ReadKafkaSettings(configuration),
         };
