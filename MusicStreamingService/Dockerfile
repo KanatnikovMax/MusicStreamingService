@@ -9,6 +9,7 @@ WORKDIR /src
 
 COPY ["MusicStreamingService/MusicStreamingService.sln", "."]
 COPY ["MusicStreamingService/MusicStreamingService.MediaLibrary/MusicStreamingService.MediaLibrary.csproj", "MusicStreamingService.MediaLibrary/"]
+COPY ["MusicStreamingService/MusicStreamingService.Infrastructure/MusicStreamingService.Infrastructure.csproj", "MusicStreamingService.Infrastructure/"]
 COPY ["MusicStreamingService/MusicStreamingService.Service/MusicStreamingService.Service.csproj", "MusicStreamingService.Service/"]
 COPY ["MusicStreamingService/MusicStreamingService.BusinessLogic/MusicStreamingService.BusinessLogic.csproj", "MusicStreamingService.BusinessLogic/"]
 COPY ["MusicStreamingService/MusicStreamingService.DataAccess.Cassandra/MusicStreamingService.DataAccess.Cassandra.csproj", "MusicStreamingService.DataAccess.Cassandra/"]

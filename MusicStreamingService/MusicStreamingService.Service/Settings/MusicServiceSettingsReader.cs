@@ -1,4 +1,5 @@
-﻿using MusicStreamingService.MediaLibrary.Settings;
+﻿using MusicStreamingService.Infrastructure.Kafka.Settings;
+using MusicStreamingService.MediaLibrary.Settings;
 
 namespace MusicStreamingService.Service.Settings;
 
@@ -21,7 +22,9 @@ public static class MusicServiceSettingsReader
             FrontendUrl = configuration.GetValue<string>("Cors:FrontendUrl"),
             RedisConnectionString = configuration.GetValue<string>("Redis:ConnectionString"),
             RedisInstanceName = configuration.GetValue<string>("Redis:InstanceName"),
+            ListeningHistoryGrpcUri = configuration.GetValue<string>("ListeningHistoryGrpc:Uri"),
             MinioSettings = ReadMinioSettings(configuration),
+            KafkaSettings = ReadKafkaSettings(configuration),
         };
     }
 
@@ -36,6 +39,15 @@ public static class MusicServiceSettingsReader
             UseSsl = bool.Parse(configuration.GetValue<string>("Minio:UseSsl") ?? "false"),
             PresignedUrlExpiryMinutes =
                 int.Parse(configuration.GetValue<string>("Minio:PresignedUrlExpiryMinutes")),
+        };
+    }
+
+    private static KafkaSettings ReadKafkaSettings(IConfiguration configuration)
+    {
+        return new KafkaSettings
+        {
+            BootstrapServers = configuration.GetValue<string>("Kafka:BootstrapServers"),
+            ListeningHistoryTopic = configuration.GetValue<string>("Kafka:ListeningHistoryTopic"),
         };
     }
 }

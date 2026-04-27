@@ -15,4 +15,5 @@ public interface IUsersActionsService
         PaginationParams<DateTime?> paginationParams);
     Task<CursorResponse<DateTime?, SongModel>> GetUserSongsByNameAsync(Guid userId, string? namePart,
         PaginationParams<DateTime?> paginationParams);
+    Task<List<SongModel>> GetListeningHistoryAsync(Guid userId, CancellationToken cancellationToken);
 }

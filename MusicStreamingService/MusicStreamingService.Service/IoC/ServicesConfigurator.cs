@@ -3,6 +3,7 @@ using Minio;
 using Microsoft.AspNetCore.Identity;
 using MusicStreamingService.BusinessLogic.Services.Albums;
 using MusicStreamingService.BusinessLogic.Services.Artists;
+using MusicStreamingService.BusinessLogic.Grpc.ListeningHistory;
 using MusicStreamingService.BusinessLogic.Services.Playlists;
 using MusicStreamingService.BusinessLogic.Services.Songs;
 using MusicStreamingService.BusinessLogic.Services.Users;
@@ -12,6 +13,7 @@ using MusicStreamingService.DataAccess.Postgres.Context;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
+using MusicStreamingService.Infrastructure.Kafka.ListeningHistory;
 using MusicStreamingService.MediaLibrary;
 using MusicStreamingService.Service.Init;
 using MusicStreamingService.Service.Settings;
@@ -23,7 +25,12 @@ public static class ServicesConfigurator
     public static void ConfigureServices(IServiceCollection services, MusicServiceSettings settings)
     {
         services.AddSingleton(settings.MinioSettings);
+        services.AddSingleton(settings.KafkaSettings);
         services.AddSingleton(settings);
+        services.AddGrpcClient<ListeningHistoryApi.ListeningHistoryApiClient>(options =>
+        {
+            options.Address = new Uri(settings.ListeningHistoryGrpcUri);
+        });
         services.AddSingleton<IMinioClient>(_ =>
         {
             var clientBuilder = new MinioClient()
@@ -46,6 +53,7 @@ public static class ServicesConfigurator
         services.AddScoped<IPlaylistsService, PlaylistsService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IUsersActionsService, UsersActionsService>();
+        services.AddSingleton<IListeningHistoryProducer, KafkaListeningHistoryProducer>();
         services.AddScoped<IAuthService>(x =>
             new AuthService(
                 x.GetRequiredService<MusicServiceDbContext>(),

@@ -85,6 +85,16 @@ public class SongsRepository : ISongsRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Title, title));
     }
+
+    public async Task<List<Song>> FindByIdsAsync(IEnumerable<Guid> ids)
+    {
+        var songIds = ids.Distinct().ToList();
+        return await _context.Set<Song>()
+            .Include(s => s.Artists)
+            .AsNoTracking()
+            .Where(s => songIds.Contains(s.Id))
+            .ToListAsync();
+    }
     
     public async Task<CursorResponse<DateTime?, Song>> FindByTitlePartAsync(string titlePart, 
         PaginationParams<DateTime?> request)

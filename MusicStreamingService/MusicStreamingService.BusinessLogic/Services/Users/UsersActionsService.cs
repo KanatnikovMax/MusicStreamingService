@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using MusicStreamingService.BusinessLogic.Grpc.ListeningHistory;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Albums.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
@@ -14,11 +15,16 @@ public class UsersActionsService : IUsersActionsService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ListeningHistoryApi.ListeningHistoryApiClient _listeningHistoryClient;
 
-    public UsersActionsService(IUnitOfWork unitOfWork, IMapper mapper)
+    public UsersActionsService(
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        ListeningHistoryApi.ListeningHistoryApiClient listeningHistoryClient)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _listeningHistoryClient = listeningHistoryClient;
     }
 
     public async Task<UserSongModel> AddSongToAccountAsync(Guid userId, Guid songId)
@@ -157,5 +163,49 @@ public class UsersActionsService : IUsersActionsService
             Cursor = albums.Cursor,
             Items = _mapper.Map<List<AlbumModel>>(albums.Items)
         };
+    }
+
+    public async Task<List<SongModel>> GetListeningHistoryAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var response = await _listeningHistoryClient.GetUserListeningHistoryAsync(
+            new GetUserListeningHistoryRequest { UserId = userId.ToString() },
+            cancellationToken: cancellationToken);
+
+        var validItems = response.Items
+            .Select(item =>
+            {
+                if (!Guid.TryParse(item.SongId, out var songId))
+                {
+                    return null;
+                }
+                return new
+                {
+                    SongId = songId,
+                    ListenedAtUtc = item.ListenedAtUtc?.ToDateTime()
+                };
+            })
+            .Where(x => x != null)
+            .ToList();
+
+        var songs = await _unitOfWork.Songs.FindByIdsAsync(
+            validItems.Select(x => x!.SongId));
+
+        var songsById = songs.ToDictionary(
+            song => song.Id,
+            song => _mapper.Map<SongModel>(song));
+
+        var result = new List<SongModel>();
+
+        foreach (var item in validItems)
+        {
+            if (songsById.TryGetValue(item!.SongId, out var song))
+            {
+                result.Add(song);
+            }
+        }
+
+        return result;
     }
 }
