@@ -1,4 +1,5 @@
-﻿using MusicStreamingService.MediaLibrary.Settings;
+﻿using MusicStreamingService.Infrastructure.Kafka.Settings;
+using MusicStreamingService.MediaLibrary.Settings;
 
 namespace MusicStreamingService.Service.Settings;
 
@@ -18,4 +19,5 @@ public class MusicServiceSettings
     public string RedisConnectionString { get; set; }
     public string RedisInstanceName { get; set; }
     public MinioSettings MinioSettings { get; set; }
+    public KafkaSettings KafkaSettings { get; set; }
 }

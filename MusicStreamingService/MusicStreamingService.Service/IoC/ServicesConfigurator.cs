@@ -12,6 +12,7 @@ using MusicStreamingService.DataAccess.Postgres.Context;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
+using MusicStreamingService.Infrastructure.Kafka.ListeningHistory;
 using MusicStreamingService.MediaLibrary;
 using MusicStreamingService.Service.Init;
 using MusicStreamingService.Service.Settings;
@@ -23,6 +24,7 @@ public static class ServicesConfigurator
     public static void ConfigureServices(IServiceCollection services, MusicServiceSettings settings)
     {
         services.AddSingleton(settings.MinioSettings);
+        services.AddSingleton(settings.KafkaSettings);
         services.AddSingleton(settings);
         services.AddSingleton<IMinioClient>(_ =>
         {
@@ -46,6 +48,7 @@ public static class ServicesConfigurator
         services.AddScoped<IPlaylistsService, PlaylistsService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IUsersActionsService, UsersActionsService>();
+        services.AddSingleton<IListeningHistoryProducer, KafkaListeningHistoryProducer>();
         services.AddScoped<IAuthService>(x =>
             new AuthService(
                 x.GetRequiredService<MusicServiceDbContext>(),

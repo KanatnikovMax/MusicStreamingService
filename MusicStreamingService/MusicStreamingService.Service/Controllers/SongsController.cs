@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Songs;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Postgres.Entities;
+using MusicStreamingService.Infrastructure.Kafka.ListeningHistory;
 using MusicStreamingService.Service.Controllers.Requests.Pagination;
 using MusicStreamingService.Service.Controllers.Requests.Songs;
 using MusicStreamingService.Service.Controllers.Responses.Pagination;
@@ -18,12 +21,18 @@ public class SongsController : ControllerBase
     private const long MaxFileSize = 30 * 1024 * 1024;
 
     private readonly ISongsService _songsService;
+    private readonly IListeningHistoryProducer _listeningHistoryProducer;
     private readonly IMapper _mapper;
     private readonly ILogger<SongsController> _logger;
 
-    public SongsController(ISongsService songsService, IMapper mapper, ILogger<SongsController> logger)
+    public SongsController(
+        ISongsService songsService,
+        IListeningHistoryProducer listeningHistoryProducer,
+        IMapper mapper,
+        ILogger<SongsController> logger)
     {
         _songsService = songsService;
+        _listeningHistoryProducer = listeningHistoryProducer;
         _mapper = mapper;
         _logger = logger;
     }
@@ -86,6 +95,16 @@ public class SongsController : ControllerBase
         return Ok(new { audioUrl = url });
     }
 
+    [Authorize]
+    [HttpPost]
+    [Route("/users/{userId:guid}/songs/{songId:guid}/played")]
+    public async Task<IActionResult> SongPlayed(Guid userId, Guid songId, CancellationToken cancellationToken)
+    {
+        EnsureCurrentUser(userId);
+        await _listeningHistoryProducer.ProduceSongPlayedAsync(userId, songId, DateTime.UtcNow, cancellationToken);
+        return Accepted();
+    }
+
     [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("{id:guid}")]
@@ -104,5 +123,16 @@ public class SongsController : ControllerBase
     {
         var song = await _songsService.DeleteSongAsync(id);
         return Ok(new SongsListResponse([song]));
+    }
+
+    private void EnsureCurrentUser(Guid userId)
+    {
+        var subjectClaim = User.FindFirst("sub")?.Value ??
+                           User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(subjectClaim, out var currentUserId) || currentUserId != userId)
+        {
+            throw new AccessDeniedException("User can write only own listening history");
+        }
     }
 }
