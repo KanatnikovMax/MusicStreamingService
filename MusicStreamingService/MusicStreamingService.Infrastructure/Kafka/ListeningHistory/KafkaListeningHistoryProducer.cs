@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using MusicStreamingService.Infrastructure.Kafka.ListeningHistory.Events;
 using MusicStreamingService.Infrastructure.Kafka.Settings;
 
 namespace MusicStreamingService.Infrastructure.Kafka.ListeningHistory;
@@ -27,7 +28,7 @@ public class KafkaListeningHistoryProducer : IListeningHistoryProducer, IDisposa
         DateTime listenedAtUtc,
         CancellationToken cancellationToken)
     {
-        var eventPayload = new Events.SongPlayedEvent
+        var eventPayload = new SongPlayedEvent
         {
             EventId = Guid.NewGuid(),
             UserId = userId,
