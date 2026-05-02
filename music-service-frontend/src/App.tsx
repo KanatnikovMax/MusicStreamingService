@@ -16,6 +16,7 @@ import LibraryPage from './pages/userPages/LibraryPage.tsx';
 import UserSettings from './pages/userPages/UserSettings.tsx';
 import PlaylistsPage from './pages/userPages/PlaylistsPage.tsx';
 import PlaylistDetailPage from './pages/userPages/PlaylistDetailPage.tsx';
+import ListeningHistoryPage from './pages/userPages/ListeningHistoryPage.tsx';
 
 const AppRoutes = () => {
     return (
@@ -39,6 +40,14 @@ const AppRoutes = () => {
                     element={
                         <ProtectedRoute>
                             <PlaylistDetailPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="listening-history"
+                    element={
+                        <ProtectedRoute>
+                            <ListeningHistoryPage />
                         </ProtectedRoute>
                     }
                 />

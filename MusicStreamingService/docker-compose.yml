@@ -1,21 +1,4 @@
 services:
-  cassandra_db:
-    container_name: cassandra-local
-    image: cassandra:latest
-    ports:
-      - "9042:9042"
-    volumes:
-      - cassandra-data:/var/lib/cassandra
-    environment:
-      - CASSANDRA_CLUSTER_NAME=MyCluster
-    healthcheck:
-      test: [ "CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'DESCRIBE KEYSPACES'" ]
-      interval: 10s
-      timeout: 10s
-      retries: 20
-    networks:
-      - app-network
-
   redis_db:
     container_name: redis-local
     image: redis:7.2-alpine
@@ -118,11 +101,10 @@ services:
       - app-network
 
 volumes:
-  cassandra-data:
   redis-data:
   minio-data:
-  zookeeper-data:
-  kafka-data:
+  zookeeper_data:
+  kafka_data:
 
 networks:
   app-network:

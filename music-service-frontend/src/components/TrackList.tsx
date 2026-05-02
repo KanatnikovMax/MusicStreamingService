@@ -16,6 +16,7 @@ interface TrackListProps {
   onSongRemoved?: (songId: string) => void;
   extraActionLabel?: string;
   renderExtraAction?: (song: Song) => React.ReactNode;
+  showLibraryActions?: boolean;
 }
 
 const TrackList: React.FC<TrackListProps> = ({
@@ -24,7 +25,8 @@ const TrackList: React.FC<TrackListProps> = ({
   onSongSaved,
   onSongRemoved,
   extraActionLabel,
-  renderExtraAction
+  renderExtraAction,
+  showLibraryActions = true
 }) => {
   const {
     currentSong,
@@ -146,12 +148,12 @@ const TrackList: React.FC<TrackListProps> = ({
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               <Clock size={16} />
             </th>
-            {isAuthenticated && !isAdmin && (
+            {showLibraryActions && isAuthenticated && !isAdmin && (
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Save
                 </th>
             )}
-            {isAuthenticated && !isAdmin && (
+            {showLibraryActions && isAuthenticated && !isAdmin && (
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Playlist
                 </th>
@@ -204,7 +206,7 @@ const TrackList: React.FC<TrackListProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDuration(song.duration)}
                 </td>
-                {isAuthenticated && !isAdmin && (
+                {showLibraryActions && isAuthenticated && !isAdmin && (
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       {isSongSaved(song.id) ? (
                           <button
@@ -223,7 +225,7 @@ const TrackList: React.FC<TrackListProps> = ({
                       )}
                     </td>
                 )}
-                {isAuthenticated && !isAdmin && (
+                {showLibraryActions && isAuthenticated && !isAdmin && (
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                           onClick={() => handleOpenPlaylistModal(song)}

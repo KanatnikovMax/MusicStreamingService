@@ -21,10 +21,10 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MusicStreamingService.DataAccess.Cassandra\MusicStreamingService.DataAccess.Cassandra.csproj" />
       <ProjectReference Include="..\MusicStreamingService.DataAccess.Postgres\MusicStreamingService.DataAccess.Postgres.csproj" />
       <ProjectReference Include="..\MusicStreamingService.MediaLibrary\MusicStreamingService.MediaLibrary.csproj" />
     </ItemGroup>

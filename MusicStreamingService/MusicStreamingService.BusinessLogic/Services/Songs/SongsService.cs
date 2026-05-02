@@ -5,7 +5,6 @@ using Microsoft.Extensions.Caching.Distributed;
 using MusicStreamingService.BusinessLogic.Exceptions;
 using MusicStreamingService.BusinessLogic.Services.Media.Models;
 using MusicStreamingService.BusinessLogic.Services.Songs.Models;
-using MusicStreamingService.DataAccess.Cassandra.Repositories.Interfaces;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.DataAccess.Postgres.UnitOfWork.Interfaces;
 using MusicStreamingService.MediaLibrary;
@@ -18,17 +17,17 @@ public class SongsService : ISongsService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ICassandraSongsRepository _cassandraRepository;
     private readonly IDistributedCache _cache;
     private readonly IMediaStorageService  _mediaStorageService;
 
-    public SongsService(IUnitOfWork unitOfWork, IMapper mapper,
-        ICassandraSongsRepository cassandraRepository, IDistributedCache cache,
+    public SongsService(
+        IUnitOfWork unitOfWork, 
+        IMapper mapper,
+        IDistributedCache cache,
         IMediaStorageService mediaStorageService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _cassandraRepository = cassandraRepository;
         _cache = cache;
         _mediaStorageService = mediaStorageService;
     }

@@ -12,7 +12,6 @@ var app = builder.Build();
 ApplicationConfigurator.ConfigureApplication(app);
 
 await PostgresInitializer.InitializeAsync(app, settings);
-await app.Services.GetRequiredService<CassandraCluster>().InitializeAsync();
 app.Run();
 
 public partial class Program;
