@@ -179,8 +179,8 @@ volumes:
   cassandra-data:
   redis-data:
   minio-data:
-  zookeeper-data:
-  kafka-data:
+  zookeeper_data:
+  kafka_data:
 
 networks:
   app-network:
