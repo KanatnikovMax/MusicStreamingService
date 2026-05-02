@@ -75,6 +75,11 @@ export const getUserSongs = async (
   };
 };
 
+export const getListeningHistory = async (userId: string): Promise<Song[]> => {
+  const response = await ApiClient.get<Song[]>(`${API_URL}/${userId}/listening-history`);
+  return response.data;
+};
+
 export const getUserAlbumsByTitle = async (
     userId: string,
     titlePart: string,

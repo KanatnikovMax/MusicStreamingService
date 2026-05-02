@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, X } from 'lucide-react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { getAlbumById } from '../services/albumService.ts';
-import { getSongAudioUrl } from '../services/songService.ts';
+import { getSongAudioUrl, notifySongPlayed } from '../services/songService.ts';
+import { useAuth } from '../contexts/AuthContext.tsx';
 
 const MusicPlayer: React.FC = () => {
   const {
@@ -20,11 +21,17 @@ const MusicPlayer: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [albumCover, setAlbumCover] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const { isAuthenticated, user } = useAuth();
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const albumCoverCache = useRef<Map<string, string>>(new Map());
   const audioUrlCache = useRef<Map<string, string>>(new Map());
+  const isCurrentSongReported = useRef(false);
+
+  useEffect(() => {
+    isCurrentSongReported.current = false;
+  }, [currentSong?.id]);
 
   useEffect(() => {
     const fetchAlbumCover = async () => {
@@ -99,6 +106,18 @@ const MusicPlayer: React.FC = () => {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
       setDuration(audioRef.current.duration);
+
+      if (
+          currentSong &&
+          isAuthenticated &&
+          user &&
+          !isCurrentSongReported.current &&
+          audioRef.current.currentTime >= 10
+      ) {
+        isCurrentSongReported.current = true;
+        notifySongPlayed(user.id, currentSong.id)
+            .catch(error => console.error('Failed to notify listened song:', error));
+      }
     }
   };
 

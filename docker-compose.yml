@@ -18,23 +18,6 @@
       retries: 10
     networks:
       - app-network
-    
-  cassandra_db:
-    container_name: data-access-cassandra
-    image: cassandra:latest
-    ports:
-      - "9042:9042"
-    volumes:
-      - cassandra-data:/var/lib/cassandra
-    environment:
-      - CASSANDRA_CLUSTER_NAME=MyCluster
-    healthcheck:
-      test: [ "CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'DESCRIBE KEYSPACES'" ]
-      interval: 10s
-      timeout: 10s
-      retries: 20
-    networks:
-      - app-network
 
   redis_db:
     container_name: data-access-redis
@@ -176,7 +159,6 @@
 
 volumes:
   pg-volume:
-  cassandra-data:
   redis-data:
   minio-data:
   zookeeper_data:

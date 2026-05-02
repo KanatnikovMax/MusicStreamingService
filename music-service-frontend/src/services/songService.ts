@@ -46,6 +46,10 @@ export const getSongAudioUrl = async (id: string): Promise<string> => {
   return response.data.audioUrl;
 };
 
+export const notifySongPlayed = async (userId: string, songId: string) => {
+  await ApiClient.post(`/users/${userId}/songs/${songId}/played`);
+};
+
 // Admin functions
 export const createSong = async (formData: FormData) => {
   const response = await ApiClient.post(`${API_URL}`, formData, {
