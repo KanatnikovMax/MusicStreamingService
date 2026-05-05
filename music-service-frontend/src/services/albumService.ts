@@ -5,10 +5,6 @@ import type {Album, Song} from '../types/music';
 
 const API_URL = 'http://localhost:5071/albums';
 
-export interface AlbumResponse {
-  albums: Album[];
-}
-
 interface AlbumSearchParams {
   cursor?: string;
   pageSize: number;
@@ -50,7 +46,7 @@ export const getAllAlbums = async (
   };
 };
 
-export const getAlbumById = async (id: string): Promise<AlbumResponse> => {
+export const getAlbumById = async (id: string): Promise<Album> => {
   const response = await axios.get(`${API_URL}/${id}`);
   return response.data;
 };

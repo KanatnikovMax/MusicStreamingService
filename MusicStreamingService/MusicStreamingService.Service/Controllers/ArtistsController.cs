@@ -8,7 +8,7 @@ using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.Service.Controllers.Requests.Artists;
 using MusicStreamingService.Service.Controllers.Requests.Pagination;
-using MusicStreamingService.Service.Controllers.Responses.Artists;
+
 using MusicStreamingService.Service.Controllers.Responses.Pagination;
 using MusicStreamingService.Service.Utils;
 
@@ -31,7 +31,7 @@ public class ArtistsController : ControllerBase
 
     [Authorize(Roles = "admin")]
     [HttpPost]
-    public async Task<ActionResult<ArtistsListResponse>> CreateArtist([FromForm] CreateArtistRequest request,
+    public async Task<ActionResult<ArtistModel>> CreateArtist([FromForm] CreateArtistRequest request,
         [FromForm] IFormFile? photo)
     {
         var createArtistModel = _mapper.Map<CreateArtistModel>(request);
@@ -40,7 +40,7 @@ public class ArtistsController : ControllerBase
             createArtistModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
         }
         var artist = await _artistsService.CreateArtistAsync(createArtistModel);
-        return Ok(new ArtistsListResponse([artist]));
+        return Ok(artist);
     }
 
     [HttpGet]
@@ -54,10 +54,10 @@ public class ArtistsController : ControllerBase
     
     [HttpGet]
     [Route("{id:guid}")]
-    public async Task<ActionResult<ArtistsListResponse>> GetArtistById(Guid id)
+    public async Task<ActionResult<ArtistModel>> GetArtistById(Guid id)
     {
         var artist = await _artistsService.GetArtistByIdAsync(id);
-        return Ok(new ArtistsListResponse([artist]));
+        return Ok(artist);
     }
 
     [HttpGet]
@@ -83,7 +83,7 @@ public class ArtistsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("{id:guid}")]
-    public async Task<ActionResult<ArtistsListResponse>> UpdateArtist(Guid id, [FromForm] UpdateArtistRequest request,
+    public async Task<ActionResult<ArtistModel>> UpdateArtist(Guid id, [FromForm] UpdateArtistRequest request,
         [FromForm] IFormFile? photo)
     {
         var updateArtistModel = _mapper.Map<UpdateArtistModel>(request);
@@ -92,15 +92,15 @@ public class ArtistsController : ControllerBase
             updateArtistModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
         }
         var artist = await _artistsService.UpdateArtistAsync(updateArtistModel, id);
-        return Ok(new ArtistsListResponse([artist]));
+        return Ok(artist);
     }
 
     [Authorize(Roles = "admin")]
     [HttpDelete]
     [Route("{id:guid}")]
-    public async Task<ActionResult<ArtistsListResponse>> DeleteArtist(Guid id)
+    public async Task<ActionResult<ArtistModel>> DeleteArtist(Guid id)
     {
         var artist = await _artistsService.DeleteArtistAsync(id);
-        return Ok(new ArtistsListResponse([artist]));
+        return Ok(artist);
     }
 }

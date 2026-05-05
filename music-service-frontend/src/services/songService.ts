@@ -5,10 +5,6 @@ import type {Song} from '../types/music';
 
 const API_URL = 'http://localhost:5071/songs';
 
-export interface SongResponse extends Song {
-  songs: Song[];
-}
-
 interface SongSearchParams {
   cursor?: string;
   pageSize: number;
@@ -36,7 +32,7 @@ export const getAllSongs = async (
   };
 };
 
-export const getSongById = async (id: string): Promise<SongResponse> => {
+export const getSongById = async (id: string): Promise<Song> => {
   const response = await axios.get(`${API_URL}/${id}`);
   return response.data;
 };

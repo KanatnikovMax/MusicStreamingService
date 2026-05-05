@@ -47,7 +47,7 @@ const ArtistDetailPage: React.FC = () => {
         getArtistAlbums(id, { pageSize: 100 })
       ]);
 
-      setArtist(artistData.artists[0]);
+      setArtist(artistData);
       setAlbums(albumsData.items);
 
       if (isAuthenticated && user) {

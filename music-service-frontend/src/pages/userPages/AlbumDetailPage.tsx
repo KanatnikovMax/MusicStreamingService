@@ -29,7 +29,7 @@ const AlbumDetailPage: React.FC = () => {
       setIsLoading(true);
       try {
         const albumData = await getAlbumById(id);
-        setAlbum(albumData.albums[0]);
+        setAlbum(albumData);
 
         const songsData = await getAlbumSongs(id);
         setSongs(songsData.items);

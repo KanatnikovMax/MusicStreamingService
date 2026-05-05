@@ -10,7 +10,7 @@ using MusicStreamingService.Infrastructure.Kafka.ListeningHistory;
 using MusicStreamingService.Service.Controllers.Requests.Pagination;
 using MusicStreamingService.Service.Controllers.Requests.Songs;
 using MusicStreamingService.Service.Controllers.Responses.Pagination;
-using MusicStreamingService.Service.Controllers.Responses.Songs;
+
 
 namespace MusicStreamingService.Service.Controllers;
 
@@ -40,7 +40,7 @@ public class SongsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPost]
     [RequestSizeLimit(MaxFileSize)]
-    public async Task<ActionResult<SongsListResponse>> UploadSong([FromForm] CreateSongRequest model,
+    public async Task<ActionResult<SongModel>> UploadSong([FromForm] CreateSongRequest model,
         [FromForm] IFormFile audioFile)
     {
         if (audioFile.Length == 0)
@@ -61,15 +61,15 @@ public class SongsController : ControllerBase
         var createSongModel = _mapper.Map<CreateSongModel>(model);
         var song = await _songsService.CreateSongAsync(createSongModel, data);
 
-        return Ok(new SongsListResponse([song]));
+        return Ok(song);
     }
 
     [HttpGet]
     [Route("{id:guid}")]
-    public async Task<ActionResult<SongsListResponse>> GetSongById(Guid id)
+    public async Task<ActionResult<SongModel>> GetSongById(Guid id)
     {
         var song = await _songsService.GetSongByIdAsync(id);
-        return Ok(new SongsListResponse([song]));
+        return Ok(song);
     }
 
     [HttpGet]
@@ -108,21 +108,21 @@ public class SongsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("{id:guid}")]
-    public async Task<ActionResult<SongsListResponse>> UpdateSong(Guid id, [FromForm] UpdateSongRequest request)
+    public async Task<ActionResult<SongModel>> UpdateSong(Guid id, [FromForm] UpdateSongRequest request)
     {
         var updateSongModel = _mapper.Map<UpdateSongModel>(request);
 
         var song = await _songsService.UpdateSongAsync(updateSongModel, id);
-        return Ok(new SongsListResponse([song]));
+        return Ok(song);
     }
 
     [Authorize(Roles = "admin")]
     [HttpDelete]
     [Route("{id:guid}")]
-    public async Task<ActionResult<SongsListResponse>> DeleteSong(Guid id)
+    public async Task<ActionResult<SongModel>> DeleteSong(Guid id)
     {
         var song = await _songsService.DeleteSongAsync(id);
-        return Ok(new SongsListResponse([song]));
+        return Ok(song);
     }
 
     private void EnsureCurrentUser(Guid userId)

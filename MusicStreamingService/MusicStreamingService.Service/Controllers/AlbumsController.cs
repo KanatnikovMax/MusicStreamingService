@@ -7,7 +7,7 @@ using MusicStreamingService.BusinessLogic.Services.Songs.Models;
 using MusicStreamingService.DataAccess.Postgres.Entities;
 using MusicStreamingService.Service.Controllers.Requests.Albums;
 using MusicStreamingService.Service.Controllers.Requests.Pagination;
-using MusicStreamingService.Service.Controllers.Responses.Albums;
+
 using MusicStreamingService.Service.Controllers.Responses.Pagination;
 using MusicStreamingService.Service.Utils;
 
@@ -30,7 +30,7 @@ public class AlbumsController : ControllerBase
 
     [Authorize(Roles = "admin")]
     [HttpPost]
-    public async Task<ActionResult<AlbumsListResponse>> CreateAlbum([FromForm] CreateAlbumRequest request,
+    public async Task<ActionResult<AlbumModel>> CreateAlbum([FromForm] CreateAlbumRequest request,
         [FromForm] IFormFile? photo)
     {
         var createAlbumModel = _mapper.Map<CreateAlbumModel>(request);
@@ -39,15 +39,15 @@ public class AlbumsController : ControllerBase
             createAlbumModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
         }
         var album = await _albumsService.CreateAlbumAsync(createAlbumModel);
-        return Ok(new AlbumsListResponse([album]));
+        return Ok(album);
     }
 
     [HttpGet]
     [Route("{id:guid}")]
-    public async Task<ActionResult<AlbumsListResponse>> GetAlbumById(Guid id)
+    public async Task<ActionResult<AlbumModel>> GetAlbumById(Guid id)
     {
         var album = await _albumsService.GetAlbumByIdAsync(id);
-        return Ok(new AlbumsListResponse([album]));
+        return Ok(album);
     }
 
     [HttpGet]
@@ -73,7 +73,7 @@ public class AlbumsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("{id:guid}")]
-    public async Task<ActionResult<AlbumsListResponse>> UpdateAlbum(Guid id, [FromForm] UpdateAlbumRequest request,
+    public async Task<ActionResult<AlbumModel>> UpdateAlbum(Guid id, [FromForm] UpdateAlbumRequest request,
         [FromForm] IFormFile? photo)
     {
         var updateAlbumModel = _mapper.Map<UpdateAlbumModel>(request);
@@ -82,15 +82,15 @@ public class AlbumsController : ControllerBase
             updateAlbumModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
         }
         var album = await _albumsService.UpdateAlbumAsync(updateAlbumModel, id);
-        return Ok(new AlbumsListResponse([album]));
+        return Ok(album);
     }
 
     [Authorize(Roles = "admin")]
     [HttpDelete]
     [Route("{id:guid}")]
-    public async Task<ActionResult<AlbumsListResponse>> DeleteAlbum(Guid id)
+    public async Task<ActionResult<AlbumModel>> DeleteAlbum(Guid id)
     {
         var album = await _albumsService.DeleteAlbumAsync(id);
-        return Ok(new AlbumsListResponse([album]));
+        return Ok(album);
     }
 }

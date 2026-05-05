@@ -51,13 +51,12 @@ const AlbumForm: React.FC = () => {
         try {
           setIsLoading(true);
           const albumData = await getAlbumById(id!);
-          const album = albumData.albums[0];
-          setTitle(album.title);
-          setReleaseDate(album.releaseDate);
-          setSelectedArtists(album.artists.map((artist: Artist) => artist.name));
+          setTitle(albumData.title);
+          setReleaseDate(albumData.releaseDate);
+          setSelectedArtists(albumData.artists.map((artist: Artist) => artist.name));
 
-          if (album.photoUrl) {
-            setPreviewUrl(album.photoUrl);
+          if (albumData.photoUrl) {
+            setPreviewUrl(albumData.photoUrl);
           }
         } catch {
           if (!abortController.signal.aborted) {

@@ -27,11 +27,10 @@ const ArtistForm: React.FC = () => {
     try {
       setIsLoading(true);
       const artistData = await getArtistById(id!);
-      const artist = artistData.artists[0];
-      setName(artist.name);
+      setName(artistData.name);
 
-      if (artist.photoUrl) {
-        setPreviewUrl(artist.photoUrl);
+      if (artistData.photoUrl) {
+        setPreviewUrl(artistData.photoUrl);
       }
     } catch {
       showToast('Failed to load artist data', 'error');

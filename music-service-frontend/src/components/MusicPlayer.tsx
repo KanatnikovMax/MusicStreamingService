@@ -46,8 +46,8 @@ const MusicPlayer: React.FC = () => {
 
       try {
         const response = await getAlbumById(albumId);
-        if (response.albums?.[0]?.photoUrl) {
-          const coverUrl = response.albums[0].photoUrl;
+        if (response?.photoUrl) {
+          const coverUrl = response.photoUrl;
           albumCoverCache.current.set(albumId, coverUrl);
           setAlbumCover(coverUrl);
         } else {
