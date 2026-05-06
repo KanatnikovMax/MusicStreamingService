@@ -3,6 +3,7 @@
 public class Artist : BaseEntity
 {
     public string Name { get; set; }
+    public long PlayCount { get; set; }
     public string? PhotoObjectKey { get; set; }
     public ICollection<Album>? Albums { get; set; }
     public ICollection<Song>? Songs { get; set; }

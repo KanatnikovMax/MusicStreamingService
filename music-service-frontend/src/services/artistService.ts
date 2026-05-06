@@ -1,14 +1,22 @@
 import axios from 'axios';
 import {ApiClient} from '../contexts/ApiClient';
-import type {PaginatedResponse, PaginationRequest} from '../types/pagination';
+import type {PaginatedResponse, PaginationRequest, PopularityPaginationRequest, PopularityCursor} from '../types/pagination';
 import type {Album, Artist, Song} from '../types/music';
 
 const API_URL = 'http://localhost:5071/artists';
 
-interface ArtistSearchParams {
-  cursor?: string;
+interface ArtistQueryParams {
   pageSize: number;
+  cursorPlayCount?: number;
+  cursorCreatedAt?: string;
   namePart?: string;
+}
+
+interface ArtistSongsQueryParams {
+  pageSize: number;
+  cursorPlayCount?: number;
+  cursorCreatedAt?: string;
+  titlePart?: string;
 }
 
 export interface CreateArtistRequest {
@@ -22,23 +30,27 @@ export interface UpdateArtistRequest {
 }
 
 export const getAllArtists = async (
-    request: PaginationRequest<Date> & { searchTerm?: string } = { pageSize: 10 }
+    request: (PopularityPaginationRequest & { searchTerm?: string }) = { pageSize: 10 }
 ) => {
-  const params: ArtistSearchParams = {
-    cursor: request.cursor?.toISOString(),
+  const params: ArtistQueryParams = {
     pageSize: request.pageSize
   };
+
+  if (request.cursorPlayCount !== undefined && request.cursorCreatedAt !== undefined) {
+    params.cursorPlayCount = request.cursorPlayCount;
+    params.cursorCreatedAt = request.cursorCreatedAt;
+  }
 
   if (request.searchTerm?.trim()) {
     params.namePart = request.searchTerm;
   }
 
   const response =
-      await axios.get<PaginatedResponse<string, Artist>>(API_URL, { params });
+      await axios.get<PaginatedResponse<PopularityCursor, Artist>>(API_URL, { params });
 
   return {
     items: response.data.items,
-    cursor: response.data.cursor ? new Date(response.data.cursor) : undefined
+    cursor: response.data.cursor
   };
 };
 
@@ -64,43 +76,51 @@ export const getArtistAlbums = async (
 
 export const getArtistSongs = async (
     artistId: string,
-    request: PaginationRequest<Date> = { pageSize: 100 }
+    request: PopularityPaginationRequest = { pageSize: 100 }
 ) => {
-  const params = {
-    cursor: request.cursor?.toISOString(),
+  const params: ArtistSongsQueryParams = {
     pageSize: request.pageSize
   };
 
-  const response = await axios.get<PaginatedResponse<string, Song>>(
+  if (request.cursorPlayCount !== undefined && request.cursorCreatedAt !== undefined) {
+    params.cursorPlayCount = request.cursorPlayCount;
+    params.cursorCreatedAt = request.cursorCreatedAt;
+  }
+
+  const response = await axios.get<PaginatedResponse<PopularityCursor, Song>>(
       `${API_URL}/${artistId}/songs`,
       { params }
   );
 
   return {
     items: response.data.items,
-    cursor: response.data.cursor ? new Date(response.data.cursor) : undefined
+    cursor: response.data.cursor
   };
 };
 
 export const getArtistSongsByTitle = async (
     artistId: string,
     titlePart: string,
-    request: PaginationRequest<Date> = { pageSize: 100 }
+    request: PopularityPaginationRequest = { pageSize: 100 }
 ) => {
-  const params = {
-    cursor: request.cursor?.toISOString(),
+  const params: ArtistSongsQueryParams = {
     pageSize: request.pageSize,
     titlePart
   };
 
-  const response = await axios.get<PaginatedResponse<string, Song>>(
+  if (request.cursorPlayCount !== undefined && request.cursorCreatedAt !== undefined) {
+    params.cursorPlayCount = request.cursorPlayCount;
+    params.cursorCreatedAt = request.cursorCreatedAt;
+  }
+
+  const response = await axios.get<PaginatedResponse<PopularityCursor, Song>>(
       `${API_URL}/${artistId}/songs`,
       { params }
   );
 
   return {
     items: response.data.items,
-    cursor: response.data.cursor ? new Date(response.data.cursor) : undefined
+    cursor: response.data.cursor
   };
 };
 

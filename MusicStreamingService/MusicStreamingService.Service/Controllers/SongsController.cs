@@ -73,13 +73,12 @@ public class SongsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedResponse<DateTime?, SongModel>>> GetSongsByName(
+    public async Task<ActionResult<PaginatedResponse<PopularityCursor?, SongModel>>> GetSongsByName(
         [FromQuery] string? titlePart,
-        [FromQuery] PaginationRequest<DateTime?> request)
+        [FromQuery] PopularityPaginationRequest request)
     {
-        var paginationParams = _mapper.Map <PaginationParams<DateTime?>>(request);
-        var songs = await _songsService.GetSongByTitleAsync(titlePart, paginationParams);
-        return Ok(_mapper.Map<PaginatedResponse<DateTime?, SongModel>>(songs));
+        var songs = await _songsService.GetSongByTitleAsync(titlePart, request.ToPaginationParams());
+        return Ok(_mapper.Map<PaginatedResponse<PopularityCursor?, SongModel>>(songs));
     }
 
     [HttpGet]
@@ -101,6 +100,7 @@ public class SongsController : ControllerBase
     public async Task<IActionResult> SongPlayed(Guid userId, Guid songId, CancellationToken cancellationToken)
     {
         EnsureCurrentUser(userId);
+        await _songsService.RecordSongPlayedAsync(songId);
         await _listeningHistoryProducer.ProduceSongPlayedAsync(userId, songId, DateTime.UtcNow, cancellationToken);
         return Accepted();
     }

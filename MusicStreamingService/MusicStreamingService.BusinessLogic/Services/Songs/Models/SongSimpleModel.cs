@@ -7,4 +7,5 @@ public record SongSimpleModel(
     string Title,
     List<ArtistSimpleModel> Artists,
     int TrackNumber,
-    int Duration);
+    int Duration,
+    long PlayCount);

@@ -6,6 +6,7 @@ public class Song : BaseEntity
     // Duration in seconds
     public int Duration { get; set; }
     public int TrackNumber { get; set; }
+    public long PlayCount { get; set; }
     public string AudioObjectKey { get; set; }
     
     public Guid AlbumId { get; set; }

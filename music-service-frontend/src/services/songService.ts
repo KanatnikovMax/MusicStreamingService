@@ -1,34 +1,39 @@
 import axios from 'axios';
 import {ApiClient} from '../contexts/ApiClient';
-import type {PaginatedResponse, PaginationRequest} from '../types/pagination';
+import type {PaginatedResponse, PopularityPaginationRequest, PopularityCursor} from '../types/pagination';
 import type {Song} from '../types/music';
 
 const API_URL = 'http://localhost:5071/songs';
 
-interface SongSearchParams {
-  cursor?: string;
+interface SongQueryParams {
   pageSize: number;
+  cursorPlayCount?: number;
+  cursorCreatedAt?: string;
   titlePart?: string;
 }
 
 export const getAllSongs = async (
-    request: PaginationRequest<Date> & { searchTerm?: string } = { pageSize: 10 }
+    request: (PopularityPaginationRequest & { searchTerm?: string }) = { pageSize: 10 }
 ) => {
-  const params: SongSearchParams = {
-    cursor: request.cursor?.toISOString(),
+  const params: SongQueryParams = {
     pageSize: request.pageSize
   };
+
+  if (request.cursorPlayCount !== undefined && request.cursorCreatedAt !== undefined) {
+    params.cursorPlayCount = request.cursorPlayCount;
+    params.cursorCreatedAt = request.cursorCreatedAt;
+  }
 
   if (request.searchTerm?.trim()) {
     params.titlePart = request.searchTerm;
   }
 
   const response =
-      await axios.get<PaginatedResponse<string, Song>>(API_URL, { params });
+      await axios.get<PaginatedResponse<PopularityCursor, Song>>(API_URL, { params });
 
   return {
     items: response.data.items,
-    cursor: response.data.cursor ? new Date(response.data.cursor) : undefined
+    cursor: response.data.cursor
   };
 };
 
