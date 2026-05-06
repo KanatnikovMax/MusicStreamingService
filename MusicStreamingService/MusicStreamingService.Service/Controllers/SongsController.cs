@@ -40,21 +40,20 @@ public class SongsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPost]
     [RequestSizeLimit(MaxFileSize)]
-    public async Task<ActionResult<SongModel>> UploadSong([FromForm] CreateSongRequest model,
-        [FromForm] IFormFile audioFile)
+    public async Task<ActionResult<SongModel>> UploadSong([FromForm] CreateSongRequest model)
     {
-        if (audioFile.Length == 0)
+        if (model.AudioFile.Length == 0)
         {
             return BadRequest("Audio file is required");
         }
-        if (audioFile.ContentType != "audio/mpeg")
+        if (model.AudioFile.ContentType != "audio/mpeg")
         {
             return BadRequest("Only MP3 files are allowed");
         }
         byte[] data;
         using (var memoryStream = new MemoryStream())
         {
-            await audioFile.CopyToAsync(memoryStream);
+            await model.AudioFile.CopyToAsync(memoryStream);
             data = memoryStream.ToArray();
         }
 

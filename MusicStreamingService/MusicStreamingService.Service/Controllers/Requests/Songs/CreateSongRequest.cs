@@ -5,4 +5,5 @@ public record CreateSongRequest(
     int Duration,
     int TrackNumber, 
     Guid AlbumId,
-    List<string> Artists);
+    List<string> Artists,
+    IFormFile AudioFile);

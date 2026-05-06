@@ -131,9 +131,9 @@ export const getArtistById = async (id: string): Promise<Artist> => {
 
 export const createArtist = async (data: CreateArtistRequest) => {
   const formData = new FormData();
-  formData.append('name', data.name);
+  formData.append('Name', data.name);
   if (data.photo) {
-    formData.append('photo', data.photo);
+    formData.append('Photo', data.photo);
   }
 
   const response = await ApiClient.post(`${API_URL}`, formData, {
@@ -146,8 +146,8 @@ export const createArtist = async (data: CreateArtistRequest) => {
 
 export const updateArtist = async (id: string, data: UpdateArtistRequest) => {
   const formData = new FormData();
-  if (data.name) formData.append('name', data.name);
-  if (data.photo) formData.append('photo', data.photo);
+  if (data.name) formData.append('Name', data.name);
+  if (data.photo) formData.append('Photo', data.photo);
 
   const response = await ApiClient.put(`${API_URL}/${id}`, formData, {
     headers: {

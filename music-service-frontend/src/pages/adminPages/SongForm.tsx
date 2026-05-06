@@ -450,7 +450,7 @@ const SongForm: React.FC = () => {
                             <span>Upload a file</span>
                             <input
                                 id="audioFile"
-                                name="audioFile"
+                                name="AudioFile"
                                 type="file"
                                 className="sr-only"
                                 accept="audio/mpeg"
