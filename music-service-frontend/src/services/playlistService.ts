@@ -63,9 +63,9 @@ export const getUserPlaylistById = async (userId: string, playlistId: string) =>
 
 export const createPlaylist = async (userId: string, data: PlaylistRequest) => {
   const formData = new FormData();
-  formData.append('name', data.name);
+  formData.append('Name', data.name);
   if (data.photo) {
-    formData.append('photo', data.photo);
+    formData.append('Photo', data.photo);
   }
 
   const response = await ApiClient.post<Playlist>(
@@ -82,9 +82,9 @@ export const createPlaylist = async (userId: string, data: PlaylistRequest) => {
 
 export const updatePlaylist = async (userId: string, playlistId: string, data: PlaylistRequest) => {
   const formData = new FormData();
-  formData.append('name', data.name);
+  formData.append('Name', data.name);
   if (data.photo) {
-    formData.append('photo', data.photo);
+    formData.append('Photo', data.photo);
   }
 
   const response = await ApiClient.patch<Playlist>(

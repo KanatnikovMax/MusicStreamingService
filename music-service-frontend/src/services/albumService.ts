@@ -70,11 +70,11 @@ export const getAlbumSongs = async (
 // Admin functions
 export const createAlbum = async (data: CreateAlbumRequest) => {
   const formData = new FormData();
-  formData.append('title', data.title);
-  formData.append('releaseDate', data.releaseDate);
-  data.artists.forEach(artist => formData.append('artists', artist));
+  formData.append('Title', data.title);
+  formData.append('ReleaseDate', data.releaseDate);
+  data.artists.forEach(artist => formData.append('Artists', artist));
   if (data.photo) {
-    formData.append('photo', data.photo);
+    formData.append('Photo', data.photo);
   }
 
   const response = await ApiClient.post(`${API_URL}`, formData, {
@@ -87,12 +87,12 @@ export const createAlbum = async (data: CreateAlbumRequest) => {
 
 export const updateAlbum = async (id: string, data: UpdateAlbumRequest) => {
   const formData = new FormData();
-  if (data.title) formData.append('title', data.title);
-  if (data.releaseDate) formData.append('releaseDate', data.releaseDate);
+  if (data.title) formData.append('Title', data.title);
+  if (data.releaseDate) formData.append('ReleaseDate', data.releaseDate);
   if (data.artists) {
-    data.artists.forEach(artist => formData.append('artists', artist));
+    data.artists.forEach(artist => formData.append('Artists', artist));
   }
-  if (data.photo) formData.append('photo', data.photo);
+  if (data.photo) formData.append('Photo', data.photo);
 
   const response = await ApiClient.put(`${API_URL}/${id}`, formData, {
     headers: {

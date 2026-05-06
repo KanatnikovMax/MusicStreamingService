@@ -31,13 +31,12 @@ public class ArtistsController : ControllerBase
 
     [Authorize(Roles = "admin")]
     [HttpPost]
-    public async Task<ActionResult<ArtistModel>> CreateArtist([FromForm] CreateArtistRequest request,
-        [FromForm] IFormFile? photo)
+    public async Task<ActionResult<ArtistModel>> CreateArtist([FromForm] CreateArtistRequest request)
     {
         var createArtistModel = _mapper.Map<CreateArtistModel>(request);
-        if (photo != null)
+        if (request.Photo != null)
         {
-            createArtistModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
+            createArtistModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(request.Photo, default);
         }
         var artist = await _artistsService.CreateArtistAsync(createArtistModel);
         return Ok(artist);
@@ -81,13 +80,12 @@ public class ArtistsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("{id:guid}")]
-    public async Task<ActionResult<ArtistModel>> UpdateArtist(Guid id, [FromForm] UpdateArtistRequest request,
-        [FromForm] IFormFile? photo)
+    public async Task<ActionResult<ArtistModel>> UpdateArtist(Guid id, [FromForm] UpdateArtistRequest request)
     {
         var updateArtistModel = _mapper.Map<UpdateArtistModel>(request);
-        if (photo != null)
+        if (request.Photo != null)
         {
-            updateArtistModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
+            updateArtistModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(request.Photo, default);
         }
         var artist = await _artistsService.UpdateArtistAsync(updateArtistModel, id);
         return Ok(artist);

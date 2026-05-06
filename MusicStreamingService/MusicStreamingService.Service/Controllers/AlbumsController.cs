@@ -30,13 +30,12 @@ public class AlbumsController : ControllerBase
 
     [Authorize(Roles = "admin")]
     [HttpPost]
-    public async Task<ActionResult<AlbumModel>> CreateAlbum([FromForm] CreateAlbumRequest request,
-        [FromForm] IFormFile? photo)
+    public async Task<ActionResult<AlbumModel>> CreateAlbum([FromForm] CreateAlbumRequest request)
     {
         var createAlbumModel = _mapper.Map<CreateAlbumModel>(request);
-        if (photo != null)
+        if (request.Photo != null)
         {
-            createAlbumModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
+            createAlbumModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(request.Photo, default);
         }
         var album = await _albumsService.CreateAlbumAsync(createAlbumModel);
         return Ok(album);
@@ -73,13 +72,12 @@ public class AlbumsController : ControllerBase
     [Authorize(Roles = "admin")]
     [HttpPut]
     [Route("{id:guid}")]
-    public async Task<ActionResult<AlbumModel>> UpdateAlbum(Guid id, [FromForm] UpdateAlbumRequest request,
-        [FromForm] IFormFile? photo)
+    public async Task<ActionResult<AlbumModel>> UpdateAlbum(Guid id, [FromForm] UpdateAlbumRequest request)
     {
         var updateAlbumModel = _mapper.Map<UpdateAlbumModel>(request);
-        if (photo != null)
+        if (request.Photo != null)
         {
-            updateAlbumModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(photo, default);
+            updateAlbumModel.Photo = await PhotoFilesUtil.CreateFileUploadModelAsync(request.Photo, default);
         }
         var album = await _albumsService.UpdateAlbumAsync(updateAlbumModel, id);
         return Ok(album);
