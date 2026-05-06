@@ -13,7 +13,8 @@ const SongsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [cursor, setCursor] = useState<number>();
+  const [cursorPlayCount, setCursorPlayCount] = useState<number>();
+  const [cursorCreatedAt, setCursorCreatedAt] = useState<string>();
   const [hasMore, setHasMore] = useState(true);
   const [pageSize, setPageSize] = useState(20);
   const { user, isAuthenticated } = useAuth();
@@ -54,7 +55,8 @@ const SongsPage: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await getAllSongs({
-        cursor: loadMore ? cursor : undefined,
+        cursorPlayCount: loadMore ? cursorPlayCount : undefined,
+        cursorCreatedAt: loadMore ? cursorCreatedAt : undefined,
         pageSize,
         searchTerm
       });
@@ -68,7 +70,13 @@ const SongsPage: React.FC = () => {
       });
 
       setHasMore(!!response.cursor);
-      setCursor(response.cursor);
+      if (response.cursor) {
+        setCursorPlayCount(response.cursor.cursorPlayCount);
+        setCursorCreatedAt(response.cursor.cursorCreatedAt);
+      } else {
+        setCursorPlayCount(undefined);
+        setCursorCreatedAt(undefined);
+      }
     } catch {
 
       setHasMore(false);
@@ -78,7 +86,7 @@ const SongsPage: React.FC = () => {
         setIsInitialized(true);
       }
     }
-  }, [cursor, pageSize, searchTerm, showToast]);
+  }, [cursorPlayCount, cursorCreatedAt, pageSize, searchTerm, showToast]);
 
   const fetchUserSongs = useCallback(async () => {
     if (!isAuthenticated || !user) return;
@@ -94,7 +102,8 @@ const SongsPage: React.FC = () => {
   useEffect(() => {
     const handler = setTimeout(() => {
       setSongs([]);
-      setCursor(undefined);
+      setCursorPlayCount(undefined);
+      setCursorCreatedAt(undefined);
       setHasMore(true);
       fetchSongs(false);
     }, 300);

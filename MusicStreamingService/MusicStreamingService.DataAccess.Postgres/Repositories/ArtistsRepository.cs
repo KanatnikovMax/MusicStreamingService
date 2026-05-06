@@ -15,7 +15,7 @@ public class ArtistsRepository : IArtistsRepository
         _context = dbContext;
     }
 
-    public async Task<CursorResponse<long?, Artist>> FindAllAsync(PaginationParams<long?> request)
+    public async Task<CursorResponse<PopularityCursor?, Artist>> FindAllAsync(PaginationParams<PopularityCursor> request)
     {
         var artists = _context.Set<Artist>()
             .Include(a => a.Albums)
@@ -24,18 +24,23 @@ public class ArtistsRepository : IArtistsRepository
         
         if (request.Cursor is not null)
         {
-            artists = artists.Where(s => s.PlayCount <= request.Cursor);
+            artists = artists.Where(s => s.PlayCount < request.Cursor.PlayCount
+                                         || (s.PlayCount == request.Cursor.PlayCount
+                                             && s.CreatedAt > request.Cursor.CreatedAt));
         }
 
         var items = await artists
             .OrderByDescending(s => s.PlayCount)
-            .ThenByDescending(s => s.CreatedAt)
+            .ThenBy(s => s.CreatedAt)
             .Take(request.PageSize + 1)
             .ToListAsync();
         
-        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.PlayCount : null;
+        var cursorItem = items.Count > request.PageSize ? items[request.PageSize - 1] : null;
+        var cursor = cursorItem is not null
+            ? new PopularityCursor(cursorItem.PlayCount, cursorItem.CreatedAt)
+            : null;
         
-        return new CursorResponse<long?, Artist>
+        return new CursorResponse<PopularityCursor?, Artist>
         {
             Cursor = cursor,
             Items = items.Take(request.PageSize).ToList(),
@@ -95,8 +100,8 @@ public class ArtistsRepository : IArtistsRepository
             .FirstOrDefaultAsync(a => EF.Functions.ILike(a.Name, name));
    }
     
-    public async Task<CursorResponse<long?, Artist>> FindByNamePartAsync(string namePart, 
-        PaginationParams<long?> request)
+    public async Task<CursorResponse<PopularityCursor?, Artist>> FindByNamePartAsync(string namePart, 
+        PaginationParams<PopularityCursor> request)
     {
         var artists = _context.Set<Artist>()
             .Include(a => a.Albums)! 
@@ -107,18 +112,23 @@ public class ArtistsRepository : IArtistsRepository
         
         if (request.Cursor is not null)
         {
-            artists = artists.Where(s => s.PlayCount <= request.Cursor);
+            artists = artists.Where(s => s.PlayCount < request.Cursor.PlayCount
+                                         || (s.PlayCount == request.Cursor.PlayCount
+                                             && s.CreatedAt > request.Cursor.CreatedAt));
         }
 
         var items = await artists
             .OrderByDescending(a => a.PlayCount)
-            .ThenByDescending(a => a.CreatedAt)
+            .ThenBy(a => a.CreatedAt)
             .Take(request.PageSize + 1)
             .ToListAsync();
         
-        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.PlayCount : null;
+        var cursorItem = items.Count > request.PageSize ? items[request.PageSize - 1] : null;
+        var cursor = cursorItem is not null
+            ? new PopularityCursor(cursorItem.PlayCount, cursorItem.CreatedAt)
+            : null;
         
-        return new CursorResponse<long?, Artist>
+        return new CursorResponse<PopularityCursor?, Artist>
         {
             Cursor = cursor,
             Items = items.Take(request.PageSize).ToList(),
@@ -189,8 +199,8 @@ public class ArtistsRepository : IArtistsRepository
         };
     }
 
-    public async Task<CursorResponse<long?, Song>> FindAllSongsAsync(Guid artistId, 
-        PaginationParams<long?> request)
+    public async Task<CursorResponse<PopularityCursor?, Song>> FindAllSongsAsync(Guid artistId, 
+        PaginationParams<PopularityCursor> request)
     {
         var artist = await _context.Set<Artist>()
             .Include(a => a.Songs)!
@@ -199,7 +209,7 @@ public class ArtistsRepository : IArtistsRepository
 
         if (artist is null)
         {
-            return new CursorResponse<long?, Song>
+            return new CursorResponse<PopularityCursor?, Song>
             {
                 Cursor = null,
                 Items = []
@@ -210,26 +220,31 @@ public class ArtistsRepository : IArtistsRepository
         
         if (request.Cursor is not null)
         {
-            songs = songs.Where(s => s.PlayCount <= request.Cursor).ToList();
+            songs = songs.Where(s => s.PlayCount < request.Cursor.PlayCount
+                                     || (s.PlayCount == request.Cursor.PlayCount
+                                         && s.CreatedAt > request.Cursor.CreatedAt)).ToList();
         }
 
         var items = songs
             .OrderByDescending(s => s.PlayCount)
-            .ThenByDescending(s => s.CreatedAt)
+            .ThenBy(s => s.CreatedAt)
             .Take(request.PageSize + 1)
             .ToList();
         
-        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.PlayCount : null;
+        var cursorItem = items.Count > request.PageSize ? items[request.PageSize - 1] : null;
+        var cursor = cursorItem is not null
+            ? new PopularityCursor(cursorItem.PlayCount, cursorItem.CreatedAt)
+            : null;
         
-        return new CursorResponse<long?, Song>
+        return new CursorResponse<PopularityCursor?, Song>
         {
             Cursor = cursor,
             Items = items.Take(request.PageSize).ToList(),
         };
     }
 
-    public async Task<CursorResponse<long?, Song>> FindAllSongsByTitleAsync(Guid artistId, string titlePart, 
-        PaginationParams<long?> request)
+    public async Task<CursorResponse<PopularityCursor?, Song>> FindAllSongsByTitleAsync(Guid artistId, string titlePart, 
+        PaginationParams<PopularityCursor> request)
     {
         var songs = _context.Set<ArtistSong>()
             .Where(a => a.ArtistId == artistId)
@@ -240,18 +255,23 @@ public class ArtistsRepository : IArtistsRepository
 
         if (request.Cursor is not null)
         {
-            songs = songs.Where(a => a.Song.PlayCount <= request.Cursor);
+            songs = songs.Where(a => a.Song.PlayCount < request.Cursor.PlayCount
+                                     || (a.Song.PlayCount == request.Cursor.PlayCount
+                                         && a.Song.CreatedAt > request.Cursor.CreatedAt));
         }
 
         var items = await songs
             .OrderByDescending(a => a.Song.PlayCount)
-            .ThenByDescending(a => a.Song.CreatedAt)
+            .ThenBy(a => a.Song.CreatedAt)
             .Take(request.PageSize + 1)
             .ToListAsync();
 
-        var cursor = items.Count > request.PageSize ? items.LastOrDefault()?.Song.PlayCount : null;
+        var cursorItem = items.Count > request.PageSize ? items[request.PageSize - 1].Song : null;
+        var cursor = cursorItem is not null
+            ? new PopularityCursor(cursorItem.PlayCount, cursorItem.CreatedAt)
+            : null;
 
-        return new CursorResponse<long?, Song>
+        return new CursorResponse<PopularityCursor?, Song>
         {
             Cursor = cursor,
             Items = items.Take(request.PageSize).Select(a => a.Song).ToList(),

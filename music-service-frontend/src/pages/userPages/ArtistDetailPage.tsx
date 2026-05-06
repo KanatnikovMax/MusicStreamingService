@@ -25,7 +25,8 @@ const ArtistDetailPage: React.FC = () => {
   const [userSavedSongs, setUserSavedSongs] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [hasMoreSongs, setHasMoreSongs] = useState(true);
-  const [songsCursor, setSongsCursor] = useState<number>();
+  const [songsCursorPlayCount, setSongsCursorPlayCount] = useState<number>();
+  const [songsCursorCreatedAt, setSongsCursorCreatedAt] = useState<string>();
   const [isInitialized, setIsInitialized] = useState(false);
 
   const { showToast } = useToast();
@@ -80,11 +81,13 @@ const ArtistDetailPage: React.FC = () => {
 
       const response = searchTerm
           ? await getArtistSongsByTitle(id, searchTerm, {
-            cursor: loadMore ? songsCursor : undefined,
+            cursorPlayCount: loadMore ? songsCursorPlayCount : undefined,
+            cursorCreatedAt: loadMore ? songsCursorCreatedAt : undefined,
             pageSize
           })
           : await getArtistSongs(id, {
-            cursor: loadMore ? songsCursor : undefined,
+            cursorPlayCount: loadMore ? songsCursorPlayCount : undefined,
+            cursorCreatedAt: loadMore ? songsCursorCreatedAt : undefined,
             pageSize
           });
 
@@ -94,7 +97,13 @@ const ArtistDetailPage: React.FC = () => {
       );
 
       setHasMoreSongs(!!response.cursor);
-      setSongsCursor(response.cursor);
+      if (response.cursor) {
+        setSongsCursorPlayCount(response.cursor.cursorPlayCount);
+        setSongsCursorCreatedAt(response.cursor.cursorCreatedAt);
+      } else {
+        setSongsCursorPlayCount(undefined);
+        setSongsCursorCreatedAt(undefined);
+      }
       setIsInitialized(true);
     } catch {
       setHasMoreSongs(false);
@@ -103,7 +112,7 @@ const ArtistDetailPage: React.FC = () => {
         setIsLoading(prev => ({ ...prev, songs: false }));
       }
     }
-  }, [id, searchTerm, songsCursor, pageSize, hasMoreSongs]);
+  }, [id, searchTerm, songsCursorPlayCount, songsCursorCreatedAt, pageSize, hasMoreSongs]);
 
   useEffect(() => {
     fetchInitialData();
@@ -112,7 +121,8 @@ const ArtistDetailPage: React.FC = () => {
   useEffect(() => {
     const handler = setTimeout(() => {
       setSongs([]);
-      setSongsCursor(undefined);
+      setSongsCursorPlayCount(undefined);
+      setSongsCursorCreatedAt(undefined);
       setHasMoreSongs(true);
       fetchSongs(false);
     }, 500);

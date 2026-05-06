@@ -195,7 +195,7 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                     b.HasIndex("Name")
                         .HasDatabaseName("ix_artists_name_trgm");
 
-                    b.HasIndex("PlayCount");
+                    b.HasIndex("PlayCount", "CreatedAt");
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Name"), "gin");
                     NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Name"), new[] { "gin_trgm_ops" });
@@ -354,7 +354,7 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
 
                     b.HasIndex("CreatedAt");
 
-                    b.HasIndex("PlayCount");
+                    b.HasIndex("PlayCount", "CreatedAt");
 
                     b.HasIndex("Title")
                         .HasDatabaseName("ix_songs_title_trgm");

@@ -44,12 +44,11 @@ public class ArtistsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedResponse<long?, ArtistModel>>> GetArtistsByName(
-        [FromQuery] string? namePart, [FromQuery] PaginationRequest<long?> request)
+    public async Task<ActionResult<PaginatedResponse<PopularityCursor?, ArtistModel>>> GetArtistsByName(
+        [FromQuery] string? namePart, [FromQuery] PopularityPaginationRequest request)
     {
-        var paginationParams = _mapper.Map <PaginationParams<long?>>(request); 
-        var artists = await _artistsService.GetArtistByNameAsync(namePart, paginationParams);
-        return Ok(_mapper.Map<PaginatedResponse<long?, ArtistModel>>(artists));
+        var artists = await _artistsService.GetArtistByNameAsync(namePart, request.ToPaginationParams());
+        return Ok(_mapper.Map<PaginatedResponse<PopularityCursor?, ArtistModel>>(artists));
     }
     
     [HttpGet]
@@ -72,12 +71,11 @@ public class ArtistsController : ControllerBase
 
     [HttpGet]
     [Route("{id:guid}/songs")]
-    public async Task<ActionResult<PaginatedResponse<long?, SongModel>>> GetArtistSongsByTitle(Guid id,
-        [FromQuery] string? titlePart, [FromQuery] PaginationRequest<long?> request)
+    public async Task<ActionResult<PaginatedResponse<PopularityCursor?, SongModel>>> GetArtistSongsByTitle(Guid id,
+        [FromQuery] string? titlePart, [FromQuery] PopularityPaginationRequest request)
     {
-        var paginationParams = _mapper.Map <PaginationParams<long?>>(request);
-        var songs = await _artistsService.GetSongsByTitleAsync(id, titlePart, paginationParams);
-        return Ok(_mapper.Map<PaginatedResponse<long?, SongModel>>(songs));
+        var songs = await _artistsService.GetSongsByTitleAsync(id, titlePart, request.ToPaginationParams());
+        return Ok(_mapper.Map<PaginatedResponse<PopularityCursor?, SongModel>>(songs));
     }
 
     [Authorize(Roles = "admin")]

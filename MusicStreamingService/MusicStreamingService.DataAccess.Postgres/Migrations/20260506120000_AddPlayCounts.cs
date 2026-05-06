@@ -28,24 +28,24 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                 defaultValue: 0L);
 
             migrationBuilder.CreateIndex(
-                name: "IX_songs_PlayCount",
+                name: "IX_songs_PlayCount_CreatedAt",
                 table: "songs",
-                column: "PlayCount");
+                columns: new[] { "PlayCount", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_artists_PlayCount",
+                name: "IX_artists_PlayCount_CreatedAt",
                 table: "artists",
-                column: "PlayCount");
+                columns: new[] { "PlayCount", "CreatedAt" });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
-                name: "IX_songs_PlayCount",
+                name: "IX_songs_PlayCount_CreatedAt",
                 table: "songs");
 
             migrationBuilder.DropIndex(
-                name: "IX_artists_PlayCount",
+                name: "IX_artists_PlayCount_CreatedAt",
                 table: "artists");
 
             migrationBuilder.DropColumn(

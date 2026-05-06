@@ -61,13 +61,13 @@ public class SongsService : ISongsService
         return _mapper.Map<SongModel>(song);
     }
 
-    public async Task<CursorResponse<long?, SongModel>> GetSongByTitleAsync(string? titlePart, 
-        PaginationParams<long?> request)
+    public async Task<CursorResponse<PopularityCursor?, SongModel>> GetSongByTitleAsync(string? titlePart, 
+        PaginationParams<PopularityCursor> request)
     {
         var songs = titlePart == null 
             ? await _unitOfWork.Songs.FindAllAsync(request) 
             : await _unitOfWork.Songs.FindByTitlePartAsync(titlePart, request);
-        return new CursorResponse<long?, SongModel>
+        return new CursorResponse<PopularityCursor?, SongModel>
         {
             Cursor = songs.Cursor,
             Items = _mapper.Map<List<SongModel>>(songs.Items),

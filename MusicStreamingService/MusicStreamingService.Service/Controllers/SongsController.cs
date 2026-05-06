@@ -73,13 +73,12 @@ public class SongsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedResponse<long?, SongModel>>> GetSongsByName(
+    public async Task<ActionResult<PaginatedResponse<PopularityCursor?, SongModel>>> GetSongsByName(
         [FromQuery] string? titlePart,
-        [FromQuery] PaginationRequest<long?> request)
+        [FromQuery] PopularityPaginationRequest request)
     {
-        var paginationParams = _mapper.Map <PaginationParams<long?>>(request);
-        var songs = await _songsService.GetSongByTitleAsync(titlePart, paginationParams);
-        return Ok(_mapper.Map<PaginatedResponse<long?, SongModel>>(songs));
+        var songs = await _songsService.GetSongByTitleAsync(titlePart, request.ToPaginationParams());
+        return Ok(_mapper.Map<PaginatedResponse<PopularityCursor?, SongModel>>(songs));
     }
 
     [HttpGet]

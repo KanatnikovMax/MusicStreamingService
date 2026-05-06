@@ -17,7 +17,7 @@ public static class SongsContextConfiguration
         modelBuilder.Entity<Song>().Property(x => x.Duration).IsRequired();
         modelBuilder.Entity<Song>().Property(x => x.TrackNumber).IsRequired();
         modelBuilder.Entity<Song>().Property(x => x.PlayCount).HasDefaultValue(0L);
-        modelBuilder.Entity<Song>().HasIndex(x => x.PlayCount);
+        modelBuilder.Entity<Song>().HasIndex(x => new { x.PlayCount, x.CreatedAt });
         modelBuilder.Entity<Song>()
             .HasIndex(x => x.Title)
             .HasMethod("gin")
