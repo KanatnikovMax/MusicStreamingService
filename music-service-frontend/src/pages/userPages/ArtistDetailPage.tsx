@@ -25,7 +25,7 @@ const ArtistDetailPage: React.FC = () => {
   const [userSavedSongs, setUserSavedSongs] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [hasMoreSongs, setHasMoreSongs] = useState(true);
-  const [songsCursor, setSongsCursor] = useState<Date>();
+  const [songsCursor, setSongsCursor] = useState<number>();
   const [isInitialized, setIsInitialized] = useState(false);
 
   const { showToast } = useToast();

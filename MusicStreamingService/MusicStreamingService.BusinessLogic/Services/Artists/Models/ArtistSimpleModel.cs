@@ -2,4 +2,5 @@
 
 public record ArtistSimpleModel(
     Guid Id,
-    string Name);
+    string Name,
+    long PlayCount);

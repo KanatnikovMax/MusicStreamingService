@@ -7,6 +7,7 @@ public record SongModel(
     string Title, 
     int Duration,
     int TrackNumber,
+    long PlayCount,
     string AudioObjectKey,
     Guid AlbumId,
     List<ArtistSimpleModel> Artists);

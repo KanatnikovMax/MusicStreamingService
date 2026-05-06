@@ -15,6 +15,8 @@ public static class ArtistsContextConfigurator
         modelBuilder.Entity<Artist>().HasIndex(a => a.CreatedAt);
         modelBuilder.Entity<Artist>().Property(x => x.Name).IsRequired();
         modelBuilder.Entity<Artist>().Property(x => x.Name).HasMaxLength(50);
+        modelBuilder.Entity<Artist>().Property(x => x.PlayCount).HasDefaultValue(0L);
+        modelBuilder.Entity<Artist>().HasIndex(x => x.PlayCount);
         modelBuilder.Entity<Artist>().Property(x => x.PhotoObjectKey).HasMaxLength(512);
         modelBuilder.Entity<Artist>()
             .HasIndex(x => x.Name)

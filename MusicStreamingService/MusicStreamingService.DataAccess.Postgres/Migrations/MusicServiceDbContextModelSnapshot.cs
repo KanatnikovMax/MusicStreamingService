@@ -179,6 +179,11 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<long>("PlayCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
+
                     b.Property<string>("PhotoObjectKey")
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
@@ -189,6 +194,8 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
 
                     b.HasIndex("Name")
                         .HasDatabaseName("ix_artists_name_trgm");
+
+                    b.HasIndex("PlayCount");
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Name"), "gin");
                     NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Name"), new[] { "gin_trgm_ops" });
@@ -328,6 +335,11 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                     b.Property<int>("Duration")
                         .HasColumnType("integer");
 
+                    b.Property<long>("PlayCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -341,6 +353,8 @@ namespace MusicStreamingService.DataAccess.Postgres.Migrations
                     b.HasIndex("AlbumId");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("PlayCount");
 
                     b.HasIndex("Title")
                         .HasDatabaseName("ix_songs_title_trgm");

@@ -10,7 +10,7 @@ const ArtistsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [cursor, setCursor] = useState<Date>();
+  const [cursor, setCursor] = useState<number>();
   const [hasMore, setHasMore] = useState(true);
   const [pageSize, setPageSize] = useState(16);
   const { showToast } = useToast();

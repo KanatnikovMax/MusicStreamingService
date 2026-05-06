@@ -6,16 +6,16 @@ import type {Song} from '../types/music';
 const API_URL = 'http://localhost:5071/songs';
 
 interface SongSearchParams {
-  cursor?: string;
+  cursor?: number;
   pageSize: number;
   titlePart?: string;
 }
 
 export const getAllSongs = async (
-    request: PaginationRequest<Date> & { searchTerm?: string } = { pageSize: 10 }
+    request: PaginationRequest<number> & { searchTerm?: string } = { pageSize: 10 }
 ) => {
   const params: SongSearchParams = {
-    cursor: request.cursor?.toISOString(),
+    cursor: request.cursor,
     pageSize: request.pageSize
   };
 
@@ -24,11 +24,11 @@ export const getAllSongs = async (
   }
 
   const response =
-      await axios.get<PaginatedResponse<string, Song>>(API_URL, { params });
+      await axios.get<PaginatedResponse<number, Song>>(API_URL, { params });
 
   return {
     items: response.data.items,
-    cursor: response.data.cursor ? new Date(response.data.cursor) : undefined
+    cursor: response.data.cursor || undefined
   };
 };
 

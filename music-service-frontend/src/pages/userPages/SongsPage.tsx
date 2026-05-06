@@ -13,7 +13,7 @@ const SongsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [cursor, setCursor] = useState<Date>();
+  const [cursor, setCursor] = useState<number>();
   const [hasMore, setHasMore] = useState(true);
   const [pageSize, setPageSize] = useState(20);
   const { user, isAuthenticated } = useAuth();
@@ -68,7 +68,7 @@ const SongsPage: React.FC = () => {
       });
 
       setHasMore(!!response.cursor);
-      setCursor(response.cursor ? new Date(response.cursor) : undefined);
+      setCursor(response.cursor);
     } catch {
 
       setHasMore(false);

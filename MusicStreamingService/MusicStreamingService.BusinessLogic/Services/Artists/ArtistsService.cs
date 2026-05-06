@@ -60,13 +60,13 @@ public class ArtistsService : IArtistsService
         return await MapArtistAsync(artist);
     }
 
-    public async Task<CursorResponse<DateTime?, ArtistModel>> GetArtistByNameAsync(string? namePart, 
-        PaginationParams<DateTime?> request)
+    public async Task<CursorResponse<long?, ArtistModel>> GetArtistByNameAsync(string? namePart, 
+        PaginationParams<long?> request)
     {
         var artists = namePart == null 
             ? await _unitOfWork.Artists.FindAllAsync(request) 
             : await _unitOfWork.Artists.FindByNamePartAsync(namePart, request);
-        return new CursorResponse<DateTime?, ArtistModel>
+        return new CursorResponse<long?, ArtistModel>
         {
             Cursor = artists.Cursor,
             Items = await MapArtistsAsync(artists.Items)
@@ -84,13 +84,13 @@ public class ArtistsService : IArtistsService
         };
     }
     
-    public async Task<CursorResponse<DateTime?, SongModel>> GetSongsByTitleAsync(Guid artistId, string? titlePart,
-        PaginationParams<DateTime?> request)
+    public async Task<CursorResponse<long?, SongModel>> GetSongsByTitleAsync(Guid artistId, string? titlePart,
+        PaginationParams<long?> request)
     {
         var songs = titlePart == null 
             ? await _unitOfWork.Artists.FindAllSongsAsync(artistId, request) 
             : await _unitOfWork.Artists.FindAllSongsByTitleAsync(artistId, titlePart, request);
-        return new CursorResponse<DateTime?, SongModel>
+        return new CursorResponse<long?, SongModel>
         {
             Cursor = songs.Cursor,
             Items = _mapper.Map<List<SongModel>>(songs.Items)

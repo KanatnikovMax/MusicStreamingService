@@ -6,7 +6,7 @@ import type {Album, Artist, Song} from '../types/music';
 const API_URL = 'http://localhost:5071/artists';
 
 interface ArtistSearchParams {
-  cursor?: string;
+  cursor?: number;
   pageSize: number;
   namePart?: string;
 }
@@ -22,10 +22,10 @@ export interface UpdateArtistRequest {
 }
 
 export const getAllArtists = async (
-    request: PaginationRequest<Date> & { searchTerm?: string } = { pageSize: 10 }
+    request: PaginationRequest<number> & { searchTerm?: string } = { pageSize: 10 }
 ) => {
   const params: ArtistSearchParams = {
-    cursor: request.cursor?.toISOString(),
+    cursor: request.cursor,
     pageSize: request.pageSize
   };
 
@@ -34,11 +34,11 @@ export const getAllArtists = async (
   }
 
   const response =
-      await axios.get<PaginatedResponse<string, Artist>>(API_URL, { params });
+      await axios.get<PaginatedResponse<number, Artist>>(API_URL, { params });
 
   return {
     items: response.data.items,
-    cursor: response.data.cursor ? new Date(response.data.cursor) : undefined
+    cursor: response.data.cursor || undefined
   };
 };
 
@@ -64,43 +64,43 @@ export const getArtistAlbums = async (
 
 export const getArtistSongs = async (
     artistId: string,
-    request: PaginationRequest<Date> = { pageSize: 100 }
+    request: PaginationRequest<number> = { pageSize: 100 }
 ) => {
   const params = {
-    cursor: request.cursor?.toISOString(),
+    cursor: request.cursor,
     pageSize: request.pageSize
   };
 
-  const response = await axios.get<PaginatedResponse<string, Song>>(
+  const response = await axios.get<PaginatedResponse<number, Song>>(
       `${API_URL}/${artistId}/songs`,
       { params }
   );
 
   return {
     items: response.data.items,
-    cursor: response.data.cursor ? new Date(response.data.cursor) : undefined
+    cursor: response.data.cursor || undefined
   };
 };
 
 export const getArtistSongsByTitle = async (
     artistId: string,
     titlePart: string,
-    request: PaginationRequest<Date> = { pageSize: 100 }
+    request: PaginationRequest<number> = { pageSize: 100 }
 ) => {
   const params = {
-    cursor: request.cursor?.toISOString(),
+    cursor: request.cursor,
     pageSize: request.pageSize,
     titlePart
   };
 
-  const response = await axios.get<PaginatedResponse<string, Song>>(
+  const response = await axios.get<PaginatedResponse<number, Song>>(
       `${API_URL}/${artistId}/songs`,
       { params }
   );
 
   return {
     items: response.data.items,
-    cursor: response.data.cursor ? new Date(response.data.cursor) : undefined
+    cursor: response.data.cursor || undefined
   };
 };
 
