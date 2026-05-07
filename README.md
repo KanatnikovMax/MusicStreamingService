@@ -18,6 +18,9 @@ ___
 - Docker
 - Redis
 - OpenAPI
+- xUnit
+- Mock
+- AutoFixture
 ___
 ## Авторизация
 В&nbsp;зависимости от&nbsp;своей роли пользователь может:
