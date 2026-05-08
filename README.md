@@ -50,7 +50,8 @@ ___
 - **MinIO** для хранения аудиофайлов и изображений (плейлистов, исполнителей и альбомов)
 ___
 ## Схема базы данных
-<img width="788" height="514" alt="image" src="https://github.com/user-attachments/assets/3267418e-5e54-4b79-927d-019efecb4a6e" />
+<img width="825" height="510" alt="image" src="https://github.com/user-attachments/assets/2d38c7a8-f254-486c-823a-193862def42f" />
+
 
 
 ## Скриншоты интерфейса
