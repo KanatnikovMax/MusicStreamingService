@@ -42,6 +42,14 @@ ___
   - Добавлять новых исполнителей и&nbsp;новые альбомы, загружать новые песни
   - Изменять данные о&nbsp;песнях/альбомах/исполнителях
   - Удалять песни/альбомы/исполнителей
+
+___
+## Архитектура
+
+<img width="1844" height="883" alt="image" src="https://github.com/user-attachments/assets/6131eca8-3584-499b-8d41-5a8c755bcce8" />
+
+
+
 ___
 ## Хранение данных
 В&nbsp;приложении для хранения данных используются:
@@ -51,7 +59,6 @@ ___
 ___
 ## Схема базы данных
 <img width="825" height="510" alt="image" src="https://github.com/user-attachments/assets/2d38c7a8-f254-486c-823a-193862def42f" />
-
 
 
 ## Скриншоты интерфейса
@@ -69,7 +76,7 @@ ___
 
 Страница альбомов
 
-<img width="624" height="318" alt="image" src="https://github.com/user-attachments/assets/5369f611-c02b-46c6-be0e-79b9d1723cf0" />
+<img width="1546" height="816" alt="image" src="https://github.com/user-attachments/assets/f4102747-d82f-4975-8b62-b66d58599963" />
 
 Открытый альбом
 
@@ -78,6 +85,10 @@ ___
 Открытый исполнитель
 
 <img width="620" height="331" alt="image" src="https://github.com/user-attachments/assets/9fcbaf85-a4cc-41cc-ba7a-05344ab809b7" />
+
+История прослушиваний
+
+<img width="1622" height="647" alt="image" src="https://github.com/user-attachments/assets/e5f949ad-4b05-45b8-91f6-c50d33f35806" />
 
 Страница артистов в панели администратора
 
